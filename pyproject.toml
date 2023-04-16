@@ -1,3 +1,6 @@
+[build-system]
+requires = ["build", "setuptools-scm"]
+
 [project]
 dynamic = ["version"]
 name = "transport-data"
