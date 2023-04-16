@@ -1,7 +1,10 @@
 """Manipulate the registry repo."""
+import re
 import subprocess
+from typing import Tuple, Union
 
 import click
+import packaging.version
 import sdmx
 import sdmx.model.v21 as m
 
@@ -52,6 +55,55 @@ def write(obj: m.MaintainableArtefact, force=False):
     # Add to git, but do not commit
     _git("add", str(path.relative_to(CONFIG.tdc_registry_local)))
     _git("status")
+
+
+def list_versions(obj: m.MaintainableArtefact) -> list[str]:
+    """List all versions of `obj` already stored in the registry."""
+    # Path that would result from writing `obj`
+    path = path_for(obj)
+
+    # Expression matching similar file names with different versions
+    expr = re.compile("(.*_)(?P<version>[0-9-]+)(.xml)")
+
+    # A glob pattern for similar names
+    pattern = expr.sub(r"\1*\3", str(path.name))
+
+    # Extract just the version part of the names of matching files; restore "."
+    versions = sorted(
+        map(
+            lambda p: expr.fullmatch(p.name).group("version").replace("-", "."),
+            path.parent.glob(pattern),
+        )
+    )
+
+    return versions
+
+
+def next_version(
+    obj: m.MaintainableArtefact, major=False, minor=True, patch=False
+) -> str:
+    """Return an incremented version string for `obj`."""
+    v = packaging.version.parse(list_versions(obj)[-1])
+    return f"{v.major + int(major)}.{v.minor + int(minor)}.{v.micro + int(patch)}"
+
+
+def assign_version(
+    obj: m.MaintainableArtefact,
+    default="0.0.0",
+    increment: Union[bool, Tuple[bool, bool, bool]] = False,
+):
+    """Assign a version to `obj`.
+
+    If `increment` is :data:`False`, the version will be the latest already existing in
+    the registry, if any, or `default` if no version of `obj` is stored.
+
+    Otherwise, `increment` should be a 3-tuple of :class:`bool`, which are passed as
+    arguments to :func:`next_version`.
+    """
+    if increment is False:
+        obj.version = (list_versions(obj) or [default])[-1]
+    else:
+        obj.version = next_version(obj, *increment)
 
 
 # Command-line interface
