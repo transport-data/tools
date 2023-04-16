@@ -23,9 +23,6 @@ def _git(*parts):
 
 def path_for(obj: m.MaintainableArtefact):
     """Determine a path and filename for `obj`."""
-    if obj.urn is None:
-        obj.urn = sdmx.urn.make(obj)
-
     version = obj.version or "0"
     return CONFIG.tdc_registry_local.joinpath(
         obj.maintainer.id,
