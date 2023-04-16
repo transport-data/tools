@@ -3,6 +3,7 @@ dynamic = ["version"]
 name = "transport-data"
 dependencies = [
     "click",
+    "sdmx1",
 ]
 
 [project.scripts]
