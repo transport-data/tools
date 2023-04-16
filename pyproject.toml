@@ -1,0 +1,11 @@
+[project]
+dynamic = ["version"]
+name = "transport-data"
+dependencies = [
+    "click",
+]
+
+[project.scripts]
+tdc = "transport_data.cli:main"
+
+[tool.setuptools_scm]
