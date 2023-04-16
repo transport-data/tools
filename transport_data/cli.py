@@ -9,8 +9,8 @@ def main():
 
 
 # Add subcommands from each module that defines them
-for name in ("org", "proto"):
+for name in ("config", "org.cli", "proto.cli"):
     # Import a CLI submodule
-    module = import_module(f"transport_data.{name}.cli")
+    module = import_module(f"transport_data.{name}")
     # Add the command named "main"
     main.add_command(getattr(module, "main"))
