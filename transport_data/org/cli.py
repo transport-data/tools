@@ -1,10 +1,11 @@
 import click
 
+from transport_data import registry
+
 
 @click.command("org")
 def main():
-    import sdmx
-
+    """Information about the TDCI per se."""
     from . import gen_structures
 
-    print(sdmx.to_xml(gen_structures(), pretty_print=True).decode())
+    registry.write(gen_structures())
