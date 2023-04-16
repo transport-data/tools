@@ -17,6 +17,9 @@ class Config:
     #: Path to a local clone of https://github.com/transport-data/registry.
     tdc_registry_local: Path = field(default_factory=Path.cwd)
 
+    def __post_init__(self):
+        self.tdc_registry_local = Path(self.tdc_registry_local)
+
     @classmethod
     def read(cls):
         # Candidate path for the configuration file
