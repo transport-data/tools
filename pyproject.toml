@@ -4,6 +4,7 @@ name = "transport-data"
 dependencies = [
     "click",
     "sdmx1",
+    "xdg-base-dirs",
 ]
 
 [project.scripts]
