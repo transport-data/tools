@@ -1,6 +1,8 @@
 """Manipulate the registry repo."""
 import re
 import subprocess
+from datetime import datetime
+from importlib.metadata import version
 from typing import Tuple, Union
 
 import click
@@ -43,6 +45,15 @@ def write(obj: m.MaintainableArtefact, force=False):
 
     # Make the parent directory (but not multiple parents)
     path.parent.mkdir(exist_ok=True)
+
+    # Annotate the object with information about how it was generated
+    obj.annotations.append(
+        m.Annotation(
+            id="tdc-generated",
+            text=f"{datetime.now().isoformat()} "
+            f"by transport_data v{version('transport_data')}",
+        )
+    )
 
     with open(path, "wb") as f:
         f.write(sdmx.to_xml(obj, pretty_print=True))
