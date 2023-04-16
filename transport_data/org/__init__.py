@@ -1,6 +1,7 @@
 """Information about the TDC Initiative."""
 from datetime import date
 from importlib import import_module
+from typing import Union
 
 import sdmx.model.v21 as m
 
@@ -21,7 +22,7 @@ def get_agency() -> m.Agency:
     return a
 
 
-def get_agencyscheme(increment_version=False):
+def get_agencyscheme(version: Union[None, str] = None):
     """Generate an AgencyScheme including some TDCI data providers."""
     a = get_agency()
 
@@ -42,6 +43,8 @@ def get_agencyscheme(increment_version=False):
         # Call a function named get_agency() in the module
         as_.append(module.get_agency())
 
-    registry.assign_version(as_)
+    as_.version = version
+    if as_.version is None:
+        registry.assign_version(as_)
 
     return as_
