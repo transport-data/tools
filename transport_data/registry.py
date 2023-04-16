@@ -23,10 +23,11 @@ def path_for(obj: m.MaintainableArtefact):
     if obj.urn is None:
         obj.urn = sdmx.urn.make(obj)
 
+    version = obj.version or "0"
     return CONFIG.tdc_registry_local.joinpath(
         obj.maintainer.id,
         f"{obj.__class__.__name__}_{obj.maintainer.id}_{obj.id}_"
-        f"{obj.version.replace('.', '-')}",
+        f"{version.replace('.', '-')}",
     ).with_suffix(".xml")
 
 
