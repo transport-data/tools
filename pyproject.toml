@@ -6,6 +6,7 @@ dynamic = ["version"]
 name = "transport-data"
 dependencies = [
     "click",
+    "packaging",
     "sdmx1",
     "xdg-base-dirs",
 ]
