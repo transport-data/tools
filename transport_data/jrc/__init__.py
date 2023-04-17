@@ -32,7 +32,9 @@ def get_agency() -> m.Agency:
 Maintainers of the IDEES data set: https://data.jrc.ec.europa.eu/dataset/jrc-10110-10001""",  # noqa: E501
     )
 
-    a.contact.append(m.Contact(name="Jacopo Tattini", email=["name@example.com"]))
+    a.contact.append(
+        m.Contact(name="Jacopo Tattini", email=["Jacopo.TATTINI@ec.europa.eu"])
+    )
 
     return a
 
