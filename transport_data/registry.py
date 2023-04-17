@@ -1,8 +1,6 @@
 """Manipulate the registry repo."""
 import re
 import subprocess
-from datetime import datetime
-from importlib.metadata import version
 from typing import Tuple, Union
 
 import click
@@ -11,6 +9,7 @@ import sdmx
 import sdmx.model.v21 as m
 
 from transport_data import CONFIG
+from transport_data.util.sdmx import anno_generated
 
 
 def _gh(*parts):
@@ -47,13 +46,7 @@ def write(obj: m.MaintainableArtefact, force=False):
     path.parent.mkdir(exist_ok=True)
 
     # Annotate the object with information about how it was generated
-    obj.annotations.append(
-        m.Annotation(
-            id="tdc-generated",
-            text=f"{datetime.now().isoformat()} "
-            f"by transport_data v{version('transport_data')}",
-        )
-    )
+    anno_generated(obj)
 
     with open(path, "wb") as f:
         f.write(sdmx.to_xml(obj, pretty_print=True))
