@@ -17,9 +17,12 @@ Usage
       --help  Show this message and exit.
 
     Commands:
-      config  Manipulate configuration.
-      org     Information about the TDCI per se.
-      proto   TDC prototype.
+      adb       Asian Development Bank (ADB) data provider.
+      config    Manipulate configuration.
+      estat     Eurostat (ESTAT) data provider.
+      org       Information about the TDCI per se.
+      proto     TDC prototype debugging.
+      registry  Manipulate the registry repo.
 
   Each subcommand has its own --help.
 
@@ -28,6 +31,6 @@ Development
 
 - Python code:
 
-  - Use `black <https://black.rtfd.io>`.
+  - Use `black <https://black.rtfd.io>`__.
 
 - Exchange MaintainableArtefacts between modules.

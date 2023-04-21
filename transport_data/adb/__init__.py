@@ -1,3 +1,5 @@
+"""Asian Development Bank (ADB) data provider."""
+
 import click
 import pandas as pd
 import requests
