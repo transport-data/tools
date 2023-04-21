@@ -1,6 +1,8 @@
 """Manipulate the registry repo."""
 import re
 import subprocess
+from functools import singledispatch
+from pathlib import Path
 from typing import Tuple, Union
 
 import click
@@ -22,7 +24,8 @@ def _git(*parts):
     return subprocess.run(("git", "-C", str(CONFIG.tdc_registry_local)) + parts)
 
 
-def path_for(obj: m.MaintainableArtefact):
+@singledispatch
+def path_for(obj: m.MaintainableArtefact) -> Path:
     """Determine a path and filename for `obj`."""
     version = obj.version or "0"
     return CONFIG.tdc_registry_local.joinpath(
@@ -32,7 +35,20 @@ def path_for(obj: m.MaintainableArtefact):
     ).with_suffix(".xml")
 
 
-def write(obj: m.MaintainableArtefact, force=False):
+@path_for.register
+def _(obj: m.DataSet) -> Path:
+    """Determine a path and filename for `obj`."""
+    # Generate a path for the data set's corresponding data flow
+    tmp = path_for(obj.described_by)
+    return tmp.with_name(tmp.name.replace("DataflowDefinition", "DataSet"))
+
+
+def write(
+    obj: Union[m.MaintainableArtefact, m.DataSet],
+    *,
+    annotate=True,
+    force=False,
+):
     """Write `obj` into the registry as SDMX-ML.
 
     The path and filename are determined by the object properties.
@@ -45,8 +61,10 @@ def write(obj: m.MaintainableArtefact, force=False):
     # Make the parent directory (but not multiple parents)
     path.parent.mkdir(exist_ok=True)
 
-    # Annotate the object with information about how it was generated
-    anno_generated(obj)
+    if isinstance(obj, m.MaintainableArtefact) and annotate:
+        # Annotate the object with information about how it was generated
+        # TODO don't do this for files retrieved directly from an SDMX API
+        anno_generated(obj)
 
     with open(path, "wb") as f:
         f.write(sdmx.to_xml(obj, pretty_print=True))
@@ -54,8 +72,12 @@ def write(obj: m.MaintainableArtefact, force=False):
     print(f"Wrote {path}")
 
     # Add to git, but do not commit
+    # NB if the path is specifically covered by a .gitignore entry, this will generate
+    #    some advice messages but have no effect. See e.g. registry/ESTAT/README.
     _git("add", str(path.relative_to(CONFIG.tdc_registry_local)))
     _git("status")
+
+    return path
 
 
 def list_versions(obj: m.MaintainableArtefact) -> list[str]:
