@@ -42,9 +42,10 @@ def get(dataflow_id: str):
     # Assign an explicit reference to the data set. The ESTAT response comes back with
     # an "anonymous" dataflow.
     ds.described_by = sm.dataflow[dataflow_id]
+    ds.structured_by = ds.described_by.structure
 
     # Write to file
-    path = registry.write(ds)
+    path = registry.write(ds, force=True)
     print(f"Retrieved {path}")
     print("          and associated structures")
 

@@ -71,6 +71,9 @@ def write(
 
     print(f"Wrote {path}")
 
+    if isinstance(obj, m.DataSet):
+        _dump_csv(obj, path)
+
     # Add to git, but do not commit
     # NB if the path is specifically covered by a .gitignore entry, this will generate
     #    some advice messages but have no effect. See e.g. registry/ESTAT/README.
@@ -100,6 +103,24 @@ def list_versions(obj: m.MaintainableArtefact) -> list[str]:
     )
 
     return versions
+
+
+def _dump_csv(obj: m.DataSet, path: Path) -> Path:
+    """Dump a version of `obj` to a CSV file with a name similar to `path`.
+
+    Note that this is **not** standards-compliant SDMX-CSV; rather it uses the
+    conversion of :mod:`sdmx` to :mod:`pandas` data structures, and then pandas'
+    built-in routines to write CSV.
+
+    .. todo:: update once SDMX-CSV support is implemented in :mod:`sdmx`; see
+       `upstream issue #36 <https://github.com/khaeru/sdmx/issues/36>`__.
+    """
+    csv_path = path.with_suffix(".csv")
+
+    sdmx.to_pandas(obj, attributes="gso").to_csv(csv_path)
+
+    print(f"Wrote {csv_path}")
+    return csv_path
 
 
 def next_version(
