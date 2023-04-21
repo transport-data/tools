@@ -7,6 +7,8 @@ name = "transport-data"
 dependencies = [
     "click",
     "packaging",
+    "pandas",
+    "requests",
     "sdmx1",
     "xdg-base-dirs",
 ]
