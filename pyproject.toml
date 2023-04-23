@@ -13,6 +13,11 @@ dependencies = [
     "xdg-base-dirs",
 ]
 
+[project.optional-dependencies]
+tests = [
+    "pytest",
+]
+
 [project.scripts]
 tdc = "transport_data.cli:main"
 
