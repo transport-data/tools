@@ -12,7 +12,7 @@ def test_make_dsd_for():
 
     # Function runs, returns a SDMX StructureMessage containing multiple structure
     # objects
-    sm = make_dsd_for(df)
+    sm = make_dsd_for(df, base_id="TEST")
 
     # Code lists have expected length
     expected = {
@@ -20,12 +20,14 @@ def test_make_dsd_for():
         "SCENARIO": 6,
         "REGION": 10,
         "UNIT": 39,
-        "MEASURE": 31,
     }
 
     for name, N in expected.items():
         assert N == len(sm.codelist[name])
 
+    # Concept schemes have expected length
+    assert 31 == len(sm.concept_scheme["MEASURE"])
+
     # DSD is annotated with a description of the data from which it was derived
-    dsd = sm.structure["GENERATED"]
+    dsd = sm.structure["TEST"]
     assert str(dsd.description).startswith("The original data are in")

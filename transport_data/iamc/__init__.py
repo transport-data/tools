@@ -71,14 +71,16 @@ def get_iamc_structures():
     return cs
 
 
-def make_dsd_for(data: pd.DataFrame) -> m.DataStructureDefinition:
+def make_dsd_for(
+    data: pd.DataFrame, base_id: str = "GENERATED"
+) -> m.DataStructureDefinition:
     """Return IAMC-like data structures describing `data`."""
     # Generic IAMC ConceptScheme
     iamc_cs = get_iamc_structures()
 
     # Empty structures
     sm = StructureMessage()
-    dsd = m.DataStructureDefinition(id="GENERATED")
+    dsd = m.DataStructureDefinition(id=base_id)
 
     # Identify dimension IDs from column names
     data_format = "long"
@@ -103,28 +105,93 @@ def make_dsd_for(data: pd.DataFrame) -> m.DataStructureDefinition:
             raise
 
     dsd.description = f"The original data are in {data_format!r} format."
+    sm.add(dsd)
 
     # Create code lists
     for dim in filter(lambda d: d.id.upper() not in "YEAR VARIABLE", dsd.dimensions):
         sm.add(make_cl_for(data[dim.id], id=dim.concept_identity.id))
 
     # Special handling for "VARIABLE"
-    sm.add(make_variable_cl(data["variable"]))
-
-    sm.add(dsd)
+    for obj in make_variable_structures(data["variable"]):
+        sm.add(obj)
 
     return sm
 
 
-def make_variable_cl(data: pd.Series) -> m.Codelist:
-    """Make a `VARIABLE` codelist for `data`."""
-    cl = m.Codelist(id="MEASURE")
-
+def make_variable_structures(data: pd.Series) -> list:
+    """Make structures for IAMC-like “Variable” `data`."""
     # Split the data on the first "|"
-    for value in sorted(data.str.split("|", expand=True)[0].unique()):
-        cl.append(m.Code(id=value))
+    parts = data.drop_duplicates().str.split("|", expand=True)
 
-    return cl
+    # A Concept scheme for the measures appearing in `data`
+    cs = m.ConceptScheme(id="MEASURE")
+
+    # Structures to be returned
+    structures = [cs]
+
+    # Identify and group by the measure in the first part
+    for name, group_parts in parts.groupby(0):
+        # Add the measure to the concept scheme
+        measure = m.Concept(id=name.upper().replace(" ", "_"), name=name)
+        cs.append(measure)
+
+        # Make a DSD and code lists from the remaining parts
+        # TODO also include the general (model, scenario, etc.) dimensions
+        structures.extend(make_measure_structures(measure, group_parts.iloc[:, 1:]))
+
+    log.info(
+        f"Identified {len(cs)} measures from {len(parts)} distinct 'variable' values"
+    )
+
+    return structures
+
+
+def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
+    """Create a DSD and code lists for a particular `measure` from variable `parts`."""
+    dsd = m.DataStructureDefinition(id=measure.id)
+
+    # Structures to be returned
+    structures = [dsd]
+
+    # Drop any columns that are empty
+    parts = parts.dropna(axis=1, how="all")
+
+    # Check whether labels are balanced
+    some_empty = parts.isna().any(axis=0)
+    if some_empty.any():
+        # commented: log information about unbalanced numbers of dimensions
+        N_dim = parts.shape[1]
+        N_empty = some_empty.sum()
+
+        log.info(f"Measure {measure.id!r}")
+        log.info(
+            f"Variables contain uneven dimension labels: {N_dim - N_empty}–{N_dim}"
+        )
+        pass
+
+    # Iterate over remaining dimensions
+    for i, s in parts.items():
+        # Numerical ID for this dimension
+        dim_id = f"DIM_{i}"
+
+        # Generate a code list
+        cl = make_cl_for(s.dropna(), id=f"{measure.id}_{dim_id}")
+
+        # Add a special value for missing labels "_"
+        if some_empty[i]:
+            cl.append(m.Code(id="_", name="No label/missing"))
+        structures.append(cl)
+
+        # Generate a dimension that references this code list and measure
+        dsd.dimensions.append(
+            m.Dimension(
+                id=dim_id,
+                concept_identity=measure,
+                local_representation=m.Representation(enumerated=cl),
+            )
+        )
+
+    return structures
 
 
 def make_cl_for(data: pd.Series, id: str) -> m.Codelist:
