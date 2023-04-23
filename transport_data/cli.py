@@ -2,6 +2,8 @@ from importlib import import_module
 
 import click
 
+from . import CONFIG  # noqa: F401
+
 
 @click.group("tdc")
 def main():
@@ -14,6 +16,7 @@ MODULES_WITH_CLI = [
     "adb",
     "config",
     "estat",
+    "iamc.cli",
     "org.cli",
     "proto.cli",
     "registry",
