@@ -30,9 +30,7 @@ def get(dataflow_id: str):
     sm = client.dataflow(dataflow_id)
 
     # Write each of the structure objects received to a separate file
-    for kind in ("codelist", "concept_scheme", "dataflow", "structure"):
-        for obj in getattr(sm, kind).values():
-            registry.write(obj, annotate=False, force=True)
+    registry.write(sm, annotate=False, force=True)
 
     # Retrieve the data itself
     dm = client.data(dataflow_id)

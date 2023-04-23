@@ -9,6 +9,7 @@ import click
 import packaging.version
 import sdmx
 import sdmx.model.v21 as m
+from sdmx.message import StructureMessage
 
 from transport_data import CONFIG
 from transport_data.util.sdmx import anno_generated
@@ -43,11 +44,13 @@ def _(obj: m.DataSet) -> Path:
     return tmp.with_name(tmp.name.replace("DataflowDefinition", "DataSet"))
 
 
+@singledispatch
 def write(
     obj: Union[m.MaintainableArtefact, m.DataSet],
     *,
     annotate=True,
     force=False,
+    _show_status=True,
 ):
     """Write `obj` into the registry as SDMX-ML.
 
@@ -78,9 +81,20 @@ def write(
     # NB if the path is specifically covered by a .gitignore entry, this will generate
     #    some advice messages but have no effect. See e.g. registry/ESTAT/README.
     _git("add", str(path.relative_to(CONFIG.tdc_registry_local)))
-    _git("status")
+    if _show_status:
+        _git("status")
 
     return path
+
+
+@write.register
+def _(obj: StructureMessage, **kwargs):
+    # Write each of the structure objects a separate file
+    for kind in ("codelist", "concept_scheme", "dataflow", "structure"):
+        for obj_ in getattr(obj, kind).values():
+            write(obj_, **kwargs, _show_status=False)
+
+    _git("status")
 
 
 def list_versions(obj: m.MaintainableArtefact) -> list[str]:
