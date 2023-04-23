@@ -123,6 +123,8 @@ def make_structures_for(
         obj.maintainer = maintainer
         sm.add(obj)
 
+    sm.add(iamc_cs)
+
     return sm
 
 
