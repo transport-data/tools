@@ -3,7 +3,8 @@ import sys
 
 from .config import Config
 
-logging.basicConfig(level=logging.INFO, handlers=logging.StreamHandler(sys.stdout))
-logging.getLogger(__name__).setLevel(logging.INFO)
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+log.addHandler(logging.StreamHandler(sys.stdout))
 
 CONFIG = Config.read()
