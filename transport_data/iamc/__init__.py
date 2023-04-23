@@ -36,14 +36,28 @@ These data structures are characterized by:
 .. todo:: Add a function to generate distinct DSDs for each data flow in a data set.
 .. todo:: Add function(s) to reshape IAMC-like data.
 """
+import logging
+
 import pandas as pd
 import sdmx.model.v21 as m
 from sdmx.message import StructureMessage
 
+log = logging.getLogger(__name__)
+
+
+def get_agency():
+    return m.Agency(
+        id="IAMC",
+        name="Integrated Assessment Modeling Consortium",
+        contact=[m.Contact(uri=["https://iamconsortium.org"])],
+    )
+
 
 def get_iamc_structures():
     """Return common metadata for IAMC-like data and structures."""
-    cs = m.ConceptScheme(id="IAMC", name="Concepts in the IAMC data model")
+    cs = m.ConceptScheme(
+        id="IAMC", name="Concepts in the IAMC data model", maintainer=get_agency()
+    )
 
     cs.items = [
         m.Concept(id="MODEL", name="Model name"),
