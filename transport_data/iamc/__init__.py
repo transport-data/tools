@@ -80,9 +80,12 @@ def make_structures_for(
     # Generic IAMC ConceptScheme
     iamc_cs = get_iamc_structures()
 
+    # Default maintainer
+    maintainer = maintainer or m.Agency(id="TEST")
+
     # Empty structures
     sm = StructureMessage()
-    dsd = m.DataStructureDefinition(id=base_id)
+    dsd = m.DataStructureDefinition(id=base_id, maintainer=maintainer)
 
     # Identify dimension IDs from column names
     data_format = "long"
@@ -111,10 +114,13 @@ def make_structures_for(
 
     # Create code lists
     for dim in filter(lambda d: d.id.upper() not in "YEAR VARIABLE", dsd.dimensions):
-        sm.add(make_cl_for(data[dim.id], id=dim.concept_identity.id))
+        cl = make_cl_for(data[dim.id], id=dim.concept_identity.id)
+        cl.maintainer = maintainer
+        sm.add(cl)
 
     # Special handling for "VARIABLE"
     for obj in make_variable_structures(data["variable"]):
+        obj.maintainer = maintainer
         sm.add(obj)
 
     return sm
