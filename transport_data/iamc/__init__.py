@@ -71,8 +71,10 @@ def get_iamc_structures():
     return cs
 
 
-def make_dsd_for(
-    data: pd.DataFrame, base_id: str = "GENERATED"
+def make_structures_for(
+    data: pd.DataFrame,
+    base_id: str = "GENERATED",
+    maintainer: Optional[m.Agency] = None,
 ) -> m.DataStructureDefinition:
     """Return IAMC-like data structures describing `data`."""
     # Generic IAMC ConceptScheme
