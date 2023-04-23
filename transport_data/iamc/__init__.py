@@ -37,6 +37,7 @@ These data structures are characterized by:
 .. todo:: Add function(s) to reshape IAMC-like data.
 """
 import logging
+from typing import Optional
 
 import pandas as pd
 import sdmx.model.v21 as m
@@ -59,14 +60,16 @@ def get_iamc_structures():
         id="IAMC", name="Concepts in the IAMC data model", maintainer=get_agency()
     )
 
-    cs.items = [
-        m.Concept(id="MODEL", name="Model name"),
-        m.Concept(id="SCENARIO", name="Model configuration or parametrization"),
-        m.Concept(id="REGION", name="Geographical area"),
-        m.Concept(id="VARIABLE", name="Measure and additional dimensions"),
-        m.Concept(id="UNIT", name="Unit of measurement"),
-        m.Concept(id="YEAR", name="Time period"),
-    ]
+    cs.extend(
+        [
+            m.Concept(id="MODEL", name="Model name"),
+            m.Concept(id="SCENARIO", name="Model configuration or parametrization"),
+            m.Concept(id="REGION", name="Geographical area"),
+            m.Concept(id="VARIABLE", name="Measure and additional dimensions"),
+            m.Concept(id="UNIT", name="Unit of measurement"),
+            m.Concept(id="YEAR", name="Time period"),
+        ]
+    )
 
     return cs
 
