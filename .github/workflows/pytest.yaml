@@ -1,0 +1,42 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+  - cron: "0 5 * * *"
+
+# Cancel previous runs that have not completed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: ${{ env.depth }}
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.x"
+        cache: pip
+        cache-dependency-path: "**/pyproject.toml"
+
+    - name: Install the Python package and dependencies
+      run: pip install --upgrade --upgrade-strategy=eager .[tests]
+
+    - name: Run test suite using pytest
+      run: |
+        pytest transport_data \
+          --trace-config --color=yes --verbose \
+          --cov-report=xml --cov-report=term \
+          --numprocesses auto
+
+    - name: Upload test coverage to Codecov.io
+      uses: codecov/codecov-action@v3
