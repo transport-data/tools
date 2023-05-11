@@ -338,5 +338,6 @@ def read(geo=None):
     # raise NotImplementedError
 
 
-def convert():
+def convert(geo):
+    read(geo)
     raise NotImplementedError
