@@ -1,12 +1,12 @@
 """Asian Development Bank (ADB) data provider."""
 
-import click
+from urllib.parse import quote
+
 import pandas as pd
-import requests
 import sdmx.model.v21 as m
-from xdg_base_dirs import xdg_cache_home
 
 from transport_data import registry
+from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
 
 
@@ -26,17 +26,7 @@ def get_agency() -> m.Agency:
     return a
 
 
-def path_for(name):
-    """Return a filename and local cache path for the data file for `geo`."""
-    return xdg_cache_home().joinpath("transport-data", "adb", name).with_suffix(".xlsx")
-
-
-BASE_URL = "https://asiantransportoutlook.com/exportdl"
-
-FILES = [
-    "ATO National Database Masterlist of Indicators",
-    "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS))",
-]
+BASE_URL = "https://asiantransportoutlook.com/exportdl?orig=1"
 
 #: List of all "ECONOMY" codes appearing in processed data.
 CL_ECONOMY = m.Codelist(
@@ -47,8 +37,8 @@ CL_ECONOMY = m.Codelist(
 
 #: List of all measures (indicators) appearing in processed data.
 #:
-#: .. todo:: Validate against FILES[0]; or read from that file and validate IDs
-#:    appearing in data files.
+#: .. todo:: Validate against the master list of indicators; or read from that file and
+#:    validate IDs appearing in data files.
 CS_MEASURE = m.ConceptScheme(
     id="MEASURE",
     name="Asian Transport Outlook measures (indicators)",
@@ -56,23 +46,40 @@ CS_MEASURE = m.ConceptScheme(
     "correspondence with the list provided directly by ADB is checked or enforced.",
 )
 
+FILES = {
+    # "ATO National Database Masterlist of Indicators",
+    "INF": "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
+    "TAS": "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
+    "ACC": "ATO Workbook (ACCESS & CONNECTIVITY (ACC)).xlsx",
+    "RSA": "ATO Workbook (ROAD SAFETY (RSA)).xlsx",
+    "APH": "ATO Workbook (AIR POLLUTION & HEALTH (APH)).xlsx",
+    "CLC": "ATO Workbook (CLIMATE CHANGE (CLC)).xlsx",
+    "SEC": "ATO Workbook (SOCIO-ECONOMIC (SEC)).xlsx",
+    "POL": "ATO Workbook (TRANSPORT POLICY (POL)).xlsx",
+    "MIS": "ATO Workbook (MISCELLANEOUS (MIS)).xlsx",
+}
 
-def get():
-    """Retrieve the ATO files listed in :data:`FILES`."""
-    for file in FILES:
-        path = path_for(file)
 
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            print(f"Create directory {path.parent}")
+def expand(fname: str) -> str:
+    return FILES.get(fname, fname)
 
-        response = requests.get(
-            url=BASE_URL, params=dict(orig="1", filename=path.name), stream=True
-        )
-        path.write_bytes(response.content)
-        print(f"Retrieved {path}")
 
-    return path
+def make_url(fname: str) -> str:
+    return f"{BASE_URL}&filename={quote(expand(fname))}"
+
+
+POOCH = Pooch(
+    module=__name__,
+    base_url=BASE_URL,
+    registry={expand(key): None for key in FILES.keys()},
+    urls={expand(key): make_url(key) for key in FILES.keys()},
+    expand=expand,
+)
+
+
+def path_for(arg):
+    """Return a filename and local cache path for the data file for `geo`."""
+    return POOCH.path.joinpath(expand(arg))
 
 
 def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
@@ -269,7 +276,7 @@ def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, callable]:
 
 
 def convert_all():
-    path = path_for(FILES[1])
+    path = path_for("TAS")
     ef = pd.ExcelFile(path, engine="openpyxl")
 
     for sheet_name in ef.sheet_names:
