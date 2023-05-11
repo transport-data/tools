@@ -44,6 +44,9 @@ repository = "https://github.com/transport-data/tools"
 tdc = "transport_data.cli:main"
 
 [tool.pytest.ini_options]
-addopts = """--cov=transport_data"""
+addopts = """-m "not network" --cov=transport_data"""
+markers = [
+    "network: tests that perform network requests",
+]
 
 [tool.setuptools_scm]

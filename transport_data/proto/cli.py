@@ -2,7 +2,7 @@ import click
 
 
 @click.command("proto")
-def main():
+def main():  # pragma: no cover
     """TDC prototype debugging."""
     from transport_data import adb, jrc
 
@@ -18,4 +18,4 @@ def main():
     # # commented: uncomment this statement to fetch ADB ATO data files
     # adb.get()
 
-    adb.convert_all()
+    # adb.convert_all()
