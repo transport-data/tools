@@ -16,6 +16,8 @@ dependencies = [
 [project.optional-dependencies]
 tests = [
     "pytest",
+    "pytest-cov",
+    "pytest-xdist",
 ]
 
 [project.scripts]
