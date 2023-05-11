@@ -12,13 +12,12 @@ import re
 from functools import partial
 from operator import add
 from pathlib import Path
-from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-import requests
 import sdmx.model.v21 as m
-from xdg_base_dirs import xdg_cache_home
+
+from transport_data.util.pooch import Pooch
 
 
 def get_agency() -> m.Agency:
@@ -42,7 +41,9 @@ Maintainers of the IDEES data set: https://data.jrc.ec.europa.eu/dataset/jrc-101
     return a
 
 
-BASE_URL = "http://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/JRC-IDEES/JRC-IDEES-2015_v1"
+BASE_URL = (
+    "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/JRC-IDEES/JRC-IDEES-2015_v1/"
+)
 
 #: List of geographical areas for which data are provided. These are ISO 3166-1 alpha-2
 #: codes, except for "EU28".
@@ -78,41 +79,41 @@ GEO = [
     "UK",
 ]
 
+# Fragments for file names in each archive
+MEMBERS = [
+    "EmissionBalance",
+    "EnergyBalance",
+    "Industry",
+    "Macro",
+    "MBunkers",
+    "PowerGen",
+    "Residential",
+    "Tertiary",
+    "Transport",
+]
 
-def path_for(geo=None):
+
+def expand(fname: str) -> str:
+    return f"JRC-IDEES-2015_All_xlsx_{fname}.zip"
+
+
+POOCH = Pooch(
+    module=__name__,
+    base_url=BASE_URL,
+    # TODO add copyright.txt, readme.txt, and "…Methodological Note.pdf"
+    registry={f"JRC-IDEES-2015_All_xlsx_{geo}.zip": None for geo in GEO},
+    expand=expand,
+    processor="unzip",
+)
+
+
+def path_for(geo=None, member=None):
     """Return a filename and local cache path for the data file for `geo`."""
-    name = f"JRC-IDEES-2015_All_xlsx_{geo}.zip"
-    return xdg_cache_home().joinpath("transport-data", "jrc", name)
-
-
-def get(geo=None):
-    """Retrieve the JRC-IDREES 2015 file for a single geography, `geo`."""
-    # TODO also get copyright.txt, readme.txt, and "…Methodological Note.pdf"
-
-    path = path_for(geo)
-
-    if not path.parent.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        print(f"Create directory {path.parent}")
-
-    response = requests.get(url=f"{BASE_URL}/{path.name}", stream=True)
-    path.write_bytes(response.content)
-    print(f"Retrieved {path}")
-
-    return path
-
-
-def extract(path: Path):
-    """Extract the ZIP file at `path`."""
-    with ZipFile(path) as zf:
-        zf.extractall(path=path.parent)
-
-
-def extract_all():
-    """Retrieve and extract all files."""
-    for geo in GEO:
-        p = get(geo)
-        extract(p)
+    if member:
+        assert member in MEMBERS
+        return POOCH.path.joinpath(f"JRC-IDEES-2015_{member}_{geo}.xlsx")
+    else:
+        return POOCH.path.joinpath(f"JRC-IDEES-2015_All_xlsx_{geo}.zip")
 
 
 def iter_blocks(path: Path, geo: str):
@@ -261,7 +262,7 @@ def read(geo=None):
       (indentation, with greater indentation indicating greater depth). This is not
       easily extracted with pandas.
     """
-    path = path_for(geo).with_name(f"JRC-IDEES-2015_Transport_{geo}.xlsx")
+    path = path_for(geo, "Transport")
 
     # Metadata across all blocks
     ALL_INFO = set()
