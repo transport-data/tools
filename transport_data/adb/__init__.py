@@ -301,17 +301,3 @@ def convert_all():
         obj.maintainer = a
         obj.version = "0.1.0"
         registry.write(obj, force=True)
-
-
-# Command-line interface
-
-
-@click.group("adb", help=__doc__)
-def main():
-    pass
-
-
-@main.command("convert")
-def convert_cmd():
-    """Convert data to SDMX."""
-    convert_all()
