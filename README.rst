@@ -4,6 +4,9 @@ Tools for the Transport Data Commons
 .. image:: https://github.com/transport-data/tools/actions/workflows/pytest.yaml/badge.svg
    :target: https://github.com/transport-data/tools/actions/workflows/pytest.yaml
    :alt: "pytest" workflow status badge
+.. image:: https://codecov.io/gh/transport-data/tools/branch/main/graph/badge.svg
+   :target: https://codecov.io/gh/transport-data/tools
+   :alt: Codecov.io test coverage status badge
 
 Usage
 =====
