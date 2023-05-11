@@ -46,7 +46,7 @@ def get_agency() -> m.Agency:
 
 def get_agencyscheme(version: Union[None, str] = None):
     """Generate an AgencyScheme including some TDCI data providers."""
-    a = get_agency()
+    agencies = get_agency()
 
     as_ = m.AgencyScheme(
         id="TDCI",
@@ -55,10 +55,11 @@ def get_agencyscheme(version: Union[None, str] = None):
         # VersionableArtefact
         valid_from=date.today().isoformat(),
         # MaintainableArtefact
-        maintainer=a[0],
-        # ItemScheme
-        items=a,
+        maintainer=agencies[0],
     )
+
+    for a in agencies:
+        as_.append(a)
 
     # Add agencies with corresponding modules in this repository
     for id_ in ("adb", "jrc"):
