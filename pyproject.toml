@@ -9,7 +9,7 @@ dependencies = [
     "packaging",
     "pandas",
     "requests",
-    "sdmx1",
+    "sdmx1 >= 2.9",
     "xdg-base-dirs",
 ]
 
