@@ -4,6 +4,21 @@ requires = ["build", "setuptools-scm"]
 [project]
 dynamic = ["version"]
 name = "transport-data"
+description = "Tools for the Transport Data Commons"
+authors = [
+  {name = "Transport Data Commons Initiative (TDCI)"}
+]
+maintainers = [
+  {name = "Paul Natsuo Kishimoto", email = "mail@paul.kishimoto.name"}
+]
+classifiers = [
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+]
+readme = "README.rst"
+
 dependencies = [
     "click",
     "packaging",
@@ -19,6 +34,10 @@ tests = [
     "pytest-cov",
     "pytest-xdist",
 ]
+
+[project.urls]
+homepage = "https://transport-data.org"
+repository = "https://github.com/transport-data/tools"
 
 [project.scripts]
 tdc = "transport_data.cli:main"
