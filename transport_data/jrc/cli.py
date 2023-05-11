@@ -5,7 +5,7 @@ from . import GEO, POOCH, convert
 
 @click.group("jrc", help=__doc__)
 def main():
-    pass
+    """EU Joint Research Center (JRC) provider."""
 
 
 @main.command

@@ -21,14 +21,26 @@ Usage
       --help  Show this message and exit.
 
     Commands:
-      adb       Asian Development Bank (ADB) data provider.
+      adb       Asian Development Bank (ADB) provider.
       config    Manipulate configuration.
-      estat     Eurostat (ESTAT) data provider.
+      estat     Eurostat (ESTAT) provider.
+      iamc      Demonstrate IAMC structure generation.
+      jrc       EU Joint Research Center (JRC) provider.
       org       Information about the TDCI per se.
       proto     TDC prototype debugging.
       registry  Manipulate the registry repo.
 
   Each subcommand has its own --help.
+
+Prototype data
+--------------
+
+Use::
+
+    $ tdc adb fetch --all --go
+    $ tdc adb convert TAS
+    $ tdc jrc fetch --all --go
+    $ tdc jrc convert --all
 
 Development
 ===========

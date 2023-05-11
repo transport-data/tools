@@ -1,4 +1,4 @@
-"""Eurostat (ESTAT) data provider.
+"""Eurostat (ESTAT) provider.
 
 Eurostat is used as to demonstrate interaction with a data provider that offers:
 

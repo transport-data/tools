@@ -5,7 +5,7 @@ from . import FILES, POOCH, convert
 
 @click.group("adb", help=__doc__)
 def main():
-    pass
+    """Asian Development Bank (ADB) provider."""
 
 
 @main.command("fetch")
