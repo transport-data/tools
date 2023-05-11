@@ -101,7 +101,7 @@ POOCH = Pooch(
     module=__name__,
     base_url=BASE_URL,
     # TODO add copyright.txt, readme.txt, and "…Methodological Note.pdf"
-    registry={f"JRC-IDEES-2015_All_xlsx_{geo}.zip": None for geo in GEO},
+    registry={expand(geo): None for geo in GEO},
     expand=expand,
     processor="unzip",
 )
@@ -113,7 +113,7 @@ def path_for(geo=None, member=None):
         assert member in MEMBERS
         return POOCH.path.joinpath(f"JRC-IDEES-2015_{member}_{geo}.xlsx")
     else:
-        return POOCH.path.joinpath(f"JRC-IDEES-2015_All_xlsx_{geo}.zip")
+        return POOCH.path.joinpath(expand(geo))
 
 
 def iter_blocks(path: Path, geo: str):
