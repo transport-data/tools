@@ -6,9 +6,6 @@ from typing import Optional
 import click
 from platformdirs import user_config_path
 
-# Candidate path for the configuration file
-CONFIG_PATH = user_config_path("transport-data").joinpath("config.json")
-
 
 @dataclass
 class Config:
@@ -23,12 +20,18 @@ class Config:
     def __post_init__(self):
         self.tdc_registry_local = Path(self.tdc_registry_local)
 
+    @staticmethod
+    def _config_path():
+        """Candidate path for the configuration file."""
+        return user_config_path("transport-data").joinpath("config.json")
+
     @classmethod
     def read(cls):
-        if CONFIG_PATH.exists():
-            with open(CONFIG_PATH) as f:
+        cp = cls._config_path()
+        if cp.exists():
+            with open(cp) as f:
                 data = json.load(f)
-            data.update(config_path=CONFIG_PATH)
+            data.update(config_path=cp)
         else:
             # No file exists → defaults for all settings
             data = dict()
@@ -36,18 +39,19 @@ class Config:
         return cls(**data)
 
     def write(self):
-        config_dir = CONFIG_PATH.parent
-        if not config_dir.exists():
-            print(f"Create {config_dir}")
-            config_dir.mkdir(parents=True, exist_ok=True)
+        cp = self._config_path()
+        if not cp.parent.exists():
+            print(f"Create {cp.parent}")
+            cp.parent.mkdir(parents=True, exist_ok=True)
 
         # Convert dataclass instance to dict; omit the path to the file itself
         data = asdict(self)
         data.pop("config_path")
+        data["tdc_registry_local"] = str(data["tdc_registry_local"])
 
         # Write to config.json
-        CONFIG_PATH.write_text(json.dumps(data, indent=2))
-        print(f"Wrote {CONFIG_PATH}")
+        cp.write_text(json.dumps(data, indent=2))
+        print(f"Wrote {cp}")
 
 
 @click.group("config")
