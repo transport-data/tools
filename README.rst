@@ -8,12 +8,23 @@ Tools for the Transport Data Commons
    :target: https://codecov.io/gh/transport-data/tools
    :alt: Codecov.io test coverage status badge
 
+Installation
+============
+
+Install from PyPI using e.g.: ``pip install transport-data``
+
+You will likely also want to:
+
+- Install the `GitHub CLI <https://github.com/cli/cli#installation>`__.
+- Clone the `transport-data/registry <https://github.com/transport-data/registry>`__ repository::
+
+    $ tdc config set tdc_registry_local /path/for/local/clone
+    $ tdc registry clone
+
 Usage
 =====
 
-- Clone the repository, e.g. ``git clone git@github.com:transport-data/tools.git``.
-- In the cloned directory, run ``pip install .`` —this will also install dependencies.
-- Use the tools via the command-line interface (CLI)::
+Use the tools via the command-line interface (CLI)::
 
     $ tdc --help
     Usage: tdc [OPTIONS] COMMAND [ARGS]...
@@ -33,7 +44,7 @@ Usage
       proto     TDC prototype debugging.
       registry  Manipulate the registry repo.
 
-  Each subcommand has its own --help.
+Each subcommand has its own --help.
 
 Prototype data
 --------------
@@ -48,8 +59,14 @@ Use::
 Development
 ===========
 
-- Python code:
+- Install from source:
 
+  - Clone the repository, e.g. ``git clone git@github.com:transport-data/tools.git``.
+  - In the cloned directory, run ``pip install .[tests]`` —this will also install dependencies for development and testing.
+
+- Use `Pytest <https://docs.pytest.org>`__: ``pytest``
+- Code style and practices:
+
+  - Version as ``vYY.M.D`` using the current date.
   - Use `black <https://black.rtfd.io>`__.
-
-- Exchange MaintainableArtefacts between modules.
+  - Exchange MaintainableArtefacts between modules.
