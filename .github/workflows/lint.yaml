@@ -9,3 +9,9 @@ on:
 jobs:
   lint:
     uses: iiasa/actions/.github/workflows/lint.yaml@main
+    with:
+      type-hint-packages: >-
+        numpy
+        pandas-stubs
+        sdmx1
+        types-requests
