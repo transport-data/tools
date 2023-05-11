@@ -23,6 +23,7 @@ dependencies = [
     "click",
     "packaging",
     "pandas",
+    "pooch",
     "requests",
     "sdmx1 >= 2.9",
     "xdg-base-dirs",
@@ -41,5 +42,8 @@ repository = "https://github.com/transport-data/tools"
 
 [project.scripts]
 tdc = "transport_data.cli:main"
+
+[tool.pytest.ini_options]
+addopts = """--cov=transport_data"""
 
 [tool.setuptools_scm]

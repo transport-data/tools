@@ -33,7 +33,7 @@ jobs:
       run: |
         pytest transport_data \
           --trace-config --color=yes --verbose \
-          --cov=transport_data --cov-report=term --cov-report=xml \
+          --cov-report=term --cov-report=xml \
           --numprocesses auto
 
     - name: Upload test coverage to Codecov.io
