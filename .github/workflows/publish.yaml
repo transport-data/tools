@@ -1,0 +1,19 @@
+name: Build package / publish
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
+  release:
+    types: [ published ]
+  # Check that package can be built even on PRs
+  pull_request:
+    branches: [ main ]
+
+
+jobs:
+  publish:
+    uses: iiasa/actions/.github/workflows/publish.yaml@main
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
