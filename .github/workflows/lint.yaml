@@ -1,0 +1,11 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    uses: iiasa/actions/.github/workflows/lint.yaml@main
