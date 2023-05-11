@@ -1,5 +1,5 @@
 """Asian Development Bank (ADB) data provider."""
-
+from itertools import chain
 from urllib.parse import quote
 
 import pandas as pd
@@ -75,6 +75,15 @@ POOCH = Pooch(
     urls={expand(key): _make_url(key) for key in FILES.keys()},
     expand=expand,
 )
+
+
+def fetch(*parts, dry_run: bool = False):
+    if dry_run:
+        for p in parts:
+            print(f"Valid url for GEO={p}: {POOCH.is_available(p)}")
+        return
+
+    return list(chain(*[POOCH.fetch(p) for p in parts]))
 
 
 def validate_economy(df: pd.DataFrame) -> pd.DataFrame:

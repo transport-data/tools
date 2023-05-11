@@ -1,6 +1,6 @@
 import click
 
-from . import GEO, POOCH, convert
+from . import GEO, convert, fetch
 
 
 @click.group("jrc", help=__doc__)
@@ -12,7 +12,7 @@ def main():
 @click.argument("geo", nargs=-1)
 @click.option("--go", is_flag=True, help="Actually fetch.")
 @click.option("--all", "all_", is_flag=True, help="Fetch all files.")
-def fetch(geo, all_, go):
+def fetch_cmd(geo, all_, go):
     if not len(geo):
         if not all_:
             print(f"Supply --all or 1+ of {GEO}")
@@ -20,13 +20,7 @@ def fetch(geo, all_, go):
 
         geo = GEO
 
-    if not go:
-        for g in geo:
-            print(f"Valid url for GEO={g}: {POOCH.is_available(g)}")
-        return
-
-    for g in geo:
-        POOCH.fetch(g)
+    fetch(*geo, dry_run=not go)
 
 
 @main.command("convert")

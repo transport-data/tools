@@ -10,6 +10,7 @@
 """
 import re
 from functools import partial
+from itertools import chain
 from operator import add
 from pathlib import Path
 
@@ -105,6 +106,15 @@ POOCH = Pooch(
     expand=expand,
     processor="unzip",
 )
+
+
+def fetch(*geo, dry_run: bool = False):
+    if dry_run:
+        for g in geo:
+            print(f"Valid url for GEO={g}: {POOCH.is_available(g)}")
+        return
+
+    return list(chain(*[POOCH.fetch(g) for g in geo]))
 
 
 def path_for(geo=None, member=None):
