@@ -64,7 +64,7 @@ def write(
     # Make the parent directory (but not multiple parents)
     path.parent.mkdir(exist_ok=True)
 
-    if isinstance(obj, m.MaintainableArtefact) and annotate:
+    if isinstance(obj, m.AnnotableArtefact) and annotate:
         # Annotate the object with information about how it was generated
         # TODO don't do this for files retrieved directly from an SDMX API
         anno_generated(obj)
