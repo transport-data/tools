@@ -21,6 +21,7 @@ readme = "README.rst"
 
 dependencies = [
     "click",
+    "openpyxl",
     "packaging",
     "pandas",
     "platformdirs",
