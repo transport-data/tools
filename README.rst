@@ -1,6 +1,10 @@
 Tools for the Transport Data Commons
 ************************************
 
+.. image:: https://github.com/transport-data/tools/actions/workflows/pytest.yaml/badge.svg
+   :target: https://github.com/transport-data/tools/actions/workflows/pytest.yaml
+   :alt: "pytest" workflow status badge
+
 Usage
 =====
 
