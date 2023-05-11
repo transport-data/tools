@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Optional
 
 import click
-from xdg_base_dirs import xdg_config_home
+from platformdirs import user_config_path
+
+# Candidate path for the configuration file
+CONFIG_PATH = user_config_path("transport-data").joinpath("config.json")
 
 
 @dataclass
@@ -22,13 +25,10 @@ class Config:
 
     @classmethod
     def read(cls):
-        # Candidate path for the configuration file
-        config_path = xdg_config_home().joinpath("transport-data", "config.json")
-
-        if config_path.exists():
-            with open(config_path) as f:
+        if CONFIG_PATH.exists():
+            with open(CONFIG_PATH) as f:
                 data = json.load(f)
-            data.update(config_path=config_path)
+            data.update(config_path=CONFIG_PATH)
         else:
             # No file exists → defaults for all settings
             data = dict()
@@ -36,20 +36,18 @@ class Config:
         return cls(**data)
 
     def write(self):
-        config_dir = xdg_config_home().joinpath("transport-data")
+        config_dir = CONFIG_PATH.parent
         if not config_dir.exists():
             print(f"Create {config_dir}")
             config_dir.mkdir(parents=True, exist_ok=True)
-
-        path = config_dir.joinpath("config.json")
 
         # Convert dataclass instance to dict; omit the path to the file itself
         data = asdict(self)
         data.pop("config_path")
 
         # Write to config.json
-        path.write_text(json.dumps(data, indent=2))
-        print(f"Wrote {path}")
+        CONFIG_PATH.write_text(json.dumps(data, indent=2))
+        print(f"Wrote {CONFIG_PATH}")
 
 
 @click.group("config")
