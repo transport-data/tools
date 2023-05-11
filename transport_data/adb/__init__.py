@@ -64,7 +64,7 @@ def expand(fname: str) -> str:
     return FILES.get(fname, fname)
 
 
-def make_url(fname: str) -> str:
+def _make_url(fname: str) -> str:
     return f"{BASE_URL}&filename={quote(expand(fname))}"
 
 
@@ -72,14 +72,9 @@ POOCH = Pooch(
     module=__name__,
     base_url=BASE_URL,
     registry={expand(key): None for key in FILES.keys()},
-    urls={expand(key): make_url(key) for key in FILES.keys()},
+    urls={expand(key): _make_url(key) for key in FILES.keys()},
     expand=expand,
 )
-
-
-def path_for(arg):
-    """Return a filename and local cache path for the data file for `geo`."""
-    return POOCH.path.joinpath(expand(arg))
 
 
 def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
@@ -177,7 +172,7 @@ def read_sheet(
     return df, aa
 
 
-def convert(df: pd.DataFrame, aa: m.AnnotableArtefact):
+def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
     """Convert `df` and `aa` from :func:`read_sheet` into SDMX data structures."""
     # Prepare an empty data set, associated structures, and a helper function
     ds, _make_obs = prepare(aa)
@@ -275,8 +270,8 @@ def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, callable]:
     return ds, _make_obs
 
 
-def convert_all():
-    path = path_for("TAS")
+def convert(part):
+    path = POOCH.fetch(part)
     ef = pd.ExcelFile(path, engine="openpyxl")
 
     for sheet_name in ef.sheet_names:
@@ -286,7 +281,7 @@ def convert_all():
         print(f"Process data flow {sheet_name!r}")
 
         df, annos = read_sheet(ef, sheet_name)
-        ds = convert(df, annos)
+        ds = convert_sheet(df, annos)
 
         # Write the DSD and DFD
         registry.write(ds.described_by, force=True)

@@ -41,3 +41,7 @@ class Pooch(pooch.Pooch):
 
     def is_available(self, fname, *args, **kwargs):
         return super().is_available(self._expand(fname), *args, **kwargs)
+
+    def path_for(self, *args, **kwargs):
+        """Return a filename and local cache path for the data file."""
+        return self.path.joinpath(self._expand(*args, **kwargs))
