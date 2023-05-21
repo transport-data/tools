@@ -13,9 +13,10 @@ def main():
 @click.option("--go", is_flag=True, help="Actually fetch.")
 @click.option("--all", "all_", is_flag=True, help="Fetch all files.")
 def fetch_cmd(part, all_, go):
+    """Fetch original data files."""
     if not len(part):
         if not all_:
-            print(f"Supply --all or 1+ of {FILES.keys()}")
+            print(f"Supply --all or 1+ of: {' '.join(FILES)}")
             return
 
         part = list(FILES.keys())
@@ -25,6 +26,15 @@ def fetch_cmd(part, all_, go):
 
 @main.command("convert")
 @click.argument("part", nargs=-1)
-def convert_cmd(part):
+@click.option("--all", "all_", is_flag=True, help="Convert all parts.")
+def convert_cmd(part, all_):
+    """Convert to SDMX data and structures."""
+    if not len(part):
+        if not all_:
+            print(f"Supply --all or 1+ of: {' '.join(FILES)}")
+            return
+
+        part = list(FILES.keys())
+
     for p in part:
         convert(p)

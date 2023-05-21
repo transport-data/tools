@@ -8,14 +8,15 @@ def main():
     """EU Joint Research Center (JRC) provider."""
 
 
-@main.command
+@main.command("fetch")
 @click.argument("geo", nargs=-1)
 @click.option("--go", is_flag=True, help="Actually fetch.")
 @click.option("--all", "all_", is_flag=True, help="Fetch all files.")
 def fetch_cmd(geo, all_, go):
+    """Fetch original data files."""
     if not len(geo):
         if not all_:
-            print(f"Supply --all or 1+ of {GEO}")
+            print(f"Supply --all or 1+ of {' '.join(sorted(GEO))}")
             return
 
         geo = GEO
@@ -25,6 +26,18 @@ def fetch_cmd(geo, all_, go):
 
 @main.command("convert")
 @click.argument("geo", nargs=-1)
-def convert_cmd(geo):
-    for g in geo:
-        convert(g)
+@click.option("--all", "all_", is_flag=True, help="Fetch all files.")
+def convert_cmd(geo, all_):
+    """Convert to SDMX data and structures."""
+    if not len(geo):
+        if not all_:
+            print(f"Supply --all or 1+ of {' '.join(sorted(GEO))}")
+            return
+
+        geo = GEO
+
+    try:
+        for g in geo:
+            convert(g)
+    except AssertionError:
+        raise click.Abort
