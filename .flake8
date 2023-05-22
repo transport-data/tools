@@ -1,5 +1,8 @@
 [flake8]
 max-complexity = 10
+
+# For black
 max-line-length = 88
 ignore =
     E203
+    W503
