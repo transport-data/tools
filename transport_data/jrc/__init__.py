@@ -9,8 +9,9 @@
 
 """
 import re
+from collections import defaultdict
 from functools import partial
-from itertools import chain
+from itertools import chain, count
 from operator import add
 from pathlib import Path
 
@@ -18,7 +19,9 @@ import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
+from transport_data import registry
 from transport_data.util.pooch import Pooch
+from transport_data.util.sdmx import anno_generated
 
 
 def get_agency() -> m.Agency:
@@ -219,15 +222,27 @@ UNIT_MEASURE = {
 }
 
 UNPACK = {
-    "ALL": dict(MODE="ALL"),
-    "Road transport": dict(MODE="ROAD", VEHICLE_TYPE="ALL"),
+    "ALL": dict(),
+    "Road transport": dict(MODE="ROAD", VEHICLE_TYPE="_T"),
     "Powered 2-wheelers": dict(MODE="ROAD", VEHICLE_TYPE="2W"),
+    "Powered 2-wheelers (Gasoline)": dict(
+        MODE="ROAD", VEHICLE_TYPE="2W", FUEL="Gasoline"
+    ),
+    "of which biofuels": dict(FUEL="Biofuels"),
     "Passenger cars": dict(MODE="ROAD", VEHICLE_TYPE="LDV"),
     "Gasoline engine": dict(MODE="ROAD", VEHICLE_TYPE="LDV", POWERTRAIN="GAS"),
     "Diesel oil engine": dict(MODE="ROAD", VEHICLE_TYPE="LDV", POWERTRAIN="DIES"),
     "LPG engine": dict(MODE="ROAD", VEHICLE_TYPE="LDV", POWERTRAIN="LPG"),
     "Natural gas engine": dict(MODE="ROAD", VEHICLE_TYPE="LDV", POWERTRAIN="NG"),
+    "of which biogas": dict(FUEL="Biogas"),
     "Plug-in hybrid electric": dict(MODE="ROAD", VEHICLE_TYPE="LDV", POWERTRAIN="PHEV"),
+    "Plug-in hybrid electric (Gasoline and electricity)": dict(
+        MODE="ROAD",
+        VEHICLE_TYPE="LDV",
+        POWERTRAIN="PHEV",
+        FUEL="ALL",
+    ),
+    "of which electricity": dict(FUEL="ELE"),
     "Battery electric vehicles": dict(
         MODE="ROAD", VEHICLE_TYPE="LDV", POWERTRAIN="BEV"
     ),
@@ -243,24 +258,72 @@ UNPACK = {
     # Freight
     "Light duty vehicles": dict(MODE="ROAD", VEHICLE_TYPE="LDV"),
     "Heavy duty vehicles": dict(MODE="ROAD", VEHICLE_TYPE="HDV"),
-    "Rail transport": dict(MODE="RAIL", VEHICLE_TYPE="ALL"),
+    "Heavy duty vehicles (Diesel oil incl. biofuels)": dict(
+        MODE="ROAD",
+        VEHICLE_TYPE="HDV",
+        FUEL="Diesel oil incl. biofuels",
+    ),
+    "Rail transport": dict(MODE="RAIL", VEHICLE_TYPE="_T"),
     "Domestic and International - Intra-EU": dict(MODE="RAIL", SEGMENT="DOM_IN_EU"),
     "Coastal shipping and inland waterways": dict(MODE="WATER", SEGMENT="ALL"),
     "Domestic coastal shipping": dict(MODE="WATER", SEGMENT="DOM"),
     "Inland waterways": dict(MODE="WATER", SEGMENT="IWW"),
+    # Sheet TrRoad_ene, table "Total energy consumption (ktoe)"
+    # "Domestic": dict(MODE="ROAD", VEHICLE_TYPE="TRUCK", SEGMENT="DOM"),
+    "International": dict(SEGMENT="INTL"),
+    # Sheet TrRoad_ene
+    "by fuel": dict(FUEL="ALL"),
+    "by fuel (EUROSTAT DATA)": dict(FUEL="ALL"),
+    "Liquids": dict(FUEL="Liquids"),
+    "Liquids (Petroleum products)": dict(FUEL="Liquids (without biofuels)"),
+    "Liquified petroleum gas (LPG)": dict(FUEL="LPG"),
+    "LPG": dict(FUEL="LPG"),
+    "Gasoline (without biofuels)": dict(FUEL="Gasoline (without biofuels)"),
+    "Gasoline (incl. biofuels)": dict(FUEL="Gasoline (incl. biofuels)"),
+    "Gas/Diesel oil (without biofuels)": dict(FUEL="Gas/Diesel oil (without biofuels)"),
+    "Diesel": dict(FUEL="Diesel"),
+    "Diesel oil": dict(FUEL="Diesel"),
+    "Diesel oil (incl. biofuels)": dict(FUEL="Diesel oil (incl. biofuels)"),
+    "Kerosene": dict(FUEL="Kerosene"),
+    "Residual fuel oil": dict(FUEL="Residual fuel oil"),
+    "Other petroleum products": dict(FUEL="Other petroleum products"),
+    "Natural gas": dict(FUEL="NG"),
+    "Natural gas (incl. biogas)": dict(FUEL="Natural gas (incl. biogas)"),
+    "Renewable energies and wastes": dict(FUEL="Renewable energies and wastes"),
+    "Biogas": dict(FUEL="Biogas"),
+    "Biogasoline": dict(FUEL="Biogasoline"),
+    "Biodiesel": dict(FUEL="Biodiesel"),
+    "Biomass and wastes": dict(FUEL="Biomass and wastes"),
+    "Other biofuels": dict(FUEL="Other biofuels"),
+    "Electricity": dict(FUEL="ELE"),
+    "Electric": dict(FUEL="ELE"),
+    "Solids": dict(FUEL="Solids"),
 }
 
 
 def _unpack_info(df: pd.DataFrame) -> pd.DataFrame:
-    print(
-        df["INFO"]
-        .drop_duplicates()
-        .apply(lambda v: pd.Series(UNPACK[v]))
-        .fillna("_Z")
-        .to_string()
-    )
+    """Unpack values from the INFO column."""
+    info = df["INFO"].drop_duplicates()
+    try:
+        unpacked = pd.concat([info, info.apply(lambda v: pd.Series(UNPACK[v]))], axis=1)
+    except KeyError as e:
+        print(f"Failed to unpack INFO for {e.args[0]!r}:")
+        print(info.to_string())
+        assert False
 
-    raise NotImplementedError
+    def _merge_mode(df: pd.DataFrame) -> pd.DataFrame:
+        cols = ["MODE_x", "MODE_y"]
+        try:
+            return df.assign(MODE=df[cols].ffill(axis=1)[cols[-1]]).drop(cols, axis=1)
+        except KeyError:
+            return df
+
+    return (
+        df.merge(unpacked, on="INFO")
+        .drop("INFO", axis=1)
+        .pipe(_merge_mode)
+        .fillna("_X")
+    )
 
 
 def read(geo=None):
@@ -275,21 +338,33 @@ def read(geo=None):
     path = path_for(geo, "Transport")
 
     # Metadata across all blocks
-    ALL_INFO = set()
     CS_MEASURE = m.ConceptScheme(id="MEASURE")
-    CL_UNIT_MEASURE = m.Codelist(id="UNIT_MEASURE")
+    _measure_id = dict()
+    # Data per measure
+    data = defaultdict(list)
+
+    print(f"Read data for {geo = }")
 
     # Iterate over blocks of data
-    for i, block in enumerate(iter_blocks(path, geo)):
+    i = count(start=1)
+    for block in iter_blocks(path, geo):
         # Identify the measure (INFO column on first row of the block)
         measure_unit = block.loc[0, "INFO"]
 
-        # Unpack a string that combines MEASURE and UNIT_MEASURE
+        # Unpack a string that combines MEASURE and, possibly, UNIT_MEASURE
         match = re.fullmatch(r"(?P<measure>[^\(]+) \((?P<unit>.*)\)\*?", measure_unit)
         try:
             measure, unit = match.group("measure", "unit")
         except AttributeError:
             measure, unit = measure_unit, None
+
+        # The measure concept
+        try:
+            mc_id = _measure_id[measure]
+        except KeyError:
+            mc_id = f"{next(i):02d}"
+            CS_MEASURE.append(m.Concept(id=mc_id, name=measure))
+            _measure_id[measure] = mc_id
 
         # - Assign `unit` from above as U0, one candidate from UNIT_MEASURE.
         # - Replace the embedded measure/unit expression with "ALL transport".
@@ -310,44 +385,139 @@ def read(geo=None):
             .pipe(_unpack_info)
         )
 
-        # Update the structure information
+        data[mc_id].append(block)
 
-        # Units of measure
-        for unit in block["UNIT_MEASURE"].unique():
-            try:
-                CL_UNIT_MEASURE.append(m.Code(id=unit, name=unit))
-            except ValueError:
-                pass  # Already exists
+    print(f"{sum(map(len, data.values()))} data sets for {len(CS_MEASURE)} measures")
 
-        # The measure concept
-        measure_concept = m.Concept(id=str(i), name=measure)
-        CS_MEASURE.append(measure_concept)
-
-        # Remaining labels appearing in the "INFO" dimension
-        ALL_INFO.update(block["INFO"].unique())
-
-        # First two rows, transposed
-        print("\n", repr(measure_concept))
-        print(block.head(2).transpose().to_string())
-
-        # print("\n", repr(measure_concept))
-        # print(block.to_string())
-
-    print(
-        "---",
-        f"{len(ALL_INFO)} distinct INFO labels",
-        "\n".join(sorted(ALL_INFO)),
-        "---",
-        sep="\n",
-    )
-    print("---", repr(CL_UNIT_MEASURE), CL_UNIT_MEASURE.items, sep="\n")
-
-    # TODO extract MODE and VEHICLE from INFO
-    # TODO create SDMX DSD, Dataflow, and DataSets from the resulting pd.DataFrame
-
-    # raise NotImplementedError
+    # Join multiple data frames
+    return {
+        CS_MEASURE[mc_id]: pd.concat(dfs).fillna("_X") for mc_id, dfs in data.items()
+    }
 
 
 def convert(geo):
-    read(geo)
-    raise NotImplementedError
+    data = read(geo)
+
+    # TODO create SDMX DSD, Dataflow, and DataSets from the resulting pd.DataFrame
+
+    # Code lists
+    CL = dict()
+
+    # Retrieve the parent concept scheme
+    CS_MEASURE = list(data.keys())[0].parent
+
+    # Iterate over measure_concepts
+    for measure_concept, df in data.items():
+        # Update the structure information
+        for concept, values in df.items():
+            if concept in ("GEO", "OBS_VALUE", "TIME_PERIOD"):
+                continue
+
+            cl = CL.setdefault(concept, m.Codelist(id=concept))
+
+            for value in values.unique():
+                try:
+                    cl.append(m.Code(id=value, name=value))
+                except ValueError:
+                    pass  # Already exists
+
+        # Prepare an empty data set, associated structures, and a helper function
+        dims = []
+        for c in df.columns:
+            if c in ("OBS_VALUE",):
+                continue
+            dims.append(c)
+        ds, _make_obs = prepare(measure_concept, dims)
+
+        # Convert rows of `data` into SDMX Observation objects
+        ds.obs.extend(_make_obs(row) for _, row in df.iterrows())
+        assert len(ds) == len(df)
+
+        # Write the data set, DSD, and DFD to file
+        for obj in (ds, ds.described_by, ds.structured_by):
+            obj.annotations.append(
+                m.Annotation(
+                    id="tdc-comment", text=f"Primary measure is {measure_concept!r}"
+                )
+            )
+            registry.write(obj, force=True, _show_status=False)
+
+    # Write code lists, measure concept scheme to file
+    a = get_agency()
+    for obj in chain(CL.values(), [CS_MEASURE]):
+        obj.maintainer = a
+        obj.version = "0.1.0"
+        registry.write(obj, force=True, _show_status=False)
+
+    raise NotImplementedError("Merging data for multiple GEO")
+
+
+def prepare(measure_concept, dims):
+    # TODO merge with the similar function in .adb.__init__
+
+    measure_id = measure_concept.id
+    c = measure_concept
+    aa = measure_concept
+
+    # Data structure definition with an ID matching the measure
+    # NB here we set ADB as the maintainer. Precisely, ADB establishes the data
+    #    structure, but TDCI is maintaining the SDMX representation of it.
+    dsd = m.DataStructureDefinition(
+        id=measure_id, maintainer=get_agency(), version="0.0.0"
+    )
+    anno_generated(dsd)
+
+    dfd = m.DataflowDefinition(
+        id=measure_id, maintainer=get_agency(), version="0.0.0", structure=dsd
+    )
+
+    pm = m.PrimaryMeasure(id="OBS_VALUE", concept_identity=c)
+    dsd.measures.append(pm)
+
+    # Dimensions
+    dsd.dimensions.extend(m.Dimension(id=d) for d in dims)
+
+    # Convert annotations to DataAttributes. "NoSpecifiedRelationship" means that the
+    # attribute is attached to an entire data set (not a series, individual obs, etc.).
+    da = {}  # Store references for use below
+    for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
+        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship)
+        dsd.attributes.append(da[a.id])
+
+    _PMR = m.PrimaryMeasureRelationship  # Shorthand
+
+    # Convert remark column labels to DataAttributes. "PrimaryMeasureRelationship" means
+    # that the attribute is attached to individual observations.
+    for name in aa.eval_annotation("remark-cols") or []:
+        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR))
+
+    # Empty data set structured by this DSD
+
+    ds = m.StructureSpecificDataSet(described_by=dfd, structured_by=dsd)
+    try:
+        ds.annotations.append(aa.get_annotation(id="remark-cols"))
+    except KeyError:
+        pass
+    anno_generated(ds)
+
+    # Convert temporary annotation values to attributes attached to the data set
+    for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
+        ds.attrib[a.id] = m.AttributeValue(value=str(a.text), value_for=da[a.id])
+
+    def _make_obs(row):
+        """Helper function for making :class:`sdmx.model.Observation` objects."""
+        key = dsd.make_key(m.Key, row[[d.id for d in dsd.dimensions]])
+
+        # Attributes
+        attrs = {}
+        for a in filter(lambda a: a.related_to is _PMR, dsd.attributes):
+            # Only store an AttributeValue if there is some text
+            value = row[a.id]
+            if not pd.isna(value):
+                attrs[a.id] = m.AttributeValue(value_for=a, value=value)
+
+        return m.Observation(
+            dimension=key, attached_attribute=attrs, value_for=pm, value=row[pm.id]
+        )
+
+    return ds, _make_obs
