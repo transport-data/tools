@@ -9,7 +9,9 @@ import click
 import packaging.version
 import sdmx
 import sdmx.model.v21 as m
+from sdmx import urn
 from sdmx.message import StructureMessage
+from sdmx.reader.xml import Reader
 
 from transport_data import CONFIG
 from transport_data.util.sdmx import anno_generated
@@ -165,3 +167,57 @@ def clone():
     config value. See `tdc config --help`.
     """
     _gh("repo", "clone", "transport-data/registry", str(CONFIG.tdc_registry_local))
+
+
+@main.command("list")
+@click.argument("maintainer_id", metavar="MAINTAINER")
+def list_cmd(maintainer_id):
+    """List registry contents for MAINTAINER."""
+    base = CONFIG.tdc_registry_local.joinpath(maintainer_id)
+    for f in sorted(base.glob("*.xml")):
+        print(f.relative_to(base))
+
+
+@main.command()
+@click.argument("partial_urn", metavar="URN")
+def show(partial_urn):
+    """Display an SDMX object by URN.
+
+    The URN should be partial, starting with the object class, e.g.
+    Codelist=AGENCY:ID(1.2.3).
+    """
+    # TODO handle missing version
+    result = urn.match(f"urn:sdmx:org.sdmx.infomodel.class.{partial_urn}")
+
+    candidate = CONFIG.tdc_registry_local.joinpath(
+        result["agency"],
+        "_".join(
+            [
+                result["class"],
+                result["agency"],
+                result["id"],
+                result["version"].replace(".", "-"),
+            ]
+        ),
+    ).with_suffix(".xml")
+
+    if not candidate.exists():
+        raise click.ClickException(f"No path {candidate}")
+
+    r = Reader()
+    try:
+        obj = r.read_message(candidate)
+    except RuntimeError as e:
+        if "uncollected items" in str(e):
+            print(candidate.read_text())
+            return
+
+    if obj is None:
+        klass = sdmx.model.get_class(result["class"])
+        obj = r.get_single(klass)
+
+    print(repr(obj))
+
+    if isinstance(obj, m.ItemScheme):
+        for i, (_, item) in enumerate(obj.items.items()):
+            print(f"{i:>3} {repr(item)}")
