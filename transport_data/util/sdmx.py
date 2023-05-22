@@ -5,15 +5,15 @@ import sdmx.model.v21 as m
 
 
 def anno_generated(obj: m.AnnotableArtefact):
-    """Annotate the `obj` with information about how it was generated.
+    """Annotate the `obj` with information about how it was generated."""
+    try:
+        # Retrieve existing annotation
+        anno = obj.get_annotation(id="tdc-generated")
+    except KeyError:
+        # Create a new annotation
+        anno = m.Annotation(id="tdc-generated")
+        obj.annotations.append(anno)
 
-    .. todo: handle the case where the target annotation already exists: replace or
-       skip.
-    """
-    obj.annotations.append(
-        m.Annotation(
-            id="tdc-generated",
-            text=f"{datetime.now().isoformat()} "
-            f"by transport_data v{version('transport_data')}",
-        )
+    anno.text = (
+        f"{datetime.now().isoformat()} by transport_data v{version('transport_data')}"
     )
