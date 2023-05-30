@@ -19,6 +19,11 @@ For more about the TDC, TDCI, and community, see https://transport-data.org.
 This documentation is automatically generated from the code available at https://github.com/transport-data/tools.
 For more on the design, status, and plans for this package, see :doc:`dev`.
 
+.. toctree::
+   :caption: General
+
+   dev
+
 .. currentmodule:: transport_data
 
 Data and metadata
@@ -26,6 +31,7 @@ Data and metadata
 
 .. autosummary::
    :toctree: data
+   :caption: Data and metadata
    :recursive:
 
    ~transport_data.adb
@@ -35,11 +41,12 @@ Data and metadata
    ~transport_data.org
    ~transport_data.proto
 
-Code and utilities
-==================
+Common code and utilities
+=========================
 
 .. autosummary::
    :toctree: api
+   :caption: Common code and utilities
    :recursive:
 
    ~transport_data.cli
@@ -47,11 +54,6 @@ Code and utilities
    ~transport_data.registry
    ~transport_data.tests
    ~transport_data.util
-
-.. toctree::
-   :hidden:
-
-   dev
 
 Indices and tables
 ==================
