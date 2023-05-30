@@ -9,10 +9,6 @@ The Python package `transport-data <https://pypi.org/project/transport-data/>`__
 
    $ pip install transport-data
 
-.. runblock:: console
-
-   $ tdc --help
-
 It provides tools for working with **Transport Data Commons** (TDC) data and metadata/structures, and is built and maintained by the Transport Data Commons Initiative (TDCI) and members of the broader TDC community.
 For more about the TDC, TDCI, and community, see https://transport-data.org.
 
@@ -20,9 +16,17 @@ This documentation is automatically generated from the code available at https:/
 For more on the design, status, and plans for this package, see :doc:`dev`.
 
 .. toctree::
+   :hidden:
    :caption: General
 
+   usage
    dev
+
+General
+=======
+
+- :doc:`usage`
+- :doc:`dev`
 
 .. currentmodule:: transport_data
 

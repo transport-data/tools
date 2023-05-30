@@ -1,4 +1,10 @@
-"""Command-line interface."""
+"""Command-line interface.
+
+.. runblock:: console
+
+   $ tdc --help
+
+"""
 from importlib import import_module
 
 import click
