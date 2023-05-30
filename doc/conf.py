@@ -32,7 +32,10 @@ html_theme = "sphinx_book_theme"
 html_static_path = ["_static"]
 html_logo = "_static/logo.png"
 
-html_theme_options = {"logo": {"text": project}}
+html_theme_options = dict(
+    logo={"text": project},
+    show_navbar_depth=2,
+)
 
 html_css_files = ["css/custom.css"]
 
