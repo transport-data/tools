@@ -1,4 +1,4 @@
-"""Asian Development Bank (ADB) data provider."""
+"""Asian Development Bank (ADB) provider."""
 from itertools import chain
 from urllib.parse import quote
 

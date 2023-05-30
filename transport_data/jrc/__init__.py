@@ -1,4 +1,6 @@
-"""Handle data from the JRC IDEES 2015 source.
+"""European Commission Joint Research Centre (JRC) provider.
+
+This module handles data from the JRC IDEES 2015 source.
 
 "Handle" includes:
 

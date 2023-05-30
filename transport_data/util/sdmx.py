@@ -1,3 +1,4 @@
+"""Utilities for :mod:`sdmx`."""
 from datetime import datetime
 from importlib.metadata import version
 

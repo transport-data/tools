@@ -1,4 +1,4 @@
-"""Handle data and strucutre for IAMC-like formats.
+"""Handle data and structure for IAMC-like formats.
 
 The "IAMC format" or "IAMC template" refers to a variety of similar data formats with a
 similar structure, developed by the Integrated Assessment Modeling Consortium (IAMC) and

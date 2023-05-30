@@ -11,9 +11,15 @@ author = "Transport Data Commons Initiative"
 
 # -- General configuration -------------------------------------------------------------
 
-extensions = []
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.linkcode",
+    "sphinx.ext.todo",
+]
 
-templates_path = ["_templates"]
+templates_path = ["_template"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Options for HTML output -----------------------------------------------------------
@@ -25,3 +31,14 @@ html_logo = "_static/logo.png"
 html_theme_options = {"logo": {"text": project}}
 
 html_css_files = ["css/custom.css"]
+
+
+# -- Options for sphinx.ext.linkcode ---------------------------------------------------
+
+
+def linkcode_resolve(domain, info):
+    if domain != "py" or not info["module"]:
+        return None
+    filename = info["module"].replace(".", "/")
+    # FIXME this does not work when there is an __init__.py in a submodule
+    return f"https://github.com/transport-data/tools/tree/main/{filename}.py"

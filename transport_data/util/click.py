@@ -1,3 +1,5 @@
+"""Utilities for :mod:`click`."""
+
 import click
 
 PARAM = {"version": click.Option(["--version"])}
