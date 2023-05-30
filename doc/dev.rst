@@ -30,6 +30,8 @@ Design goals
 - :mod:`transport_data` does not duplicate data, metadata, or structural information from data providers.
   Wherever possible, these are processed from original sources.
   :mod:`transport_data` only adds metadata where it is missing in these original sources.
+- As little as possible workflow/orchestration code is created.
+  The individual functions/CLI commands in :mod:`transport_data` are kept generic, so they can eventually be incorporated as atomic workflow elements in a framework to be chosen later, or on the backend of the TDC web UI and other systems.
 
 SDMX usage conventions
 ======================
@@ -47,12 +49,17 @@ In order to support convergence and harmonization of transport data, TDCI has ce
 - **Annotations.**
   :func:`.anno_generated` adds an annotation to any :class:`~sdmx.model.common.AnnotableArtefact` with the ID ``tdc-generated``.
   This annotation contains text like "2023-05-11T21:42:55.760130 by transport_data v0.1.dev63+g92a2aac.d20230511" indicating the date, time, and version of :mod:`transport_data` code used to generate the SDMX object.
+  This function **should** be called on all objects created in this package.
+- **Code lists.**
+  Some data do not explicitly state the following along some dimensions:
+
+  - ``_T`` for total, no breakdown, a sum across all other codes.
+  - ``_X`` for not specified.
+  - ``_Z`` for not applicable.
 
 Code style
 ==========
 
-- Use `Pytest <https://docs.pytest.org>`__: ``pytest``
-- Code style and practices:
-
-  - Version as ``vYY.M.D`` using the current date.
-  - Use `black <https://black.rtfd.io>`__.
+- Use `Pytest <https://docs.pytest.org>`__ for writing :mod:`.tests`.
+- Version as ``vYY.M.D`` using the current date.
+- Use `black <https://black.rtfd.io>`__.
