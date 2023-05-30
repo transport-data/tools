@@ -8,5 +8,5 @@ build:
 python:
   install:
   - method: pip
-    path: .
-    extras: docs
+    path: "."
+    extra_requirements: [docs]
