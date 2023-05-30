@@ -33,6 +33,16 @@ html_theme_options = {"logo": {"text": project}}
 html_css_files = ["css/custom.css"]
 
 
+# -- Options for sphinx.ext.intersphinx ------------------------------------------------
+
+intersphinx_mapping = {
+    # "click": ("https://click.palletsprojects.com/en/8.1.x/", None),
+    "pooch": ("https://www.fatiando.org/pooch/latest/", None),
+    "py": ("https://docs.python.org/3/", None),
+    "pytest": ("https://docs.pytest.org/en/stable/", None),
+    "sdmx": ("https://sdmx1.readthedocs.io/en/stable/", None),
+}
+
 # -- Options for sphinx.ext.linkcode ---------------------------------------------------
 
 
