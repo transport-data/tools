@@ -2,6 +2,9 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+import sys
+from importlib import import_module
+from pathlib import Path
 
 # -- Project information ---------------------------------------------------------------
 
@@ -45,10 +48,28 @@ intersphinx_mapping = {
 
 # -- Options for sphinx.ext.linkcode ---------------------------------------------------
 
+base_path = {m: Path(import_module(m).__file__).parents[1] for m in ("transport_data",)}
+base_url = "https://github.com/transport-data/tools/tree/main/"
+
 
 def linkcode_resolve(domain, info):
+    # TODO adjust `base_url` if not on `main` branch
     if domain != "py" or not info["module"]:
         return None
-    filename = info["module"].replace(".", "/")
-    # FIXME this does not work when there is an __init__.py in a submodule
-    return f"https://github.com/transport-data/tools/tree/main/{filename}.py"
+
+    # Module containing the object
+    module = sys.modules[info["module"]]
+    # Path of the module relative to the base path of its package
+    rel = Path(module.__file__).relative_to(base_path[info["module"].split(".")[0]])
+
+    # The object itself
+    obj = getattr(module, info["fullname"])
+    try:
+        # First line number
+        firstlineno = obj.__code__.co_firstlineno
+    except AttributeError:
+        fragment = ""  # A variable, can't obtain the precise location
+    else:
+        fragment = f"#L{firstlineno}"  # Function, class, or other definition
+
+    return f"{base_url}{rel}{fragment}"
