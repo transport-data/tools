@@ -1,6 +1,6 @@
 .. From https://stackoverflow.com/a/62613202/2362198
 
-{{ fullname | escape | underline}}
+{{ ("``." + fullname.split(".", maxsplit=1)[1] + "`` " + objtype) | underline(line="*") }}
 
 .. automodule:: {{ fullname }}
 
