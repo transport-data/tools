@@ -1,3 +1,10 @@
+"""CLI for :mod:`iamc`.
+
+.. runblock:: console
+
+   $ tdc iamc --help
+
+"""
 from pathlib import Path
 
 import click

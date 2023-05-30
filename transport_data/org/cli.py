@@ -1,3 +1,10 @@
+"""CLI for :mod:`org`.
+
+.. runblock:: console
+
+   $ tdc org --help
+
+"""
 import click
 
 from transport_data import registry

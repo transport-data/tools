@@ -1,3 +1,10 @@
+"""CLI for :mod:`proto`.
+
+.. runblock:: console
+
+   $ tdc proto --help
+
+"""
 import click
 
 

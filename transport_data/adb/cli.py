@@ -1,3 +1,18 @@
+"""CLI for :mod:`adb`.
+
+.. runblock:: console
+
+   $ tdc adb --help
+
+.. runblock:: console
+
+   $ tdc add fetch --help
+
+.. runblock:: console
+
+   $ tdc adb convert --help
+"""
+
 import click
 
 from . import FILES, convert, fetch

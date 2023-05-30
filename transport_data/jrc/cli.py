@@ -1,9 +1,24 @@
+"""CLI for :mod:`jrc`.
+
+.. runblock:: console
+
+   $ tdc jrc --help
+
+.. runblock:: console
+
+   $ tdc jrc fetch --help
+
+.. runblock:: console
+
+   $ tdc jrc convert --help
+"""
+
 import click
 
 from . import GEO, convert, fetch
 
 
-@click.group("jrc", help=__doc__)
+@click.group("jrc", help=__doc__.splitlines()[0])
 def main():
     """EU Joint Research Center (JRC) provider."""
 

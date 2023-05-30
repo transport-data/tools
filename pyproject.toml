@@ -33,6 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 docs = [
     "Sphinx",
+    "sphinx-autorun",
     "sphinx-book-theme",
 ]
 tests = [

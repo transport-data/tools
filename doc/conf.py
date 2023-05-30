@@ -20,6 +20,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
     "sphinx.ext.todo",
+    "sphinx_autorun",
 ]
 
 templates_path = ["_template"]

@@ -1,4 +1,4 @@
-"""Information about the TDC Initiative."""
+"""Information about the TDCI *per se*."""
 from datetime import date
 from importlib import import_module
 from typing import Union
