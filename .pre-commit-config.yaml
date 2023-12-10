@@ -9,6 +9,7 @@ repos:
     - platformdirs
     - pytest
     - sdmx1
+    - types-requests
     args: []
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.1.2

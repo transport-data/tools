@@ -31,7 +31,7 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = ["Sphinx", "sphinx-autorun", "sphinx-book-theme"]
-tests = ["pytest", "pytest-cov", "pytest-xdist"]
+tests = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"]
 
 [project.urls]
 homepage = "https://transport-data.org"
