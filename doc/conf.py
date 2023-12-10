@@ -17,6 +17,7 @@ author = "Transport Data Commons Initiative"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
     "sphinx.ext.todo",
@@ -39,6 +40,13 @@ html_theme_options = dict(
 
 html_css_files = ["css/custom.css"]
 
+# -- Options for sphinx.ext.extlinks ---------------------------------------------------
+
+extlinks = {
+    "issue": ("https://github.com/transport-data/tools/issues/%s", "#%s"),
+    "pull": ("https://github.com/transport-data/tools/pull/%s", "PR #%s"),
+    "gh-user": ("https://github.com/%s", "@%s"),
+}
 
 # -- Options for sphinx.ext.intersphinx ------------------------------------------------
 
