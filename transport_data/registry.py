@@ -3,7 +3,7 @@ import re
 import subprocess
 from functools import singledispatch
 from pathlib import Path
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 import click
 import packaging.version
@@ -102,7 +102,7 @@ def _(obj: StructureMessage, **kwargs):
     _git("status")
 
 
-def list_versions(obj: m.MaintainableArtefact) -> list[str]:
+def list_versions(obj: m.MaintainableArtefact) -> List[str]:
     """List all versions of `obj` already stored in the registry."""
     # Path that would result from writing `obj`
     path = path_for(obj)

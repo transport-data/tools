@@ -1,6 +1,6 @@
 """Asian Development Bank (ADB) provider."""
 from itertools import chain
-from typing import Callable
+from typing import Callable, Tuple
 from urllib.parse import quote
 
 import pandas as pd
@@ -118,7 +118,7 @@ def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
 
 def read_sheet(
     ef: pd.ExcelFile, sheet_name: str
-) -> tuple[pd.DataFrame, m.AnnotableArtefact]:
+) -> Tuple[pd.DataFrame, m.AnnotableArtefact]:
     """Read a single sheet.
 
     This function handles the particular layout of sheets in files like those listed in
@@ -210,7 +210,7 @@ def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
     return ds
 
 
-def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, Callable]:
+def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
     """Prepare an empty data set and associated structures."""
     # Measure identifier and description
     measure_id = str(aa.pop_annotation(id="INDICATOR-ATO-CODE").text)
