@@ -1,0 +1,18 @@
+repos:
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.7.0
+  hooks:
+  - id: mypy
+    additional_dependencies:
+    - click
+    - pandas-stubs
+    - platformdirs
+    - pytest
+    - sdmx1
+    args: []
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.1.2
+  hooks:
+  - id: ruff
+  - id: ruff-format
+    args: [ --check ]
