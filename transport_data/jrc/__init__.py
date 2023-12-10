@@ -483,7 +483,7 @@ def prepare(measure_concept, dims):
     # attribute is attached to an entire data set (not a series, individual obs, etc.).
     da = {}  # Store references for use below
     for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
-        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship)
+        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship())
         dsd.attributes.append(da[a.id])
 
     _PMR = m.PrimaryMeasureRelationship  # Shorthand
@@ -491,7 +491,7 @@ def prepare(measure_concept, dims):
     # Convert remark column labels to DataAttributes. "PrimaryMeasureRelationship" means
     # that the attribute is attached to individual observations.
     for name in aa.eval_annotation("remark-cols") or []:
-        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR))
+        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR()))
 
     # Empty data set structured by this DSD
 
