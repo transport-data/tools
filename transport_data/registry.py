@@ -148,6 +148,8 @@ def assign_version(
     if increment is False:
         obj.version = (list_versions(obj) or [default])[-1]
     else:
+        if not isinstance(increment, tuple):
+            increment = (increment, False, False)
         obj.version = next_version(obj, *increment)
 
 
