@@ -1,5 +1,6 @@
 """Asian Development Bank (ADB) provider."""
 from itertools import chain
+from typing import Callable, Tuple
 from urllib.parse import quote
 
 import pandas as pd
@@ -46,6 +47,7 @@ CS_MEASURE = m.ConceptScheme(
     "correspondence with the list provided directly by ADB is checked or enforced.",
 )
 
+#: Mapping from short codes for ATO data categories to file names.
 FILES = {
     # "ATO National Database Masterlist of Indicators",
     "INF": "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
@@ -90,7 +92,7 @@ def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
     """Validate codes for the "ECONOMY" dimension of `df` against :data:`CL_ECONOMY`.
 
     - Every unique pair of (Economy Code, Economy Name) is converted to a
-      :class:`sdmx.model.Code`.
+      :class:`~sdmx.model.common.Code`.
     - These are added to :data:`CL_ECONOMY`. If a Code with the same ID already exists,
       it is checked for an exact match (name, description, etc.)
     - The "Economy Code" column of `df` is renamed "ECONOMY", and contains only values
@@ -117,7 +119,7 @@ def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
 
 def read_sheet(
     ef: pd.ExcelFile, sheet_name: str
-) -> tuple[pd.DataFrame, m.AnnotableArtefact]:
+) -> Tuple[pd.DataFrame, m.AnnotableArtefact]:
     """Read a single sheet.
 
     This function handles the particular layout of sheets in files like those listed in
@@ -209,7 +211,7 @@ def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
     return ds
 
 
-def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, callable]:
+def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
     """Prepare an empty data set and associated structures."""
     # Measure identifier and description
     measure_id = str(aa.pop_annotation(id="INDICATOR-ATO-CODE").text)
@@ -238,7 +240,7 @@ def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, callable]:
     # attribute is attached to an entire data set (not a series, individual obs, etc.).
     da = {}  # Store references for use below
     for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
-        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship)
+        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship())
         dsd.attributes.append(da[a.id])
 
     _PMR = m.PrimaryMeasureRelationship  # Shorthand
@@ -246,7 +248,7 @@ def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, callable]:
     # Convert remark column labels to DataAttributes. "PrimaryMeasureRelationship" means
     # that the attribute is attached to individual observations.
     for name in aa.eval_annotation("remark-cols"):
-        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR))
+        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR()))
 
     # Empty data set structured by this DSD
     ds = m.DataSet(

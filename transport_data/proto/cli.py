@@ -1,4 +1,4 @@
-"""CLI for :mod:`proto`.
+"""CLI for :mod:`.proto`.
 
 .. runblock:: console
 
@@ -11,7 +11,8 @@ import click
 @click.command("proto")
 def main():  # pragma: no cover
     """TDC prototype debugging."""
-    from transport_data import adb, jrc
+    # from transport_data import adb
+    from transport_data import jrc
 
     # # commented: this fetches *all* data, and should not be done too often
     # # jrc.extract_all()

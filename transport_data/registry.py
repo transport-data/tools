@@ -3,7 +3,7 @@ import re
 import subprocess
 from functools import singledispatch
 from pathlib import Path
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 import click
 import packaging.version
@@ -102,7 +102,7 @@ def _(obj: StructureMessage, **kwargs):
     _git("status")
 
 
-def list_versions(obj: m.MaintainableArtefact) -> list[str]:
+def list_versions(obj: m.MaintainableArtefact) -> List[str]:
     """List all versions of `obj` already stored in the registry."""
     # Path that would result from writing `obj`
     path = path_for(obj)
@@ -116,7 +116,7 @@ def list_versions(obj: m.MaintainableArtefact) -> list[str]:
     # Extract just the version part of the names of matching files; restore "."
     versions = sorted(
         map(
-            lambda p: expr.fullmatch(p.name).group("version").replace("-", "."),
+            lambda p: expr.fullmatch(p.name).group("version").replace("-", "."),  # type: ignore [union-attr]
             path.parent.glob(pattern),
         )
     )
@@ -148,6 +148,8 @@ def assign_version(
     if increment is False:
         obj.version = (list_versions(obj) or [default])[-1]
     else:
+        if not isinstance(increment, tuple):
+            increment = (increment, False, False)
         obj.version = next_version(obj, *increment)
 
 

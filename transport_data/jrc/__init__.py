@@ -16,6 +16,7 @@ from functools import partial
 from itertools import chain, count
 from operator import add
 from pathlib import Path
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -135,13 +136,14 @@ def iter_blocks(path: Path, geo: str):
     ef = pd.ExcelFile(path)
 
     skip_sheets = ["cover", "index"]
-    parse_args = dict(usecols="A:Q", header=None)
+    parse_args: Dict[Any, Any] = dict(usecols="A:Q", header=None)
     columns = pd.Index([])
-    for sheet_name in filter(lambda n: n not in skip_sheets, ef.sheet_names):
+    for sheet_name in map(str, filter(lambda n: n not in skip_sheets, ef.sheet_names)):
         common = dict(GEO=geo)
 
         # Extract a hint for MODE from the sheet name
         if match := re.match("Tr(Avia|Navi|Rail|Road)_...", sheet_name):
+            assert match
             value = match.group(1).upper()
             common.update(MODE={"AVIA": "AIR", "NAVI": "WATER"}.get(value, value))
 
@@ -165,7 +167,8 @@ def iter_blocks(path: Path, geo: str):
 
 
 def _set_axis(df: pd.DataFrame, columns: pd.Index) -> pd.DataFrame:
-    melt_kw = dict(id_vars="INFO", value_name="OBS_VALUE")
+    melt = partial(pd.DataFrame.melt, id_vars="INFO", value_name="OBS_VALUE")
+
     if df.iloc[0, 0] is np.nan:
         # Handle a different structure used in TrRoad_tech
         # First row contains the single TIME_PERIOD label applying to all data
@@ -175,19 +178,18 @@ def _set_axis(df: pd.DataFrame, columns: pd.Index) -> pd.DataFrame:
         return (
             df.iloc[2:, :]
             .set_axis(pd.Index(["INFO"] + df.iloc[1, 1:].to_list()), axis=1)
-            .melt(**melt_kw, var_name="YEAR_REG")
+            .pipe(melt, var_name="YEAR_REG")
             .assign(TIME_PERIOD=tp)
         )
     else:
-        return df.set_axis(columns, axis=1).melt(**melt_kw, var_name="TIME_PERIOD")
+        return df.set_axis(columns, axis=1).pipe(melt, var_name="TIME_PERIOD")
 
 
 def _match_extract(df: pd.DataFrame, expr) -> pd.DataFrame:
-    expr_ = re.compile(expr)
-    cols = list(expr_.groupindex.keys())
+    cols = list(re.compile(expr).groupindex.keys())
 
-    matches = df["INFO"].str.fullmatch(expr_)
-    result = pd.concat([df, df["INFO"].str.extract(expr_)[cols].ffill()], axis=1)
+    matches = df["INFO"].str.fullmatch(expr)
+    result = pd.concat([df, df["INFO"].str.extract(expr)[cols].ffill()], axis=1)
     result.loc[matches, "INFO"] = "ALL"
     return result
 
@@ -195,7 +197,7 @@ def _match_extract(df: pd.DataFrame, expr) -> pd.DataFrame:
 def _fill_unit_measure(df: pd.DataFrame, measure: str) -> pd.DataFrame:
     """Fill in the UNIT_MEASURE column of `df`."""
     # Identify the MODE, if any
-    mode = df.get("MODE", pd.Series([None])).unique().item()
+    mode = df.get("MODE", default=pd.Series([None])).unique().item()  # type: ignore
     return df.assign(
         UNIT_MEASURE=lambda df: df[["U0", "U1"]]
         .fillna(UNIT_MEASURE.get((mode, measure), ""))
@@ -223,7 +225,7 @@ UNIT_MEASURE = {
     ("AIR", "Seats available per flight"): "1",
 }
 
-UNPACK = {
+UNPACK: Dict[str, Dict[str, str]] = {
     "ALL": dict(),
     "Road transport": dict(MODE="ROAD", VEHICLE_TYPE="_T"),
     "Powered 2-wheelers": dict(MODE="ROAD", VEHICLE_TYPE="2W"),
@@ -483,7 +485,7 @@ def prepare(measure_concept, dims):
     # attribute is attached to an entire data set (not a series, individual obs, etc.).
     da = {}  # Store references for use below
     for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
-        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship)
+        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship())
         dsd.attributes.append(da[a.id])
 
     _PMR = m.PrimaryMeasureRelationship  # Shorthand
@@ -491,7 +493,7 @@ def prepare(measure_concept, dims):
     # Convert remark column labels to DataAttributes. "PrimaryMeasureRelationship" means
     # that the attribute is attached to individual observations.
     for name in aa.eval_annotation("remark-cols") or []:
-        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR))
+        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR()))
 
     # Empty data set structured by this DSD
 

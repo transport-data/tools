@@ -1,3 +1,5 @@
+.. module:: transport_data
+
 Transport Data Commons tools
 ****************************
 
@@ -21,12 +23,14 @@ For more on the design, status, and plans for this package, see :doc:`dev`.
 
    usage
    dev
+   whatsnew
 
 General
 =======
 
 - :doc:`usage`
 - :doc:`dev`
+- :doc:`whatsnew`
 
 .. currentmodule:: transport_data
 
