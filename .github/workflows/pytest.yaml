@@ -49,7 +49,7 @@ jobs:
     - name: Run test suite using pytest
       run: |
         pytest transport_data \
-          --trace-config --color=yes --verbose \
+          --trace-config --color=yes -rA -vv --durations=20 \
           --cov-report=term --cov-report=xml \
           --numprocesses auto
       shell: bash
