@@ -78,7 +78,7 @@ def make_structures_for(
     data: pd.DataFrame,
     base_id: str = "GENERATED",
     maintainer: Optional[m.Agency] = None,
-) -> m.DataStructureDefinition:
+) -> StructureMessage:
     """Return IAMC-like data structures describing `data`."""
     # Generic IAMC ConceptScheme
     iamc_cs = get_iamc_structures()
@@ -145,7 +145,7 @@ def make_variable_structures(data: pd.Series) -> list:
     # Identify and group by the measure in the first part
     for name, group_parts in parts.groupby(0):
         # Add the measure to the concept scheme
-        measure = m.Concept(id=name.upper().replace(" ", "_"), name=name)
+        measure = m.Concept(id=str(name).upper().replace(" ", "_"), name=name)
         cs.append(measure)
 
         # Make a DSD and code lists from the remaining parts
@@ -191,7 +191,7 @@ def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
         cl = make_cl_for(s.dropna(), id=f"{measure.id}_{dim_id}")
 
         # Add a special value for missing labels "_"
-        if some_empty[i]:
+        if some_empty[i]:  # type: ignore [call-overload]
             cl.append(m.Code(id="_", name="No label/missing"))
         structures.append(cl)
 

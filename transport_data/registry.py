@@ -116,7 +116,7 @@ def list_versions(obj: m.MaintainableArtefact) -> list[str]:
     # Extract just the version part of the names of matching files; restore "."
     versions = sorted(
         map(
-            lambda p: expr.fullmatch(p.name).group("version").replace("-", "."),
+            lambda p: expr.fullmatch(p.name).group("version").replace("-", "."),  # type: ignore [union-attr]
             path.parent.glob(pattern),
         )
     )

@@ -1,5 +1,5 @@
 """Utilities for :mod:`pooch`."""
-from typing import Callable
+from typing import Callable, Optional
 
 import pooch
 
@@ -23,7 +23,12 @@ class Pooch(pooch.Pooch):
     _processor = None
 
     def __init__(
-        self, *args, module: str, expand: Callable = None, processor=None, **kwargs
+        self,
+        *args,
+        module: str,
+        expand: Optional[Callable] = None,
+        processor=None,
+        **kwargs,
     ):
         kwargs.setdefault(
             "path", pooch.os_cache("transport-data").joinpath(module.split(".")[1])

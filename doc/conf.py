@@ -52,7 +52,10 @@ intersphinx_mapping = {
 
 # -- Options for sphinx.ext.linkcode ---------------------------------------------------
 
-base_path = {m: Path(import_module(m).__file__).parents[1] for m in ("transport_data",)}
+base_path = {
+    m: Path(import_module(m).__file__).parents[1]  # type: ignore [arg-type]
+    for m in ("transport_data",)
+}
 base_url = "https://github.com/transport-data/tools/tree/main/"
 
 

@@ -1,5 +1,6 @@
 """Asian Development Bank (ADB) provider."""
 from itertools import chain
+from typing import Callable
 from urllib.parse import quote
 
 import pandas as pd
@@ -209,7 +210,7 @@ def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
     return ds
 
 
-def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, callable]:
+def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, Callable]:
     """Prepare an empty data set and associated structures."""
     # Measure identifier and description
     measure_id = str(aa.pop_annotation(id="INDICATOR-ATO-CODE").text)
