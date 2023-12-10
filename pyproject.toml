@@ -5,42 +5,33 @@ requires = ["build", "setuptools-scm"]
 dynamic = ["version"]
 name = "transport-data"
 description = "Tools for the Transport Data Commons"
-authors = [
-  {name = "Transport Data Commons Initiative (TDCI)"}
-]
+authors = [{ name = "Transport Data Commons Initiative (TDCI)" }]
 maintainers = [
-  {name = "Paul Natsuo Kishimoto", email = "mail@paul.kishimoto.name"}
+  { name = "Paul Natsuo Kishimoto", email = "mail@paul.kishimoto.name" },
 ]
 classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 readme = "README.rst"
 
 dependencies = [
-    "click",
-    "openpyxl",
-    "packaging",
-    "pandas",
-    "platformdirs",
-    "pooch",
-    "requests",
-    "sdmx1 >= 2.9",
+  "click",
+  "openpyxl",
+  "packaging",
+  "pandas",
+  "platformdirs",
+  "pooch",
+  "requests",
+  "sdmx1 >= 2.9",
 ]
 
 [project.optional-dependencies]
-docs = [
-    "Sphinx",
-    "sphinx-autorun",
-    "sphinx-book-theme",
-]
-tests = [
-    "pytest",
-    "pytest-cov",
-    "pytest-xdist",
-]
+docs = ["Sphinx", "sphinx-autorun", "sphinx-book-theme"]
+tests = ["pytest", "pytest-cov", "pytest-xdist"]
 
 [project.urls]
 homepage = "https://transport-data.org"
@@ -49,10 +40,19 @@ repository = "https://github.com/transport-data/tools"
 [project.scripts]
 tdc = "transport_data.cli:main"
 
+[[tool.mypy.overrides]]
+module = ["pooch"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 addopts = """-m "not network" --cov=transport_data"""
-markers = [
-    "network: tests that perform network requests",
-]
+markers = ["network: tests that perform network requests"]
+
+[tool.ruff]
+select = ["C9", "E", "F", "I", "W"]
+ignore = ["E501", "W191"]
+
+[tool.ruff.mccabe]
+max-complexity = 10
 
 [tool.setuptools_scm]
