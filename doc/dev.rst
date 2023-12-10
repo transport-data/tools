@@ -14,7 +14,7 @@ Design goals
 ============
 
 - The code is simple, modular, and flat.
-- There is one module per data provider (e.g. :mod:`adb`, :mod:`estat`, :mod:`jrc`).
+- There is one module per data provider (e.g. :mod:`.adb`, :mod:`.estat`, :mod:`.jrc`).
 
   - This makes possible the process that:
 
@@ -23,10 +23,10 @@ Design goals
     - The module is excised from :mod:`transport_data`, along with all code in its particular subdirectory; the code is adjusted to depend on :mod:`transport_data`.
 
   - Modules for different data providers have roughly similar semantics (such as function names), but these are not (for now) tightly enforced.
-- Code for handling a specific format is collected in a single module, e.g. :mod:`iamc`, and reused from there.
+- Code for handling a specific format is collected in a single module, e.g. :mod:`.iamc`, and reused from there.
 - Data is processed from various original formats to SDMX objects, but stored and manipulated as SDMX wherever possible.
 
-  - SDMX :class:`~.sdmx.model.v21.MaintainableArtefact` are exchanged between modules.
+  - SDMX :class:`~.sdmx.model.common.MaintainableArtefact` are exchanged between modules.
 - :mod:`transport_data` does not duplicate data, metadata, or structural information from data providers.
   Wherever possible, these are processed from original sources.
   :mod:`transport_data` only adds metadata where it is missing in these original sources.

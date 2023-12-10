@@ -1,4 +1,4 @@
-"""CLI for :mod:`jrc`.
+"""CLI for :mod:`.jrc`.
 
 .. runblock:: console
 

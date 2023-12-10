@@ -1,4 +1,4 @@
-"""CLI for :mod:`proto`.
+"""CLI for :mod:`.proto`.
 
 .. runblock:: console
 

@@ -1,4 +1,4 @@
-"""CLI for :mod:`iamc`.
+"""CLI for :mod:`.iamc`.
 
 .. runblock:: console
 

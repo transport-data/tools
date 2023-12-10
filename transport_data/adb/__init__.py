@@ -47,6 +47,7 @@ CS_MEASURE = m.ConceptScheme(
     "correspondence with the list provided directly by ADB is checked or enforced.",
 )
 
+#: Mapping from short codes for ATO data categories to file names.
 FILES = {
     # "ATO National Database Masterlist of Indicators",
     "INF": "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
@@ -91,7 +92,7 @@ def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
     """Validate codes for the "ECONOMY" dimension of `df` against :data:`CL_ECONOMY`.
 
     - Every unique pair of (Economy Code, Economy Name) is converted to a
-      :class:`sdmx.model.Code`.
+      :class:`~sdmx.model.common.Code`.
     - These are added to :data:`CL_ECONOMY`. If a Code with the same ID already exists,
       it is checked for an exact match (name, description, etc.)
     - The "Economy Code" column of `df` is renamed "ECONOMY", and contains only values

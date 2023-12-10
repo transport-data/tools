@@ -1,4 +1,4 @@
-"""CLI for :mod:`org`.
+"""CLI for :mod:`.org`.
 
 .. runblock:: console
 

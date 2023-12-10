@@ -23,7 +23,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx_autorun",
 ]
-
+nitpicky = True
 templates_path = ["_template"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
@@ -51,7 +51,8 @@ extlinks = {
 # -- Options for sphinx.ext.intersphinx ------------------------------------------------
 
 intersphinx_mapping = {
-    # "click": ("https://click.palletsprojects.com/en/8.1.x/", None),
+    "click": ("https://click.palletsprojects.com/en/8.1.x/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
     "pooch": ("https://www.fatiando.org/pooch/latest/", None),
     "py": ("https://docs.python.org/3/", None),
     "pytest": ("https://docs.pytest.org/en/stable/", None),

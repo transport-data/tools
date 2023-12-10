@@ -1,3 +1,5 @@
+.. module:: transport_data
+
 Transport Data Commons tools
 ****************************
 

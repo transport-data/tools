@@ -1,4 +1,4 @@
-"""CLI for :mod:`adb`.
+"""CLI for :mod:`.adb`.
 
 .. runblock:: console
 
