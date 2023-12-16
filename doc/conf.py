@@ -118,3 +118,7 @@ def linkcode_resolve(domain, info):
 # -- Options for sphinx.ext.napoleon ---------------------------------------------------
 
 napoleon_preprocess_types = True
+
+# -- Options for sphinx.ext.todo -------------------------------------------------------
+
+todo_include_todos = True

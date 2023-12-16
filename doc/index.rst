@@ -23,6 +23,8 @@ For more on the design, status, and plans for this package, see :doc:`dev`.
 
    usage
    dev
+   standards
+   roadmap
    whatsnew
 
 General
@@ -30,6 +32,8 @@ General
 
 - :doc:`usage`
 - :doc:`dev`
+- :doc:`standards`
+- :doc:`roadmap`
 - :doc:`whatsnew`
 
 .. currentmodule:: transport_data
