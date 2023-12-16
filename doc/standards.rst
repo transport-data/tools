@@ -72,26 +72,25 @@ TDC formatted or -compliant
 TDCI Harmonized
    Data products prepared by the TDCI through transforming and merging data from multiple sources (including the 3 above categories), with validation and other quality control measures applied.
 
-   These data **must** meet the mandatory,
+   These data **must** meet the mandatory, recommended, *and* optional requirements in this document.
 
 These categories are not exhaustive: for instance, there are others including **proprietary** (non-public) data.
 The TDC standards only mention these where relevant.
 
-Data structures and metadata
-============================
+Structures and metadata
+=======================
 
 Maintainers
 -----------
 
 Every maintainable artifact **must** be associated with a specific maintainer.
 
-The maintainer **must** include at least one :class:`.Contact`, with at least the :attr:`.Contact.name`, and :attr:`Contact.email` attributes, for the person(s) responsible for preparing the (meta)data in TDC formats.
+The maintainer **must** include at least one :class:`~sdmx.model.common.Contact` with at least the :attr:`~sdmx.model.common.Contact.name`, and :attr:`~sdmx.model.common.Contact.email` attributes, for the person(s) responsible for preparing the (meta)data in TDC formats.
+It **should** include additional contacts, including:
 
-- It **should** include additional contacts, including:
-
-  - People responsible for preparing original (meta)data.
-  - Authors of publications to which the data are associated.
-  - Fallback/organizational contacts, in case the above people leave the organization.
+- People responsible for preparing original (meta)data.
+- Authors of publications to which the data are associated.
+- Fallback/organizational contacts, in case the above people leave the organization.
 
 Annotations
 -----------
@@ -141,7 +140,6 @@ Data
 
 TDC formatted data **must** be provided together with structure information and metadata, as described above.
 In other words, an SDMX DataMessage without accompanying SDMX StructureMessage(s) is *not* TDC formatted.
-
 
 Processes
 =========
