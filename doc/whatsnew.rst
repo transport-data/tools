@@ -1,8 +1,10 @@
 What's new
 **********
 
-.. Next release
-.. ============
+Next release
+============
+
+- Add :doc:`standards` and :doc:`roadmap` documentation pages (:pull:`9`).
 
 v24.2.5
 =======
