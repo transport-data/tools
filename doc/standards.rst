@@ -122,6 +122,8 @@ Any code list intended for reuse (with multiple data structures and flows) **sho
 Data structures
 ---------------
 
+Data structures that describe TDC formatted data flows **should** reflect the original or full dimensionality and attributes of the data.
+
 TDCI Harmonized data structures **must** use the following IDs for dimensions and attributes, if they appear in data. [2]_
 TDC formatted data **should** use the IDs; but if not **must** include a ``tdc-concept`` annotation that indicates one of the following, so that the data can be automatically transformed.
 
@@ -165,4 +167,5 @@ Such tools **should**:
 - be open source and free to use.
 - be concise, documented, and readable.
   One way to achieve this is to *use functions and utilities* from the :mod:`transport_data` package directly, instead of duplicating such code.
-- Where the original data provide idiosyncratic IDs or IDs are missing, apply the dimension and/or attribute IDs listed above under :ref:`dsd`.
+- where the original data are ambiguous (for example: tabular formats that mix key values, attribute values, and observation values), distinguish dimensions from attributes.
+- where the original data provide idiosyncratic or missing IDs: apply the dimension and/or attribute IDs listed above under :ref:`dsd`.
