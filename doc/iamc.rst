@@ -35,7 +35,7 @@ Convert to/from SDMX
 
 :mod:`transport_data.iamc` currently supports two types of conversions.
 
-1. Create the SDMX structures implied by certain data in IAMC formats: :func:`.make_structures_for`.
+1. Create the SDMX structures implied by certain data in IAMC formats: :func:`.structures_for_data`.
 2. Convert an SDMX data structure definition to a code list for the IAMC ``VARIABLE`` concept: :func:`.make_variables_cl`.
 
 

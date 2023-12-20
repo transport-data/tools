@@ -21,7 +21,7 @@ def get_agency():
     )
 
 
-def get_iamc_structures():
+def common_structures():
     """Return common metadata for IAMC-like data and structures.
 
     Returns
@@ -47,7 +47,7 @@ def get_iamc_structures():
     return cs
 
 
-def make_structures_for(
+def structures_for_data(
     data: pd.DataFrame,
     base_id: str = "GENERATED",
     maintainer: Optional[m.Agency] = None,
@@ -64,6 +64,8 @@ def make_structures_for(
         - Column names in any case.
           Upper-cased column names must appear in the IAMC concept scheme
           (:func:`get_iamc_structures`).
+    maintainer : .Agency, optional
+        Maintainer to be associated with generated :mod:`.MaintainableArtefact`.
 
     Returns
     -------
@@ -81,7 +83,7 @@ def make_structures_for(
           separator.
     """
     # Generic IAMC ConceptScheme
-    iamc_cs = get_iamc_structures()
+    iamc_cs = common_structures()
 
     # Default maintainer
     maintainer = maintainer or m.Agency(id="TEST")
@@ -115,15 +117,14 @@ def make_structures_for(
     dsd.description = f"The original data are in {data_format!r} format."
     sm.add(dsd)
 
-    # Create code lists
+    # Create code lists for other dimensions
     for dim in filter(lambda d: d.id.upper() not in "YEAR VARIABLE", dsd.dimensions):
-        cl = make_cl_for(data[dim.id], id=dim.concept_identity.id)
-        cl.maintainer = maintainer
-        sm.add(cl)
+        sm.add(
+            cl_for_data(data[dim.id], id=dim.concept_identity.id, maintainer=maintainer)
+        )
 
     # Special handling for "VARIABLE"
-    for obj in make_variable_structures(data["variable"]):
-        obj.maintainer = maintainer
+    for obj in structures_for_variable(data["variable"], maintainer=maintainer):
         sm.add(obj)
 
     sm.add(iamc_cs)
@@ -131,8 +132,13 @@ def make_structures_for(
     return sm
 
 
-def make_variable_structures(data: pd.Series) -> list:
-    """Make structures for IAMC-like ``Variable`` `data`.
+def structures_for_variable(data: pd.Series, **ma_kwargs) -> list:
+    """Make structures for IAMC-like "VARIABLE" `data`.
+
+    Parameters
+    ----------
+    ma_kwargs :
+        Keyword arguments for :class:`.MaintainableArtefact`.
 
     Returns
     -------
@@ -143,7 +149,7 @@ def make_variable_structures(data: pd.Series) -> list:
     parts = data.drop_duplicates().str.split("|", expand=True)
 
     # A Concept scheme for the measures appearing in `data`
-    cs = m.ConceptScheme(id="MEASURE")
+    cs = m.ConceptScheme(id="MEASURE", **ma_kwargs)
 
     # Structures to be returned
     structures = [cs]
@@ -156,7 +162,9 @@ def make_variable_structures(data: pd.Series) -> list:
 
         # Make a DSD and code lists from the remaining parts
         # TODO also include the general (model, scenario, etc.) dimensions
-        structures.extend(make_measure_structures(measure, group_parts.iloc[:, 1:]))
+        structures.extend(
+            structures_for_measure(measure, group_parts.iloc[:, 1:], **ma_kwargs)
+        )
 
     log.info(
         f"Identified {len(cs)} measures from {len(parts)} distinct 'variable' values"
@@ -165,9 +173,17 @@ def make_variable_structures(data: pd.Series) -> list:
     return structures
 
 
-def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
-    """Create a DSD and code lists for a particular `measure` from variable `parts`."""
-    dsd = m.DataStructureDefinition(id=measure.id)
+def structures_for_measure(
+    measure: m.Concept, parts: pd.DataFrame, **ma_kwargs
+) -> list:
+    """Create a DSD and code lists for a particular `measure` from variable `parts`.
+
+    Parameters
+    ----------
+    ma_kwargs :
+        Keyword arguments for :class:`.MaintainableArtefact`.
+    """
+    dsd = m.DataStructureDefinition(id=measure.id, **ma_kwargs)
 
     # Structures to be returned
     structures = [dsd]
@@ -194,7 +210,7 @@ def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
         dim_id = f"DIM_{i}"
 
         # Generate a code list
-        cl = make_cl_for(s.dropna(), id=f"{measure.id}_{dim_id}")
+        cl = cl_for_data(s.dropna(), id=f"{measure.id}_{dim_id}", **ma_kwargs)
 
         # Add a special value for missing labels "_"
         if some_empty[i]:  # type: ignore [call-overload]
@@ -213,9 +229,15 @@ def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
     return structures
 
 
-def make_cl_for(data: pd.Series, id: str) -> m.Codelist:
-    """Make a codelist for `data` for the dimension/concept `id`."""
-    cl = m.Codelist(id=id)
+def cl_for_data(data: pd.Series, id: str, **ma_kwargs) -> m.Codelist:
+    """Make a codelist for the concept `id`, given `data`.
+
+    Parameters
+    ----------
+    ma_kwargs :
+        Keyword arguments for :class:`.MaintainableArtefact`.
+    """
+    cl = m.Codelist(id=id, **ma_kwargs)
 
     for value in sorted(data.unique()):
         cl.append(m.Code(id=value))
