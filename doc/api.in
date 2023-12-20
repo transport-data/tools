@@ -2,7 +2,7 @@
 
 .. autosummary::
    :toctree: _api
-   :recurse:
+   :recursive:
 
    adb
    cli
