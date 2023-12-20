@@ -37,31 +37,52 @@ General
 Data and metadata
 =================
 
-.. autosummary::
-   :toctree: data
-   :caption: Data and metadata
-   :recursive:
+The following modules contain code tailored to *individual data providers*.
+They handle tasks including:
 
-   ~transport_data.adb
-   ~transport_data.estat
-   ~transport_data.iamc
-   ~transport_data.jrc
-   ~transport_data.org
-   ~transport_data.proto
+- Parse (meta)data or structure information from providers' idiosyncratic data formats.
+- Provide metadata and structure information that is implicit; not directly available from the provider itself.
+
+.. toctree::
+   :caption: Data and metadata
+   :hidden:
+
+   adb
+   estat
+   iamc
+   jrc
+   org
+   proto
+
+- :mod:`.adb`: :doc:`adb`
+- :mod:`.estat`: :doc:`estat`
+- :mod:`.iamc`: :doc:`iamc`
+- :mod:`.jrc`: :doc:`jrc`
+- :mod:`.org`: :doc:`org`
+- :mod:`.proto`: :doc:`proto`
 
 Common code and utilities
 =========================
 
-.. autosummary::
-   :toctree: api
-   :caption: Common code and utilities
-   :recursive:
+The following modules contain *generic* code and utilities usable with (meta)data from multiple providers or sources or created by TDCI.
 
-   ~transport_data.cli
-   ~transport_data.config
-   ~transport_data.registry
-   ~transport_data.tests
-   ~transport_data.util
+.. toctree::
+   :caption: Common code and utilities
+   :hidden:
+
+   cli
+   config
+   registry
+   testing
+   tests
+   util
+
+- :mod:`.cli`: :doc:`cli`
+- :mod:`.config`: :doc:`config`
+- :mod:`.registry`: :doc:`registry`
+- :mod:`.testing`: :doc:`testing`
+- :mod:`.tests`: :doc:`tests`
+- :mod:`.util`: :doc:`util`
 
 Indices and tables
 ==================
