@@ -243,3 +243,86 @@ def cl_for_data(data: pd.Series, id: str, **ma_kwargs) -> m.Codelist:
         cl.append(m.Code(id=value))
 
     return cl
+
+
+def variable_cl_for_dsd(
+    dsd: m.BaseDataStructureDefinition, codelist: Optional[m.Codelist] = None
+) -> m.Codelist:
+    """Generate an SDMX codelist with IAMC "VARIABLE" codes corresponding to `dsd`.
+
+    The dimensions of `dsd` are each enumerated by an associated codelist.
+    :meth:`.BaseDataStructureDefinition.iter_keys` generates one key for each member of
+    the Cartesian product of these sets.
+
+    :func:`.variable_cl_for_dsd` collapses each of these into a code whose ID is a
+    constructed IAMC "VARIABLE" name like "Primary Measure|Foo|Bar|Baz". In these:
+
+    - The part before the first pipe ("Primary Measure|") is the name of the concept
+      identity for the primary measure of `dsd`.
+    - The remaining parts ("Foo|Bar|Baz") are the names of the codes for each dimension
+      of `dsd`.
+
+    If the code lists that enumerate `dsd` contain codes with the special ID "_T", then
+    :func:`.variable_cl_for_dsd` also generates corresponding IAMC-style names for
+    aggregates. In the above example, if the third dimension contains a "_T"
+
+    Every code also has the following annotations:
+
+    ``iamc-full-dsd``
+       The URN of `dsd`. This allows an unambiguous association to the
+       full-dimensionality data structure definition.
+    ``iamc-full-key``
+       The :func:`repr` of a :func:`dict` corresponding to a full resolution key,
+       mapping dimension ID to code ID. This allows to restore or recover a valid key
+       within `dsd`, given the IAMC "VARIABLE".
+
+    If `codelist` is supplied, the new codes are appended.
+
+    Parameters
+    ----------
+    dsd :
+        Existing data structure definition.
+    codelist : Codelist, optional
+        Existing code list.
+
+    Returns
+    -------
+    Codelist
+        The same object as `codelist`, if supplied, else a new code list with id
+        "VARIABLE".
+    """
+    cl = codelist or m.Codelist(id="VARIABLE")
+
+    for key in dsd.iter_keys():
+        # Parts of the variable ID; full key as (str -> str)
+        var_parts, full_key = [str(dsd.measures[0].concept_identity.name)], {}
+
+        # Iterate over KeyValues
+        for dim, kv in key.values.items():
+            if kv.value.id == "_T":
+                # Total: pass through
+                var_parts.append("_T")
+            else:
+                # Use the (human-readable) name
+                var_parts.append(str(kv.value.name))
+            full_key[kv.value_for.id] = kv.value.id
+
+        # - Join var_parts with the IAMC "|" character.
+        # - Remove "|_T" to yield IAMC-style names for aggregates.
+        variable = "|".join(var_parts).replace("|_T", "")
+
+        # Create a Code
+        # - ID is the variable name.
+        # - Annotate with iamc-full-dsd = URN of the full DSD.
+        # - Annotate with iamc-full-key = representation of the full key.
+        cl.append(
+            m.Code(
+                id=variable,
+                annotations=[
+                    m.Annotation(id="iamc-full-dsd", text=dsd.urn),
+                    m.Annotation(id="iamc-full-key", text=repr(full_key)),
+                ],
+            )
+        )
+
+    return cl

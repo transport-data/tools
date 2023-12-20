@@ -3,8 +3,7 @@ from pathlib import Path
 import pandas as pd
 import sdmx
 
-from transport_data.iamc import structures_for_data
-from transport_data.iamc.make import make_variables_cl
+from transport_data.iamc import structures_for_data, variable_cl_for_dsd
 
 
 def test_structures_for_data():
@@ -35,15 +34,15 @@ def test_structures_for_data():
     assert str(dsd.description).startswith("The original data are in")
 
 
-def test_make_variables_cl(tmp_path, sdmx_structures):
+def test_variables_cl_for_dsd(tmp_path, sdmx_structures):
     # Function runs on the "MASS" DSD
-    cl = make_variables_cl(sdmx_structures.structure["MASS"])
+    cl = variable_cl_for_dsd(sdmx_structures.structure["MASS"])
 
     # Expected number of variable names is generated
     assert 25 == len(cl)
 
     # Function runs on the "PICKED" DSD
-    make_variables_cl(sdmx_structures.structure["PICKED"], cl)
+    variable_cl_for_dsd(sdmx_structures.structure["PICKED"], cl)
 
     # Items are appended to `cl`
     assert 50 == len(cl)
