@@ -22,7 +22,13 @@ def get_agency():
 
 
 def get_iamc_structures():
-    """Return common metadata for IAMC-like data and structures."""
+    """Return common metadata for IAMC-like data and structures.
+
+    Returns
+    -------
+    ConceptScheme
+        with id "IAMC", containing the concepts for the IAMC dimensions and attribute.
+    """
     cs = m.ConceptScheme(
         id="IAMC", name="Concepts in the IAMC data model", maintainer=get_agency()
     )
@@ -46,7 +52,34 @@ def make_structures_for(
     base_id: str = "GENERATED",
     maintainer: Optional[m.Agency] = None,
 ) -> StructureMessage:
-    """Return IAMC-like data structures describing `data`."""
+    """Return IAMC-like data structures describing `data`.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Data in IAMC tabular format.
+
+        - Either long (with a "YEAR" column) or wide (no "YEAR" column but one or more
+          columns with :class:`int` codes for the "YEAR" dimension).
+        - Column names in any case.
+          Upper-cased column names must appear in the IAMC concept scheme
+          (:func:`get_iamc_structures`).
+
+    Returns
+    -------
+    StructureMessage
+        including:
+
+        - The "IAMC" ConceptScheme from :func:`get_iamc_structures`.
+        - A data structure definition with ID `base_id`.
+        - One code list for each dimension.
+        - A "MEASURE" concept scheme including the unique measures: that is, parts
+          appearing before the first pipe ("|") separator in the "VARIABLE" column of
+          `data`.
+        - For each measure: 0 or more code lists, each containing codes for a single
+          dimension in the parts of "VARIABLE" column values beyond the first pipe ("|")
+          separator.
+    """
     # Generic IAMC ConceptScheme
     iamc_cs = get_iamc_structures()
 
@@ -99,7 +132,13 @@ def make_structures_for(
 
 
 def make_variable_structures(data: pd.Series) -> list:
-    """Make structures for IAMC-like “Variable” `data`."""
+    """Make structures for IAMC-like ``Variable`` `data`.
+
+    Returns
+    -------
+    list
+        A sequence of SDMX structures.
+    """
     # Split the data on the first "|"
     parts = data.drop_duplicates().str.split("|", expand=True)
 

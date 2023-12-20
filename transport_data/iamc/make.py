@@ -5,9 +5,26 @@ import sdmx.model.v21 as m
 
 def make_variables_cl(
     dsd: m.BaseDataStructureDefinition, codelist: Optional[m.Codelist] = None
-):
-    """Generate an SDMX codelist with IAMC-style "variable" names from `dsd`."""
+) -> m.Codelist:
+    """Generate an SDMX codelist with IAMC-style "variable" names from `dsd`.
 
+    The code
+
+    If `codelist` is supplied, the new codes are appended.
+
+    Parameters
+    ----------
+    dsd :
+        Existing data structure definition.
+    codelist : Codelist, optional
+        Existing code list.
+
+    Returns
+    -------
+    Codelist
+        The same object as `codelist`, if supplied, else a new code list with id
+        "VARIABLE".
+    """
     cl = codelist or m.Codelist(id="VARIABLE")
 
     for key in dsd.iter_keys():
