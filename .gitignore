@@ -133,3 +133,4 @@ dmypy.json
 
 # Editors/IDEs
 .vscode
+.ruff_cache
