@@ -251,8 +251,9 @@ def variable_cl_for_dsd(
     """Generate an SDMX codelist with IAMC "VARIABLE" codes corresponding to `dsd`.
 
     The dimensions of `dsd` are each enumerated by an associated codelist.
-    :meth:`.BaseDataStructureDefinition.iter_keys` generates one key for each member of
-    the Cartesian product of these sets.
+    :meth:`DataStructureDefinition.iter_keys
+    <sdmx.model.common.BaseDataStructureDefinition.iter_keys>` generates one key for
+    each member of the Cartesian product of these sets.
 
     :func:`.variable_cl_for_dsd` collapses each of these into a code whose ID is a
     constructed IAMC "VARIABLE" name like "Primary Measure|Foo|Bar|Baz". In these:
@@ -266,15 +267,16 @@ def variable_cl_for_dsd(
     :func:`.variable_cl_for_dsd` also generates corresponding IAMC-style names for
     aggregates. In the above example, if the third dimension contains a "_T"
 
-    Every code also has the following annotations:
+    Every code also has annotations with the following IDs and text:
 
     ``iamc-full-dsd``
        The URN of `dsd`. This allows an unambiguous association to the
        full-dimensionality data structure definition.
     ``iamc-full-key``
-       The :func:`repr` of a :func:`dict` corresponding to a full resolution key,
-       mapping dimension ID to code ID. This allows to restore or recover a valid key
-       within `dsd`, given the IAMC "VARIABLE".
+       The :func:`repr` of a :class:`dict` corresponding to a full resolution key,
+       mapping dimension ID to code ID; for example "{'dim_0': 'FOO', 'dim_1': 'BAR',
+       'dim_2': 'BAZ'}". This allows to restore or recover a valid key within `dsd`,
+       given the IAMC "VARIABLE".
 
     If `codelist` is supplied, the new codes are appended.
 
