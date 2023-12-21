@@ -1,14 +1,17 @@
 """Information about the TDCI *per se*."""
 from datetime import date
 from importlib import import_module
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 import sdmx.model.v21 as m
 
 from transport_data import STORE as registry
 
+if TYPE_CHECKING:
+    import sdmx.model.v21
 
-def get_agency() -> m.Agency:
+
+def get_agency() -> "sdmx.model.v21.Agency":
     # Agency
     a1 = m.Agency(
         id="TDCI",
@@ -44,7 +47,7 @@ def get_agency() -> m.Agency:
     return a1, a2
 
 
-def get_agencyscheme(version: Union[None, str] = None):
+def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.AgencyScheme":
     """Generate an AgencyScheme including some TDCI data providers."""
     agencies = get_agency()
 
@@ -72,3 +75,9 @@ def get_agencyscheme(version: Union[None, str] = None):
         registry.assign_version(as_)
 
     return as_
+
+
+def refresh():
+    """Refresh the registry with structures from this module."""
+    as_ = get_agencyscheme()
+    registry.write(as_, force=True)
