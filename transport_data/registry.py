@@ -103,15 +103,19 @@ class Store:
             # TODO don't do this for files retrieved directly from an SDMX API
             anno_generated(obj)
 
-        with open(path, "wb") as f:
-            f.write(sdmx.to_xml(obj, pretty_print=True))
+        # Encapsulate in a StructureMessage
+        sm = sdmx.message.StructureMessage()
+        sm.add(obj)
 
-        print(f"Wrote {path}")
+        with open(path, "wb") as f:
+            f.write(sdmx.to_xml(sm, pretty_print=True))
+
+        log.info(f"Wrote {path}")
 
         if isinstance(obj, m.DataSet):
             csv_path = path.with_suffix(".csv")
             sdmx.to_csv(obj, path=csv_path, attributes="gso")
-            print(f"Wrote {csv_path}")
+            log.info(f"Wrote {csv_path}")
 
         # Add to git, but do not commit
         # NB if the path is specifically covered by a .gitignore entry, this will generate
