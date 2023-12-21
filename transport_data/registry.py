@@ -1,4 +1,5 @@
 """Manipulate the registry repo."""
+import logging
 import re
 import subprocess
 from functools import singledispatchmethod
@@ -17,6 +18,17 @@ from transport_data.util.sdmx import anno_generated
 
 if TYPE_CHECKING:
     import transport_data.config
+
+log = logging.getLogger(__name__)
+
+
+def _full_urn(value: str) -> str:
+    """Convert possibly partial `value` to a complete SDMX URN."""
+    urn_base = "urn:sdmx:org.sdmx.infomodel.class."
+    if value.startswith(urn_base):
+        return value
+    else:
+        return f"{urn_base}{value}"
 
 
 class Store:
@@ -57,7 +69,7 @@ class Store:
 
     @path_for.register
     def _(self, urn: str) -> Path:
-        m = sdmx.urn.match(urn)
+        m = sdmx.urn.match(_full_urn(urn))
         return self.path.joinpath(
             m["agency"],
             "_".join(
@@ -209,10 +221,8 @@ def show(context, partial_urn):
     The URN should be partial, starting with the object class, e.g.
     Codelist=AGENCY:ID(1.2.3).
     """
-    # TODO handle missing version
-    urn = f"urn:sdmx:org.sdmx.infomodel.class.{partial_urn}"
-
     # Path to the object
+    urn = _full_urn(partial_urn)
     candidate = context.default_store.path_for(urn)
     if not candidate.exists():
         raise click.ClickException(f"No path {candidate}")
