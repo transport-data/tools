@@ -2,12 +2,12 @@ import pytest
 import sdmx.model.v21
 
 import transport_data
-import transport_data.registry
+import transport_data.store
 
 
 class TestBaseStore:
     @pytest.fixture
-    def s(self) -> transport_data.registry.BaseStore:
+    def s(self) -> transport_data.store.BaseStore:
         return transport_data.STORE
 
     @pytest.mark.parametrize(
