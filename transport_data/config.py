@@ -11,10 +11,10 @@ from platformdirs import user_config_path, user_data_path
 class Config:
     """Common configuration."""
 
-    #: Path to the configuration file read, if any
+    #: Path to the configuration file read, if any.
     config_path: Optional[Path] = None
 
-    #: Path to a local clone of https://github.com/transport-data/registry.
+    #: Path for local data. See :ref:`store-layout` for details.
     data_path: Path = field(
         default_factory=lambda: user_data_path("transport-data", ensure_exists=True)
     )
@@ -32,6 +32,7 @@ class Config:
 
     @classmethod
     def read(cls):
+        """Read configuration from file, returning a new instance."""
         cp = cls._config_path()
         if cp.exists():
             with open(cp) as f:
@@ -44,6 +45,7 @@ class Config:
         return cls(**data)
 
     def write(self):
+        """Write configuration to file."""
         cp = self._config_path()
         if not cp.parent.exists():
             print(f"Create {cp.parent}")

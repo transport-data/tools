@@ -46,6 +46,7 @@ def _maintainer(obj: Union[m.MaintainableArtefact, m.DataSet]) -> m.Agency:
 class BaseStore(ABC):
     """A class for file-based storage of SDMX artefacts."""
 
+    #: Top level file system path containing stored files.
     path: Path
 
     @abstractmethod
@@ -203,7 +204,17 @@ class LocalStore(BaseStore):
 
 
 class Registry(BaseStore):
-    """The transport-data/registry Git repository."""
+    """Registry of TDCI-maintained structure information.
+
+    Currently these are stored in, and available from, the
+    `transport-data/registry <https://github.com/transport-data/registry>`_ GitHub
+    repository. This class handles the interaction with a local clone of that
+    repository.
+
+    In the future, they will be maintained on a full SDMX REST web service, and this
+    class will handle retrieving from and publishing to that web service, with
+    appropriate caching etc.
+    """
 
     def __init__(self, config) -> None:
         self.path = config.data_path.joinpath("registry")
@@ -251,6 +262,7 @@ class Registry(BaseStore):
 class UnionStore(BaseStore):
     """A store that maps between a :class:`.LocalStore` and :class:`.Registry`."""
 
+    #: Instances of :class:`.LocalStore` and :class:`.Registry`.
     store: Mapping[Literal["local", "registry"], BaseStore]
 
     #: Mapping from maintainer IDs (such as "TEST" or "TDCI") to either "local" or
@@ -294,6 +306,7 @@ class UnionStore(BaseStore):
         )
 
     def clone(self):
+        """Clone the underlying :class:`.Registry`."""
         self.store["registry"].clone()
 
 

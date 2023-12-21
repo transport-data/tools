@@ -77,12 +77,17 @@ The following modules contain *generic* code and utilities usable with (meta)dat
    tests
    util
 
-- :mod:`.cli`: :doc:`cli`
+- :mod:`~transport_data.cli`: :doc:`cli`
 - :mod:`.config`: :doc:`config`
 - :mod:`.store`: :doc:`store`
 - :mod:`.testing`: :doc:`testing`
 - :mod:`.tests`: :doc:`tests`
 - :mod:`.util`: :doc:`util`
+
+There are also the following top-level objects:
+
+.. autodata:: transport_data.CONFIG
+.. autodata:: transport_data.STORE
 
 Indices and tables
 ==================
