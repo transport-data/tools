@@ -1,6 +1,5 @@
 """Manipulate the registry repo."""
 import logging
-import re
 import subprocess
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
@@ -146,24 +145,23 @@ class BaseStore(ABC):
 
     def list_versions(self, obj: m.MaintainableArtefact) -> List[str]:
         """List all versions of `obj` already stored in the registry."""
+
         # Path that would result from writing `obj`
         path = self.path_for(obj)
 
-        # Expression matching similar file names with different versions
-        expr = re.compile("(.*_)(?P<version>[0-9-]+)(.xml)")
+        if not path.exists():
+            return []
 
-        # A glob pattern for similar names
-        pattern = expr.sub(r"\1*\3", str(path.name))
+        # Read an SDMX Message from the path
+        msg = sdmx.read_sdmx(path)
 
-        # Extract just the version part of the names of matching files; restore "."
-        versions = sorted(
-            map(
-                lambda p: expr.fullmatch(p.name).group("version").replace("-", "."),  # type: ignore [union-attr]
-                path.parent.glob(pattern),
-            )
-        )
+        # Iterate over objects
+        versions = set()
+        for _, cls in msg.iter_collections():
+            for obj in msg.objects(cls).values():
+                versions.add(obj.version)
 
-        return versions
+        return sorted(versions)
 
     def next_version(
         self, obj: m.MaintainableArtefact, major=False, minor=True, patch=False
@@ -177,7 +175,7 @@ class BaseStore(ABC):
         obj: m.MaintainableArtefact,
         default="0.0.0",
         increment: Union[bool, Tuple[bool, bool, bool]] = False,
-    ):
+    ) -> None:
         """Assign a version to `obj`.
 
         If `increment` is :data:`False`, the version will be the latest already existing
