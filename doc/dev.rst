@@ -60,6 +60,7 @@ In order to support convergence and harmonization of transport data, TDCI has ce
 Code style
 ==========
 
-- Use `Pytest <https://docs.pytest.org>`__ for writing :mod:`.tests`.
 - Version as ``vYY.M.D`` using the current date.
-- Use `black <https://black.rtfd.io>`__.
+- Use `pre-commit <https://pre-commit.com>`__, which invokes `ruff <https://docs.astral.sh/ruff/>`__ for code formatting and `mypy <https://mypy.readthedocs.io/en/stable/>`__ for static type checking of Python code.
+- Use `Pytest <https://docs.pytest.org>`__ for writing :mod:`.tests`.
+- Write documentation in `reStructuredText <https://docutils.sourceforge.io/rst.html#reference-documentation>`__.
