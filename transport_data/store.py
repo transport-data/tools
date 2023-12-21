@@ -1,4 +1,4 @@
-"""Manipulate the registry repo."""
+"""Local data storage."""
 import logging
 import subprocess
 from abc import ABC, abstractmethod

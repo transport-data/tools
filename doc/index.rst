@@ -72,14 +72,14 @@ The following modules contain *generic* code and utilities usable with (meta)dat
 
    cli
    config
-   registry
+   store
    testing
    tests
    util
 
 - :mod:`.cli`: :doc:`cli`
 - :mod:`.config`: :doc:`config`
-- :mod:`.registry`: :doc:`registry`
+- :mod:`.store`: :doc:`store`
 - :mod:`.testing`: :doc:`testing`
 - :mod:`.tests`: :doc:`tests`
 - :mod:`.util`: :doc:`util`

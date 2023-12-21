@@ -2,7 +2,7 @@ import logging
 import sys
 
 from .config import Config
-from .registry import UnionStore
+from .store import UnionStore
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
