@@ -51,6 +51,24 @@ class Store:
         self._gh("repo", "clone", "transport-data/registry", str(self.path))
 
     @singledispatchmethod
+    def get(self, urn: str) -> object:
+        """Retrieve an object given its full or partial `urn`."""
+        # Identify the path to the object
+        urn = _full_urn(urn)
+        path = self.path_for(urn)
+        assert path.exists(), f"No object {path}"
+
+        # Read an SDMX Message from the path
+        msg = sdmx.read_sdmx(path)
+
+        # Extract the object
+        m = sdmx.urn.match(urn)
+        result = msg.get(m["id"])
+        assert result
+
+        return result
+
+    @singledispatchmethod
     def path_for(self, obj: m.MaintainableArtefact) -> Path:
         """Determine a path and filename for `obj`."""
         version = obj.version or "0"
