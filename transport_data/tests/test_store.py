@@ -1,14 +1,17 @@
 import pytest
 import sdmx.model.v21
 
-import transport_data
-from transport_data.store import BaseStore
+from transport_data.config import Config
+from transport_data.org import get_agencyscheme
+from transport_data.store import BaseStore, LocalStore
 
 
 class TestBaseStore:
     @pytest.fixture
-    def s(self) -> BaseStore:
-        return transport_data.STORE
+    def s(self, tmp_config: Config) -> BaseStore:
+        s = LocalStore(tmp_config)
+        s.write(get_agencyscheme())
+        return s
 
     @pytest.mark.parametrize(
         "urn",
