@@ -52,6 +52,7 @@ addopts = """
   -m "not network"
   --cov=transport_data --cov-report="""
 markers = ["network: tests that perform network requests"]
+usefixtures = "tmp_store"
 
 [tool.ruff]
 select = ["C9", "E", "F", "I", "W"]

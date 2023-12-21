@@ -1,9 +1,10 @@
-from typing import cast
+from typing import Generator, cast
 
 import pytest
 import sdmx.message
 import sdmx.model.v21 as m
 
+import transport_data
 from transport_data.config import Config
 from transport_data.store import Registry, UnionStore
 
@@ -56,21 +57,29 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
 
 
 @pytest.fixture(scope="session")
-def tmp_config(tmp_path_factory) -> Config:
+def tmp_config(tmp_path_factory) -> Generator[Config, None, None]:
     """A :class:`.Config` instance pointing to a temporary directory."""
     base = tmp_path_factory.mktemp("transport-data")
-    return Config(
+    result = Config(
         config_path=base.joinpath("config.json"),
         data_path=base.joinpath("data"),
     )
 
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr(transport_data, "CONFIG", result)
+        yield result
+
 
 @pytest.fixture(scope="session")
-def tmp_store(tmp_config) -> UnionStore:
+def tmp_store(tmp_config) -> Generator[UnionStore, None, None]:
     """A :class`.UnionStore` in a temporary directory per :func:`.tmp_config`."""
-    us = UnionStore(tmp_config)
-    r = cast(Registry, us.store["registry"])
-    r.path.mkdir(exist_ok=True)
-    r._git("init")
+    result = UnionStore(tmp_config)
 
-    return us
+    # Initialize an empty Git repo
+    registry = cast(Registry, result.store["registry"])
+    registry.path.mkdir(exist_ok=True)
+    registry._git("init")
+
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr(transport_data, "STORE", result)
+        yield result

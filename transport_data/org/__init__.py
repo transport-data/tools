@@ -18,8 +18,6 @@ def get_agency() -> "sdmx.model.v21.Agency":
         name="Transport Data Commons Initiative",
         description="See https://transport-data.org",
     )
-
-    # Not yet implemented in sdmx1
     c1 = m.Contact(
         responsibility="Organization team",
         email=["kirsten.orschulok@giz.de", "verena.knoell@giz.de"],
@@ -79,5 +77,7 @@ def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.Agency
 
 def refresh():
     """Refresh the registry with structures from this module."""
+    from transport_data import STORE
+
     as_ = get_agencyscheme()
-    registry.write(as_)
+    STORE.write(as_)
