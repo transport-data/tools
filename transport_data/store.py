@@ -309,6 +309,11 @@ class UnionStore(BaseStore):
         """Clone the underlying :class:`.Registry`."""
         self.store["registry"].clone()
 
+    def add_to_registry(self, urn: str):
+        """Copy data for `urn` from :class:`.LocalStore` to the :class:`.Registry`."""
+        obj = self.store["local"].get(urn)
+        self.store["registry"].write(obj)
+
 
 # Command-line interface
 
