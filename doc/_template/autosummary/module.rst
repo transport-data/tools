@@ -1,6 +1,11 @@
 .. From https://stackoverflow.com/a/62613202/2362198
 
-{{ ("``." + fullname.split(".", maxsplit=1)[1] + "`` " + objtype) | underline(line="*") }}
+.. {{ (":mod:`." + fullname.split(".", maxsplit=1)[1] + "` " + objtype) | underline(line="*") }}
+
+Code reference
+==============
+
+.. currentmodule:: {{ fullname }}
 
 .. automodule:: {{ fullname }}
 

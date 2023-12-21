@@ -48,7 +48,9 @@ module = ["pooch"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-addopts = """-m "not network" --cov=transport_data"""
+addopts = """
+  -m "not network"
+  --cov=transport_data --cov-report="""
 markers = ["network: tests that perform network requests"]
 
 [tool.ruff]

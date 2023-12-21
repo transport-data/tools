@@ -1,38 +1,5 @@
 """Handle data and structure for IAMC-like formats.
 
-The "IAMC format" or "IAMC template" refers to a variety of similar data formats with a
-similar structure, developed by the Integrated Assessment Modeling Consortium (IAMC) and
-others, for data that is output from or input to integrated assessment models. Similar
-DSDs are commonly used in related research.
-
-These data structures are characterized by:
-
-- Common dimensions, including:
-
-  - "Model", "Scenario" —identifying a model and particular configuration of that model.
-  - "Region" —geography.
-  - "Year" —if in ‘long’ format; or also commonly a ‘wide’ format with one column per
-    distinct year.
-  - "Unit" —in some cases this is effectively an attribute; in other cases, it may be a
-    dimension. See below.
-  - "Variable" —see below.
-
-- Combination of several data flows in the same file:
-
-  - Codes appearing in the "Variable" dimension are strings with a varying number of
-    parts separated by the pipe ("|") character.
-  - The first (or only) part indicates the measure concept, e.g. "Population".
-  - Subsequent parts are codes for additional dimensions. For example in
-    "Population|Female|50—59Y", "Female" may be a code for a gender dimension, and
-    "50–59Y" may be a code for an age dimension. The data message usually does not
-    identify these dimensions, and separate structural information may be provided only
-    as text and not in machine-readable formats.
-
-- Specification of "templates" in the form of files in the same format as the data, with
-  no observation values. These provide code lists for the "Variable" and sometimes other
-  dimensions. These thus, more or less explicitly, specify the measures, dimensions,
-  codes, etc. for the various data flows included.
-
 .. todo:: Add a function to generate distinct DSDs for each data flow in a data set.
 .. todo:: Add function(s) to reshape IAMC-like data.
 """
@@ -54,8 +21,14 @@ def get_agency():
     )
 
 
-def get_iamc_structures():
-    """Return common metadata for IAMC-like data and structures."""
+def common_structures():
+    """Return common metadata for IAMC-like data and structures.
+
+    Returns
+    -------
+    ConceptScheme
+        with id "IAMC", containing the concepts for the IAMC dimensions and attribute.
+    """
     cs = m.ConceptScheme(
         id="IAMC", name="Concepts in the IAMC data model", maintainer=get_agency()
     )
@@ -74,14 +47,43 @@ def get_iamc_structures():
     return cs
 
 
-def make_structures_for(
+def structures_for_data(
     data: pd.DataFrame,
     base_id: str = "GENERATED",
     maintainer: Optional[m.Agency] = None,
 ) -> StructureMessage:
-    """Return IAMC-like data structures describing `data`."""
+    """Return IAMC-like data structures describing `data`.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Data in IAMC tabular format.
+
+        - Either long (with a "YEAR" column) or wide (no "YEAR" column but one or more
+          columns with :class:`int` codes for the "YEAR" dimension).
+        - Column names in any case.
+          Upper-cased column names must appear in the IAMC concept scheme
+          (:func:`get_iamc_structures`).
+    maintainer : .Agency, optional
+        Maintainer to be associated with generated :mod:`.MaintainableArtefact`.
+
+    Returns
+    -------
+    StructureMessage
+        including:
+
+        - The "IAMC" ConceptScheme from :func:`get_iamc_structures`.
+        - A data structure definition with ID `base_id`.
+        - One code list for each dimension.
+        - A "MEASURE" concept scheme including the unique measures: that is, parts
+          appearing before the first pipe ("|") separator in the "VARIABLE" column of
+          `data`.
+        - For each measure: 0 or more code lists, each containing codes for a single
+          dimension in the parts of "VARIABLE" column values beyond the first pipe ("|")
+          separator.
+    """
     # Generic IAMC ConceptScheme
-    iamc_cs = get_iamc_structures()
+    iamc_cs = common_structures()
 
     # Default maintainer
     maintainer = maintainer or m.Agency(id="TEST")
@@ -115,15 +117,14 @@ def make_structures_for(
     dsd.description = f"The original data are in {data_format!r} format."
     sm.add(dsd)
 
-    # Create code lists
+    # Create code lists for other dimensions
     for dim in filter(lambda d: d.id.upper() not in "YEAR VARIABLE", dsd.dimensions):
-        cl = make_cl_for(data[dim.id], id=dim.concept_identity.id)
-        cl.maintainer = maintainer
-        sm.add(cl)
+        sm.add(
+            cl_for_data(data[dim.id], id=dim.concept_identity.id, maintainer=maintainer)
+        )
 
     # Special handling for "VARIABLE"
-    for obj in make_variable_structures(data["variable"]):
-        obj.maintainer = maintainer
+    for obj in structures_for_variable(data["variable"], maintainer=maintainer):
         sm.add(obj)
 
     sm.add(iamc_cs)
@@ -131,13 +132,24 @@ def make_structures_for(
     return sm
 
 
-def make_variable_structures(data: pd.Series) -> list:
-    """Make structures for IAMC-like “Variable” `data`."""
+def structures_for_variable(data: pd.Series, **ma_kwargs) -> list:
+    """Make structures for IAMC-like "VARIABLE" `data`.
+
+    Parameters
+    ----------
+    ma_kwargs :
+        Keyword arguments for :class:`.MaintainableArtefact`.
+
+    Returns
+    -------
+    list
+        A sequence of SDMX structures.
+    """
     # Split the data on the first "|"
     parts = data.drop_duplicates().str.split("|", expand=True)
 
     # A Concept scheme for the measures appearing in `data`
-    cs = m.ConceptScheme(id="MEASURE")
+    cs = m.ConceptScheme(id="MEASURE", **ma_kwargs)
 
     # Structures to be returned
     structures = [cs]
@@ -150,7 +162,9 @@ def make_variable_structures(data: pd.Series) -> list:
 
         # Make a DSD and code lists from the remaining parts
         # TODO also include the general (model, scenario, etc.) dimensions
-        structures.extend(make_measure_structures(measure, group_parts.iloc[:, 1:]))
+        structures.extend(
+            structures_for_measure(measure, group_parts.iloc[:, 1:], **ma_kwargs)
+        )
 
     log.info(
         f"Identified {len(cs)} measures from {len(parts)} distinct 'variable' values"
@@ -159,9 +173,17 @@ def make_variable_structures(data: pd.Series) -> list:
     return structures
 
 
-def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
-    """Create a DSD and code lists for a particular `measure` from variable `parts`."""
-    dsd = m.DataStructureDefinition(id=measure.id)
+def structures_for_measure(
+    measure: m.Concept, parts: pd.DataFrame, **ma_kwargs
+) -> list:
+    """Create a DSD and code lists for a particular `measure` from variable `parts`.
+
+    Parameters
+    ----------
+    ma_kwargs :
+        Keyword arguments for :class:`.MaintainableArtefact`.
+    """
+    dsd = m.DataStructureDefinition(id=measure.id, **ma_kwargs)
 
     # Structures to be returned
     structures = [dsd]
@@ -188,7 +210,7 @@ def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
         dim_id = f"DIM_{i}"
 
         # Generate a code list
-        cl = make_cl_for(s.dropna(), id=f"{measure.id}_{dim_id}")
+        cl = cl_for_data(s.dropna(), id=f"{measure.id}_{dim_id}", **ma_kwargs)
 
         # Add a special value for missing labels "_"
         if some_empty[i]:  # type: ignore [call-overload]
@@ -207,11 +229,102 @@ def make_measure_structures(measure: m.Concept, parts: pd.DataFrame) -> list:
     return structures
 
 
-def make_cl_for(data: pd.Series, id: str) -> m.Codelist:
-    """Make a codelist for `data` for the dimension/concept `id`."""
-    cl = m.Codelist(id=id)
+def cl_for_data(data: pd.Series, id: str, **ma_kwargs) -> m.Codelist:
+    """Make a codelist for the concept `id`, given `data`.
+
+    Parameters
+    ----------
+    ma_kwargs :
+        Keyword arguments for :class:`.MaintainableArtefact`.
+    """
+    cl = m.Codelist(id=id, **ma_kwargs)
 
     for value in sorted(data.unique()):
         cl.append(m.Code(id=value))
+
+    return cl
+
+
+def variable_cl_for_dsd(
+    dsd: m.BaseDataStructureDefinition, codelist: Optional[m.Codelist] = None
+) -> m.Codelist:
+    """Generate an SDMX codelist with IAMC "VARIABLE" codes corresponding to `dsd`.
+
+    The dimensions of `dsd` are each enumerated by an associated codelist.
+    :meth:`DataStructureDefinition.iter_keys
+    <sdmx.model.common.BaseDataStructureDefinition.iter_keys>` generates one key for
+    each member of the Cartesian product of these sets.
+
+    :func:`.variable_cl_for_dsd` collapses each of these into a code whose ID is a
+    constructed IAMC "VARIABLE" name like "Primary Measure|Foo|Bar|Baz". In these:
+
+    - The part before the first pipe ("Primary Measure|") is the name of the concept
+      identity for the primary measure of `dsd`.
+    - The remaining parts ("Foo|Bar|Baz") are the names of the codes for each dimension
+      of `dsd`.
+
+    If the code lists that enumerate `dsd` contain codes with the special ID "_T", then
+    :func:`.variable_cl_for_dsd` also generates corresponding IAMC-style names for
+    aggregates. In the above example, if the third dimension contains a "_T"
+
+    Every code also has annotations with the following IDs and text:
+
+    ``iamc-full-dsd``
+       The URN of `dsd`. This allows an unambiguous association to the
+       full-dimensionality data structure definition.
+    ``iamc-full-key``
+       The :func:`repr` of a :class:`dict` corresponding to a full resolution key,
+       mapping dimension ID to code ID; for example "{'dim_0': 'FOO', 'dim_1': 'BAR',
+       'dim_2': 'BAZ'}". This allows to restore or recover a valid key within `dsd`,
+       given the IAMC "VARIABLE".
+
+    If `codelist` is supplied, the new codes are appended.
+
+    Parameters
+    ----------
+    dsd :
+        Existing data structure definition.
+    codelist : Codelist, optional
+        Existing code list.
+
+    Returns
+    -------
+    Codelist
+        The same object as `codelist`, if supplied, else a new code list with id
+        "VARIABLE".
+    """
+    cl = codelist or m.Codelist(id="VARIABLE")
+
+    for key in dsd.iter_keys():
+        # Parts of the variable ID; full key as (str -> str)
+        var_parts, full_key = [str(dsd.measures[0].concept_identity.name)], {}
+
+        # Iterate over KeyValues
+        for dim, kv in key.values.items():
+            if kv.value.id == "_T":
+                # Total: pass through
+                var_parts.append("_T")
+            else:
+                # Use the (human-readable) name
+                var_parts.append(str(kv.value.name))
+            full_key[kv.value_for.id] = kv.value.id
+
+        # - Join var_parts with the IAMC "|" character.
+        # - Remove "|_T" to yield IAMC-style names for aggregates.
+        variable = "|".join(var_parts).replace("|_T", "")
+
+        # Create a Code
+        # - ID is the variable name.
+        # - Annotate with iamc-full-dsd = URN of the full DSD.
+        # - Annotate with iamc-full-key = representation of the full key.
+        cl.append(
+            m.Code(
+                id=variable,
+                annotations=[
+                    m.Annotation(id="iamc-full-dsd", text=dsd.urn),
+                    m.Annotation(id="iamc-full-key", text=repr(full_key)),
+                ],
+            )
+        )
 
     return cl

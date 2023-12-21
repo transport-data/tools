@@ -5,6 +5,10 @@
 import sys
 from importlib import import_module
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import sphinx.application
 
 # -- Project information ---------------------------------------------------------------
 
@@ -20,12 +24,22 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
+    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx_autorun",
 ]
 nitpicky = True
-templates_path = ["_template"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+
+def setup(app: "sphinx.application.Sphinx"):
+    from sphinx.ext.autosummary.generate import generate_autosummary_docs
+
+    # NB this needs to be here because setup() is executed before the module-level
+    #    variables are used
+    app.config.templates_path.append("_template")
+    generate_autosummary_docs(sources=["api.in"], output_dir="_api", app=app)
+
 
 # -- Options for HTML output -----------------------------------------------------------
 

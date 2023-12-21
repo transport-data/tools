@@ -1,5 +1,3 @@
-"""Configuration."""
-
 import json
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path

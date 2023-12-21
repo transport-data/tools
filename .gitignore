@@ -71,8 +71,7 @@ instance/
 
 # Sphinx documentation
 doc/_build/
-doc/api
-doc/data
+doc/_api
 
 # PyBuilder
 target/
@@ -133,3 +132,4 @@ dmypy.json
 
 # Editors/IDEs
 .vscode
+.ruff_cache
