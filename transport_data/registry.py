@@ -32,6 +32,18 @@ def _full_urn(value: str) -> str:
         return f"{urn_base}{value}"
 
 
+def _maintainer(obj: Union[m.MaintainableArtefact, m.DataSet]) -> m.Agency:
+    """Return a maintainer for `obj`.
+
+    If `obj` is :class:`.DataSet`, the maintainer of the data flow is used.
+    """
+    if isinstance(obj, m.MaintainableArtefact):
+        return obj.maintainer
+    else:
+        assert obj.described_by
+        return obj.described_by.maintainer
+
+
 class BaseStore(ABC):
     """A class for file-based storage of SDMX artefacts."""
 
