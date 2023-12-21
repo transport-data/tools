@@ -69,12 +69,10 @@ class Store:
 
     @path_for.register
     def _(self, urn: str) -> Path:
+        """Generate a Path given a `urn`."""
         m = sdmx.urn.match(_full_urn(urn))
         return self.path.joinpath(
-            m["agency"],
-            "_".join(
-                [m["class"], m["agency"], m["id"], m["version"].replace(".", "-")]
-            ),
+            m["agency"], "_".join([m["class"], m["agency"], m["id"]])
         ).with_suffix(".xml")
 
     @singledispatchmethod
