@@ -119,12 +119,18 @@ class BaseStore(ABC):
             # TODO don't do this for files retrieved directly from an SDMX API
             anno_generated(obj)
 
-        # Encapsulate in a StructureMessage
-        sm = sdmx.message.StructureMessage()
-        sm.add(obj)
+        if isinstance(obj, m.MaintainableArtefact):
+            # Encapsulate in a StructureMessage
+            sm = sdmx.message.StructureMessage()
+            sm.add(obj)
+            msg: sdmx.message.Message = sm
+        else:
+            dm = sdmx.message.DataMessage()
+            dm.data.append(obj)
+            msg = dm
 
         with open(path, "wb") as f:
-            f.write(sdmx.to_xml(sm, pretty_print=True))
+            f.write(sdmx.to_xml(msg, pretty_print=True))
 
         log.info(f"Wrote {path}")
 
