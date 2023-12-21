@@ -1,12 +1,15 @@
+from typing import cast
+
 import pytest
 import sdmx.message
 import sdmx.model.v21 as m
 
-import transport_data
+from transport_data.config import Config
+from transport_data.store import Registry, UnionStore
 
 
 @pytest.fixture(scope="session")
-def sdmx_structures() -> sdmx.message.StructureMessage:
+def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     """SDMX structures for use in tests."""
     sm = sdmx.message.StructureMessage()
 
@@ -47,6 +50,27 @@ def sdmx_structures() -> sdmx.message.StructureMessage:
         )
         sm.add(dsd)
 
-    transport_data.STORE.write(sm)
+    tmp_store.write(sm)
 
     return sm
+
+
+@pytest.fixture(scope="session")
+def tmp_config(tmp_path_factory) -> Config:
+    """A :class:`.Config` instance pointing to a temporary directory."""
+    base = tmp_path_factory.mktemp("transport-data")
+    return Config(
+        config_path=base.joinpath("config.json"),
+        data_path=base.joinpath("data"),
+    )
+
+
+@pytest.fixture(scope="session")
+def tmp_store(tmp_config) -> UnionStore:
+    """A :class`.UnionStore` in a temporary directory per :func:`.tmp_config`."""
+    us = UnionStore(tmp_config)
+    r = cast(Registry, us.store["registry"])
+    r.path.mkdir(exist_ok=True)
+    r._git("init")
+
+    return us
