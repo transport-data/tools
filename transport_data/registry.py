@@ -2,6 +2,7 @@
 import logging
 import re
 import subprocess
+from abc import ABC, abstractmethod
 from functools import singledispatchmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple, Union
@@ -31,24 +32,14 @@ def _full_urn(value: str) -> str:
         return f"{urn_base}{value}"
 
 
-class Store:
-    """A class for storage of SDMX artefacts."""
+class BaseStore(ABC):
+    """A class for file-based storage of SDMX artefacts."""
 
     path: Path
 
+    @abstractmethod
     def __init__(self, config: "transport_data.config.Config") -> None:
-        self.path = config.tdc_registry_local
-
-    def _gh(self, *parts):
-        """Invoke `gh`, the GitHub CLI client."""
-        return subprocess.run(("gh",) + parts)
-
-    def _git(self, *parts):
-        """Invoke `git` in the :attr:`path` directory."""
-        return subprocess.run(("git", "-C", str(self.path)) + parts)
-
-    def clone(self):
-        self._gh("repo", "clone", "transport-data/registry", str(self.path))
+        ...
 
     @singledispatchmethod
     def get(self, urn: str) -> object:
@@ -100,12 +91,15 @@ class Store:
         *,
         annotate: bool = True,
         force: bool = False,
-        _show_status: bool = False,
+        **kwargs,
     ) -> Path:
         """Write `obj` into the registry as SDMX-ML.
 
         The path and filename are determined by the object properties.
         """
+        if len(kwargs):
+            raise TypeError(f"Extra keyword arguments: {kwargs}")
+
         path = self.path_for(obj)
 
         if path.exists() and not force:
@@ -133,14 +127,6 @@ class Store:
             sdmx.to_csv(obj, path=csv_path, attributes="gso")
             log.info(f"Wrote {csv_path}")
 
-        # Add to git, but do not commit
-        # NB if the path is specifically covered by a .gitignore entry, this will generate
-        #    some advice messages but have no effect. See e.g. registry/ESTAT/README.
-        # TODO ignore "The following paths are ignored by one of your .gitignore files"
-        self._git("add", str(path.relative_to(self.path)))
-        if _show_status:
-            self._git("status")
-
         return path
 
     @write.register
@@ -148,9 +134,7 @@ class Store:
         # Write each of the structure objects a separate file
         for kind in ("codelist", "concept_scheme", "dataflow", "structure"):
             for obj_ in getattr(obj, kind).values():
-                self.write(obj_, **kwargs, _show_status=False)
-
-        self._git("status")
+                self.write(obj_, **kwargs)
 
     def list_versions(self, obj: m.MaintainableArtefact) -> List[str]:
         """List all versions of `obj` already stored in the registry."""
@@ -202,24 +186,79 @@ class Store:
             obj.version = self.next_version(obj, *increment)
 
 
+class LocalStore(BaseStore):
+    """Unversioned local storage."""
+
+    def __init__(self, config) -> None:
+        self.path = config.data_path.joinpath("local")
+        self.path.mkdir(parents=True, exist_ok=True)
+
+
+class Registry(BaseStore):
+    """The transport-data/registry Git repository."""
+
+    def __init__(self, config) -> None:
+        self.path = config.data_path.joinpath("registry")
+        if not self.path.exists():
+            print(f"WARNING: TDC registry not existing in {self.path}")
+            print("To clone, run: tdc registry clone")
+
+    def _gh(self, *parts):
+        """Invoke `gh`, the GitHub CLI client."""
+        return subprocess.run(("gh",) + parts)
+
+    def _git(self, *parts):
+        """Invoke `git` in the :attr:`path` directory."""
+        return subprocess.run(("git", "-C", str(self.path)) + parts)
+
+    def clone(self):
+        """Clone the repository."""
+        self._gh("repo", "clone", "transport-data/registry", str(self.path))
+
+    @singledispatchmethod
+    def write(
+        self,
+        obj: Union[m.MaintainableArtefact, m.DataSet],
+        *,
+        annotate: bool = True,
+        force: bool = False,
+        **kwargs,
+    ) -> Path:
+        """Write `obj` into the registry as SDMX-ML."""
+        show_status = kwargs.pop("_show_status", False)
+        result = super().write(obj, annotate=annotate, force=force, **kwargs)
+
+        # Add to git, but do not commit
+        # NB if the path is specifically covered by a .gitignore entry, this will generate
+        #    some advice messages but have no effect. See e.g. registry/ESTAT/README.
+        # TODO ignore "The following paths are ignored by one of your .gitignore files"
+        self._git("add", str(result.relative_to(self.path)))
+        if show_status:
+            self._git("status")
+
+        return result
+
+
 # Command-line interface
 
 
 @click.group("registry", help=__doc__)
 @click.pass_context
-def main(context):
-    context.default_store = Store()
+def main(context) -> None:
+    import transport_data
+
+    context.obj = dict(default_store=transport_data.STORE)
 
 
 @main.command()
-@click.pass_context
+@click.pass_obj
 def clone(context):
     """Clone the registry.
 
     The registry is cloned into the directory specified by the `tdc_registry_local`
     config value. See `tdc config --help`.
     """
-    context.default_store.clone()
+    context["default_store"].clone()
 
 
 @main.command("list")

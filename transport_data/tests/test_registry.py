@@ -5,9 +5,9 @@ import transport_data
 import transport_data.registry
 
 
-class TestStore:
+class TestBaseStore:
     @pytest.fixture
-    def s(self) -> transport_data.registry.Store:
+    def s(self) -> transport_data.registry.BaseStore:
         return transport_data.STORE
 
     @pytest.mark.parametrize(

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import click
-from platformdirs import user_config_path
+from platformdirs import user_config_path, user_data_path
 
 
 @dataclass
@@ -15,10 +15,9 @@ class Config:
     config_path: Optional[Path] = None
 
     #: Path to a local clone of https://github.com/transport-data/registry.
-    tdc_registry_local: Path = field(default_factory=Path.cwd)
-
-    def __post_init__(self):
-        self.tdc_registry_local = Path(self.tdc_registry_local)
+    data_path: Path = field(
+        default_factory=lambda: user_data_path("transport-data", ensure_exists=True)
+    )
 
     @staticmethod
     def _config_path():
