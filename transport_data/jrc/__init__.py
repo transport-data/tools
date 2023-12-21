@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
-from transport_data import registry
+from transport_data import STORE as registry
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
 

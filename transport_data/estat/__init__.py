@@ -11,7 +11,7 @@ provider-specific conversion code is needed.
 import click
 import sdmx
 
-from transport_data import registry
+from transport_data import STORE as registry
 
 # General functions
 

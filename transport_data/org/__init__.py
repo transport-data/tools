@@ -5,7 +5,7 @@ from typing import Union
 
 import sdmx.model.v21 as m
 
-from transport_data import registry
+from transport_data import STORE as registry
 
 
 def get_agency() -> m.Agency:
