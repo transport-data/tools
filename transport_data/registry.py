@@ -82,9 +82,9 @@ class Store:
         self,
         obj: Union[m.MaintainableArtefact, m.DataSet],
         *,
-        annotate=True,
-        force=False,
-        _show_status=True,
+        annotate: bool = True,
+        force: bool = False,
+        _show_status: bool = False,
     ) -> Path:
         """Write `obj` into the registry as SDMX-ML.
 
