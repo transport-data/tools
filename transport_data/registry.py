@@ -72,11 +72,8 @@ class BaseStore(ABC):
     @singledispatchmethod
     def path_for(self, obj: m.MaintainableArtefact) -> Path:
         """Determine a path and filename for `obj`."""
-        version = obj.version or "0"
         return self.path.joinpath(
-            obj.maintainer.id,
-            f"{obj.__class__.__name__}_{obj.maintainer.id}_{obj.id}_"
-            f"{version.replace('.', '-')}",
+            obj.maintainer.id, f"{obj.__class__.__name__}_{obj.maintainer.id}_{obj.id}"
         ).with_suffix(".xml")
 
     @path_for.register
