@@ -295,10 +295,10 @@ def convert(part):
         ds = convert_sheet(df, annos)
 
         # Write the DSD and DFD
-        registry.write(ds.described_by, force=True)
-        registry.write(ds.structured_by, force=True)
+        registry.write(ds.described_by)
+        registry.write(ds.structured_by)
         # Write the data itself, to SDMX-ML and CSV
-        registry.write(ds, force=True)
+        registry.write(ds)
 
     # Write the lists of "Economy" codes and measures/concepts accumulated while
     # converting
@@ -306,4 +306,4 @@ def convert(part):
     for obj in (CL_ECONOMY, CS_MEASURE):
         obj.maintainer = a
         obj.version = "0.1.0"
-        registry.write(obj, force=True)
+        registry.write(obj)

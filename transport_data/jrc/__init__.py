@@ -444,14 +444,14 @@ def convert(geo):
                     id="tdc-comment", text=f"Primary measure is {measure_concept!r}"
                 )
             )
-            registry.write(obj, force=True, _show_status=False)
+            registry.write(obj)
 
     # Write code lists, measure concept scheme to file
     a = get_agency()
     for obj in chain(CL.values(), [CS_MEASURE]):
         obj.maintainer = a
         obj.version = "0.1.0"
-        registry.write(obj, force=True, _show_status=False)
+        registry.write(obj)
 
     raise NotImplementedError("Merging data for multiple GEO")
 

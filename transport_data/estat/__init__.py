@@ -30,7 +30,7 @@ def get(dataflow_id: str):
     sm = client.dataflow(dataflow_id)
 
     # Write each of the structure objects received to a separate file
-    registry.write(sm, annotate=False, force=True)
+    registry.write(sm, annotate=False)
 
     # Retrieve the data itself
     dm = client.data(dataflow_id)
@@ -43,7 +43,7 @@ def get(dataflow_id: str):
     ds.structured_by = ds.described_by.structure
 
     # Write to file
-    path = registry.write(ds, force=True)
+    path = registry.write(ds)
     print(f"Retrieved {path}")
     print("          and associated structures")
 

@@ -80,4 +80,4 @@ def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.Agency
 def refresh():
     """Refresh the registry with structures from this module."""
     as_ = get_agencyscheme()
-    registry.write(as_, force=True)
+    registry.write(as_)
