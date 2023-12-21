@@ -52,7 +52,6 @@ class BaseStore(ABC):
     def __init__(self, config: "transport_data.config.Config") -> None:
         ...
 
-    @singledispatchmethod
     def get(self, urn: str) -> object:
         """Retrieve an object given its full or partial `urn`."""
         # Identify the path to the object
