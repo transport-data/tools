@@ -4,7 +4,7 @@ import subprocess
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, List, Literal, Mapping, Tuple, Union
 
 import click
 import packaging.version
@@ -139,7 +139,7 @@ class BaseStore(ABC):
         return path
 
     @write.register
-    def _(self, obj: StructureMessage, **kwargs):
+    def _write_structuremessage(self, obj: StructureMessage, **kwargs):
         # Write each of the structure objects a separate file
         for kind in ("codelist", "concept_scheme", "dataflow", "structure"):
             for obj_ in getattr(obj, kind).values():
@@ -244,6 +244,57 @@ class Registry(BaseStore):
             self._git("status")
 
         return result
+
+    write.register(BaseStore._write_structuremessage)
+
+
+class UnionStore(BaseStore):
+    """A store that maps between a :class:`.LocalStore` and :class:`.Registry`."""
+
+    store: Mapping[Literal["local", "registry"], BaseStore]
+
+    #: Mapping from maintainer IDs (such as "TEST" or "TDCI") to either "local" or
+    #: "registry".
+    map: Mapping[str, Literal["local", "registry"]]
+
+    def __init__(self, config) -> None:
+        self.store = dict(local=LocalStore(config), registry=Registry(config))
+        self.map = config.store_map
+
+    def _get_store(self, obj: m.MaintainableArtefact) -> BaseStore:
+        """Return the store that wants to handle `obj`."""
+        return self.store[self.map.get(_maintainer(obj).id, "local")]
+
+    def get(self, urn: str) -> object:
+        """Retrieve an object given its full or partial `urn`."""
+        # Identify the path to the object
+        urn = _full_urn(urn)
+        m = sdmx.urn.match(urn)
+
+        return self.store[self.map.get(m["agency"], "local")].get(urn)
+
+    @singledispatchmethod
+    def write(
+        self,
+        obj: Union[m.MaintainableArtefact, m.DataSet],
+        *,
+        annotate: bool = True,
+        **kwargs,
+    ) -> Path:
+        """Write `obj` into the registry as SDMX-ML."""
+        return self._get_store(obj).write(obj, annotate=annotate, **kwargs)
+
+    write.register(BaseStore._write_structuremessage)
+
+    def assign_version(
+        self, obj: m.MaintainableArtefact, default="0.0.0", increment=False
+    ):
+        return self._get_store(obj).assign_version(
+            obj, default=default, increment=increment
+        )
+
+    def clone(self):
+        self.store["registry"].clone()
 
 
 # Command-line interface

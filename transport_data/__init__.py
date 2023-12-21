@@ -2,11 +2,11 @@ import logging
 import sys
 
 from .config import Config
-from .registry import Registry
+from .registry import UnionStore
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler(sys.stdout))
 
 CONFIG = Config.read()
-STORE = Registry(CONFIG)
+STORE = UnionStore(CONFIG)
