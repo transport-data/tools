@@ -102,7 +102,6 @@ class BaseStore(ABC):
         obj: Union[m.MaintainableArtefact, m.DataSet],
         *,
         annotate: bool = True,
-        force: bool = False,
         **kwargs,
     ) -> Path:
         """Write `obj` into the registry as SDMX-ML.
@@ -113,9 +112,6 @@ class BaseStore(ABC):
             raise TypeError(f"Extra keyword arguments: {kwargs}")
 
         path = self.path_for(obj)
-
-        if path.exists() and not force:
-            raise RuntimeError(f"Will not overwrite {path} without force=True")
 
         # Make the parent directory (but not multiple parents)
         path.parent.mkdir(exist_ok=True)
@@ -233,12 +229,11 @@ class Registry(BaseStore):
         obj: Union[m.MaintainableArtefact, m.DataSet],
         *,
         annotate: bool = True,
-        force: bool = False,
         **kwargs,
     ) -> Path:
         """Write `obj` into the registry as SDMX-ML."""
         show_status = kwargs.pop("_show_status", False)
-        result = super().write(obj, annotate=annotate, force=force, **kwargs)
+        result = super().write(obj, annotate=annotate, **kwargs)
 
         # Add to git, but do not commit
         # NB if the path is specifically covered by a .gitignore entry, this will generate
