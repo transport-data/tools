@@ -19,6 +19,12 @@ class Config:
         default_factory=lambda: user_data_path("transport-data", ensure_exists=True)
     )
 
+    #: Mapping from maintainer IDs to either "local" (stored in a :class:`.LocalStore`)
+    #: or "registry" (stored in the :class:`.Registry`).
+    store_map: dict = field(
+        default_factory=lambda: {"TDCI": "registry", "TEST": "local"}
+    )
+
     @staticmethod
     def _config_path():
         """Candidate path for the configuration file."""
