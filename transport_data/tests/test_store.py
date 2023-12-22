@@ -30,3 +30,9 @@ class TestUnionStore:
     def test_add_to_registry(self, tmp_store, sdmx_structures) -> None:
         s = tmp_store
         s.add_to_registry("Codelist=TEST:FRUIT(1.0.0)")
+
+    def test_list(self, tmp_store, sdmx_structures) -> None:
+        result = tmp_store.list("TEST")
+        assert 5 == len(result)
+        assert "Codelist=TEST:COLOUR(1.0.0)" == result[0]
+        assert "DataStructureDefinition=TEST:PICKED(1.0.0)" == result[-1]

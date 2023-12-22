@@ -1,10 +1,11 @@
 """Local data storage."""
 import logging
+import re
 import subprocess
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Literal, Mapping, Tuple, Union
+from typing import TYPE_CHECKING, List, Literal, Mapping, Set, Tuple, Union
 
 import click
 import packaging.version
@@ -24,11 +25,20 @@ log = logging.getLogger(__name__)
 
 def _full_urn(value: str) -> str:
     """Convert possibly partial `value` to a complete SDMX URN."""
-    urn_base = "urn:sdmx:org.sdmx.infomodel.class."
+    urn_base = "urn:sdmx:org.sdmx.infomodel.package."
     if value.startswith(urn_base):
         return value
     else:
         return f"{urn_base}{value}"
+
+
+_SHORT_URN_EXPR = re.compile(r"(urn:sdmx:org\.sdmx\.infomodel\.[^\.]+\.)?(?P<short>.*)")
+
+
+def _short_urn(value: str) -> str:
+    m = _SHORT_URN_EXPR.match(value)
+    assert m
+    return m.group("short")
 
 
 def _maintainer(obj: Union[m.MaintainableArtefact, m.DataSet]) -> m.Agency:
@@ -69,6 +79,17 @@ class BaseStore(ABC):
         assert result
 
         return result
+
+    def list(self, maintainer_id: str) -> List[str]:
+        """Return a list of URNs for objects with `maintainer_id`."""
+        base = self.path.joinpath(maintainer_id)
+        result: Set[str] = set()
+        for path in sorted(base.glob("*.xml")):
+            msg = sdmx.read_sdmx(path)
+            for _, cls in msg.iter_collections():
+                result.update(_short_urn(obj.urn) for obj in msg.objects(cls).values())
+
+        return sorted(result)
 
     @singledispatchmethod
     def path_for(self, obj: m.MaintainableArtefact) -> Path:
@@ -284,6 +305,12 @@ class UnionStore(BaseStore):
         m = sdmx.urn.match(urn)
 
         return self.store[self.map.get(m["agency"], "local")].get(urn)
+
+    def list(self, maintainer_id: str):
+        return sorted(
+            set(self.store["registry"].list(maintainer_id))
+            | set(self.store["local"].list(maintainer_id))
+        )
 
     @singledispatchmethod
     def write(
