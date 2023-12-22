@@ -47,7 +47,7 @@ jobs:
       run: pip install --upgrade --upgrade-strategy=eager .[tests]
 
     - name: Clone the transport-data/registry repo
-      run: tdc registry clone
+      run: tdc store clone
 
     - name: Run test suite using pytest
       run: |

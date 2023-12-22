@@ -13,7 +13,6 @@ import sdmx
 import sdmx.model.v21 as m
 import sdmx.urn
 from sdmx.message import StructureMessage
-from sdmx.reader.xml import Reader
 
 from transport_data.util.sdmx import anno_generated
 
@@ -345,12 +344,10 @@ class UnionStore(BaseStore):
 # Command-line interface
 
 
-@click.group("registry", help=__doc__)
+@click.group("store")
 @click.pass_context
 def main(context) -> None:
-    import transport_data
-
-    context.obj = dict(default_store=transport_data.STORE)
+    """Manipulate local data storage."""
 
 
 @main.command()
@@ -361,17 +358,20 @@ def clone(context):
     The registry is cloned into the directory specified by the `tdc_registry_local`
     config value. See `tdc config --help`.
     """
-    context["default_store"].clone()
+    from transport_data import STORE
+
+    STORE.clone()
 
 
 @main.command("list")
 @click.argument("maintainer_id", metavar="MAINTAINER")
 @click.pass_context
 def list_cmd(context, maintainer_id):
-    """List registry contents for MAINTAINER."""
-    base = context.default_store.path.joinpath(maintainer_id)
-    for f in sorted(base.glob("*.xml")):
-        print(f.relative_to(base))
+    """List store contents for MAINTAINER."""
+    from transport_data import STORE
+
+    for urn in STORE.list(maintainer_id):
+        print(urn)
 
 
 @main.command()
@@ -380,27 +380,12 @@ def list_cmd(context, maintainer_id):
 def show(context, partial_urn):
     """Display an SDMX object by URN.
 
-    The URN should be partial, starting with the object class, e.g.
-    Codelist=AGENCY:ID(1.2.3).
+    The URN should be partial, starting with the object class, for instance
+    "Codelist=AGENCY:ID(1.2.3)".
     """
-    # Path to the object
-    urn = _full_urn(partial_urn)
-    candidate = context.default_store.path_for(urn)
-    if not candidate.exists():
-        raise click.ClickException(f"No path {candidate}")
+    from transport_data import STORE
 
-    r = Reader()
-    try:
-        obj = r.read_message(candidate)
-    except RuntimeError as e:
-        if "uncollected items" in str(e):
-            print(candidate.read_text())
-            return
-
-    if obj is None:
-        m = sdmx.urn.match(urn)
-        klass = sdmx.model.get_class(m["class"])
-        obj = r.get_single(klass)
+    obj = STORE.get(partial_urn)
 
     print(repr(obj))
 

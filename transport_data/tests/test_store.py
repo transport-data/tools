@@ -1,9 +1,10 @@
 import pytest
 import sdmx.model.v21
+from click.testing import CliRunner
 
 from transport_data.config import Config
 from transport_data.org import get_agencyscheme
-from transport_data.store import BaseStore, LocalStore
+from transport_data.store import BaseStore, LocalStore, main
 
 
 class TestBaseStore:
@@ -36,3 +37,15 @@ class TestUnionStore:
         assert 5 == len(result)
         assert "Codelist=TEST:COLOUR(1.0.0)" == result[0]
         assert "DataStructureDefinition=TEST:PICKED(1.0.0)" == result[-1]
+
+
+def test_cli_list(sdmx_structures):
+    result = CliRunner().invoke(main, ["list", "TEST"])
+    assert 0 == result.exit_code
+    assert 5 == len(result.output.splitlines())
+
+
+def test_cli_show(sdmx_structures):
+    result = CliRunner().invoke(main, ["show", "Codelist=TEST:COLOUR(1.0.0)"])
+    assert 0 == result.exit_code
+    assert "  4 <Code _T: Total>" in result.output
