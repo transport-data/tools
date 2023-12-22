@@ -14,20 +14,20 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     """SDMX structures for use in tests."""
     sm = sdmx.message.StructureMessage()
 
-    a = m.Agency(id="TEST")
+    ma_attrib = dict(maintainer=m.Agency(id="TEST"), version="1.0.0")
 
-    cs = m.ConceptScheme(id="TEST", maintainer=a)
+    cs = m.ConceptScheme(id="TEST", **ma_attrib)
     cs.append(m.Concept(id="MASS", name="Mass of fruit"))
     cs.append(m.Concept(id="PICKED", name="Number of fruits picked"))
     cs.append(m.Concept(id="COLOUR", name="Colour of fruit"))
     cs.append(m.Concept(id="FRUIT", name="Type of fruit"))
 
-    cl = m.Codelist(id="COLOUR", maintainer=a)
+    cl = m.Codelist(id="COLOUR", **ma_attrib)
     cl.extend([m.Code(id=c, name=c.title()) for c in "GREEN ORANGE RED YELLOW".split()])
     cl.append(m.Code(id="_T", name="Total"))
     sm.add(cl)
 
-    cl = m.Codelist(id="FRUIT", maintainer=a)
+    cl = m.Codelist(id="FRUIT", **ma_attrib)
     cl.extend(
         [m.Code(id=c, name=c.title()) for c in "APPLE BANANA GRAPE LEMON".split()]
     )
@@ -38,7 +38,7 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
         ("MASS", ("COLOUR", "FRUIT")),
         ("PICKED", ("FRUIT", "COLOUR")),
     ):
-        dsd = m.DataStructureDefinition(id=id_, maintainer=a, version="1.0")
+        dsd = m.DataStructureDefinition(id=id_, **ma_attrib)
         dsd.urn = sdmx.urn.make(dsd)
         dsd.measures.append(m.PrimaryMeasure(id=id_, concept_identity=cs[id_]))
         dsd.dimensions.extend(
