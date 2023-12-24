@@ -1,6 +1,6 @@
 .. From https://stackoverflow.com/a/62613202/2362198
 
-.. {{ (":mod:`." + fullname.split(".", maxsplit=1)[1] + "` " + objtype) | underline(line="*") }}
+.. {{ (":mod:`." + fullname.split(".", maxsplit=1)[1] + "` " + objtype) }}
 
 Code reference
 ==============
@@ -59,12 +59,10 @@ Code reference
    .. rubric:: {{ _('Classes') }}
 
    .. autosummary::
+      :toctree:
+      :template: autosummary/class.rst
    {% for item in classes %}
       {{ item }}
-   {%- endfor %}
-
-   {% for item in classes %}
-   .. autoclass:: {{ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}

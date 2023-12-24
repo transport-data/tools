@@ -1,10 +1,4 @@
-"""Command-line interface.
-
-.. runblock:: console
-
-   $ tdc --help
-
-"""
+"""Command-line interface."""
 from importlib import import_module
 
 import click
@@ -27,7 +21,7 @@ MODULES_WITH_CLI = [
     "jrc.cli",
     "org.cli",
     "proto.cli",
-    "registry",
+    "store",
 ]
 
 

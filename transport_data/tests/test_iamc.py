@@ -65,7 +65,7 @@ def test_variables_cl_for_dsd(tmp_path, sdmx_structures):
 
     # Code is annotated with the URN of the full-dimensionality DSD
     assert code.eval_annotation("iamc-full-dsd").endswith(
-        "DataStructureDefinition=TEST:MASS(1.0)"
+        "DataStructureDefinition=TEST:MASS(1.0.0)"
     )
     # Code is annotated with its full key; no missing dimensions
     assert {"COLOUR": "GREEN", "FRUIT": "_T"} == code.eval_annotation("iamc-full-key")

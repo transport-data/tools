@@ -7,6 +7,8 @@ from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import transport_data  # noqa: F401
+
 if TYPE_CHECKING:
     import sphinx.application
 
@@ -54,6 +56,10 @@ html_theme_options = dict(
 
 html_css_files = ["css/custom.css"]
 
+# -- Options for sphinx.ext.autosummary ------------------------------------------------
+
+autosummary_generate = True
+
 # -- Options for sphinx.ext.extlinks ---------------------------------------------------
 
 extlinks = {
@@ -67,6 +73,7 @@ extlinks = {
 intersphinx_mapping = {
     "click": ("https://click.palletsprojects.com/en/8.1.x/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "platformdirs": ("https://platformdirs.readthedocs.io/en/latest/", None),
     "pooch": ("https://www.fatiando.org/pooch/latest/", None),
     "py": ("https://docs.python.org/3/", None),
     "pytest": ("https://docs.pytest.org/en/stable/", None),
@@ -93,7 +100,10 @@ def linkcode_resolve(domain, info):
     rel = Path(module.__file__).relative_to(base_path[info["module"].split(".")[0]])
 
     # The object itself
-    obj = getattr(module, info["fullname"])
+    try:
+        obj = getattr(module, info["fullname"])
+    except AttributeError:
+        return None
     try:
         # First line number
         firstlineno = obj.__code__.co_firstlineno
@@ -103,3 +113,8 @@ def linkcode_resolve(domain, info):
         fragment = f"#L{firstlineno}"  # Function, class, or other definition
 
     return f"{base_url}{rel}{fragment}"
+
+
+# -- Options for sphinx.ext.napoleon ---------------------------------------------------
+
+napoleon_preprocess_types = True

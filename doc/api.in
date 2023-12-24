@@ -12,7 +12,7 @@
    jrc
    org
    proto
-   registry
+   store
    testing
    tests
    util

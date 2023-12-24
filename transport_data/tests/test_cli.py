@@ -20,7 +20,7 @@ from transport_data.cli import main
         ("org", "--help"),
         ("org", "--version=0.0.0"),
         ("proto", "--help"),
-        ("registry", "--help"),
+        ("store", "--help"),
     ),
 )
 def test_cli(command):
