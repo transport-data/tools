@@ -1,0 +1,2 @@
+# Reduce the number of merge/rebase conflicts
+doc/whatsnew.rst merge=union
