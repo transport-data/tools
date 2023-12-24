@@ -166,6 +166,27 @@ class BaseStore(ABC):
             for obj_ in getattr(obj, kind).values():
                 self.write(obj_, **kwargs)
 
+    def assign_version(
+        self,
+        obj: m.MaintainableArtefact,
+        default="0.0.0",
+        increment: Union[bool, Tuple[bool, bool, bool]] = False,
+    ) -> None:
+        """Assign a version to `obj`.
+
+        If `increment` is :data:`False`, the version will be the latest already existing
+        in the registry, if any, or `default` if no version of `obj` is stored.
+
+        Otherwise, `increment` should be a 3-tuple of :class:`bool`, which are passed as
+        arguments to :func:`next_version`.
+        """
+        if increment is False:
+            obj.version = (self.list_versions(obj) or [default])[-1]
+        else:
+            if not isinstance(increment, tuple):
+                increment = (increment, False, False)
+            obj.version = self.next_version(obj, *increment)
+
     def list_versions(self, obj: m.MaintainableArtefact) -> List[str]:
         """List all versions of `obj` already stored in the registry."""
 
@@ -192,27 +213,6 @@ class BaseStore(ABC):
         """Return an incremented version string for `obj`."""
         v = packaging.version.parse(self.list_versions(obj)[-1])
         return f"{v.major + int(major)}.{v.minor + int(minor)}.{v.micro + int(patch)}"
-
-    def assign_version(
-        self,
-        obj: m.MaintainableArtefact,
-        default="0.0.0",
-        increment: Union[bool, Tuple[bool, bool, bool]] = False,
-    ) -> None:
-        """Assign a version to `obj`.
-
-        If `increment` is :data:`False`, the version will be the latest already existing
-        in the registry, if any, or `default` if no version of `obj` is stored.
-
-        Otherwise, `increment` should be a 3-tuple of :class:`bool`, which are passed as
-        arguments to :func:`next_version`.
-        """
-        if increment is False:
-            obj.version = (self.list_versions(obj) or [default])[-1]
-        else:
-            if not isinstance(increment, tuple):
-                increment = (increment, False, False)
-            obj.version = self.next_version(obj, *increment)
 
 
 class LocalStore(BaseStore):

@@ -1,5 +1,6 @@
 import pytest
 import sdmx.model.v21
+import sdmx.model.v21 as m
 from click.testing import CliRunner
 
 from transport_data.config import Config
@@ -25,6 +26,38 @@ class TestBaseStore:
         """Objects can be retrieved by partial URN."""
         result = s.get(urn)
         assert isinstance(result, sdmx.model.v21.AgencyScheme)
+
+    def test_list_versions(self, sdmx_structures, s: BaseStore) -> None:
+        cl = sdmx_structures.codelist["FRUIT"]
+
+        result = s.list_versions(cl)
+
+        assert ["1.0.0"] == result
+
+        cl = m.Codelist(id="FOO", maintainer=m.Agency(id="TEST"))
+        assert [] == s.list_versions(cl)
+
+    @pytest.mark.parametrize(
+        "major, minor, patch, exp",
+        (
+            (False, True, False, "1.1.0"),  # Default
+        ),
+    )
+    def test_next_version(
+        self, sdmx_structures, s: BaseStore, major, minor, patch, exp
+    ) -> None:
+        cl = sdmx_structures.codelist["FRUIT"]
+
+        result = s.next_version(cl, major, minor, patch)
+
+        assert exp == result
+
+    def test_assign_version(self, sdmx_structures, s: BaseStore) -> None:
+        cl = m.Codelist(id="FRUIT", maintainer=m.Agency(id="TEST"))
+
+        s.assign_version(cl, increment=True)
+
+        assert "2.0.0" == cl.version
 
 
 class TestUnionStore:
