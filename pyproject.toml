@@ -47,6 +47,8 @@ tdc = "transport_data.cli:main"
 exclude_also = [
   # Imports only used by type checkers
   "if TYPE_CHECKING:",
+  # Abstract methods
+  "...",
 ]
 
 [[tool.mypy.overrides]]

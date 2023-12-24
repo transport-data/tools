@@ -47,13 +47,13 @@ jobs:
       run: pip install --upgrade --upgrade-strategy=eager .[tests]
 
     - name: Clone the transport-data/registry repo
-      run: tdc store clone
+      run: coverage run -m transport_data store clone
 
     - name: Run test suite using pytest
       run: |
         pytest transport_data \
           --trace-config --color=yes -rA -vv --durations=20 \
-          --cov-report=term --cov-report=xml \
+          --cov-append --cov-report=term --cov-report=xml \
           --numprocesses auto
       shell: bash
 
