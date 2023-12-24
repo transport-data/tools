@@ -43,6 +43,12 @@ repository = "https://github.com/transport-data/tools"
 [project.scripts]
 tdc = "transport_data.cli:main"
 
+[tool.coverage.report]
+exclude_also = [
+  # Imports only used by type checkers
+  "if TYPE_CHECKING:",
+]
+
 [[tool.mypy.overrides]]
 module = ["pooch"]
 ignore_missing_imports = true
