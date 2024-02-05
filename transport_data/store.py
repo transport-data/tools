@@ -24,11 +24,11 @@ log = logging.getLogger(__name__)
 
 def _full_urn(value: str) -> str:
     """Convert possibly partial `value` to a complete SDMX URN."""
-    urn_base = "urn:sdmx:org.sdmx.infomodel.package."
+    urn_base = "urn:sdmx:org.sdmx.infomodel."
     if value.startswith(urn_base):
         return value
     else:
-        return f"{urn_base}{value}"
+        return f"{urn_base}package.{value}"
 
 
 _SHORT_URN_EXPR = re.compile(r"(urn:sdmx:org\.sdmx\.infomodel\.[^\.]+\.)?(?P<short>.*)")
@@ -111,6 +111,18 @@ class BaseStore(ABC):
         return self.path.joinpath(
             m["agency"], "_".join([m["class"], m["agency"], m["id"]])
         ).with_suffix(".xml")
+
+    def setdefault(self, default: m.MaintainableArtefact) -> m.MaintainableArtefact:
+        """If an object with the URN of `default` is in the registry, return it.
+
+        Otherwise, :meth:`.write` `default`.
+        """
+        try:
+            # Existing object
+            return self.get(sdmx.urn.make(default))
+        except AssertionError:
+            self.write(default)
+            return default
 
     @singledispatchmethod
     def write(

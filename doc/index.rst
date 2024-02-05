@@ -51,6 +51,7 @@ They handle tasks including:
    estat
    iamc
    jrc
+   oica
    org
    proto
 
@@ -58,6 +59,7 @@ They handle tasks including:
 - :mod:`.estat`: :doc:`estat`
 - :mod:`.iamc`: :doc:`iamc`
 - :mod:`.jrc`: :doc:`jrc`
+- :mod:`.oica`: :doc:`oica`
 - :mod:`.org`: :doc:`org`
 - :mod:`.proto`: :doc:`proto`
 

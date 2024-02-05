@@ -3,10 +3,15 @@ codecov:
     after_n_builds: 5
 
 comment:
+  behavior: once
   # Don't display the large graph
   layout: "diff, files"
 
 coverage:
   status:
     project:
-      default: {}
+      default:
+        if_ci_failed: success
+    patch:
+      default:
+        if_ci_failed: success
