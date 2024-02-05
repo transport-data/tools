@@ -19,6 +19,7 @@ MODULES_WITH_CLI = [
     "estat",
     "iamc.cli",
     "jrc.cli",
+    "oica.cli",
     "org.cli",
     "proto.cli",
     "store",
