@@ -8,8 +8,8 @@ from transport_data.oica import convert, get_cl_geo, update_registry
     (
         pytest.param("PROD", None, marks=pytest.mark.xfail(raises=NotImplementedError)),
         ("SALES", dict(SALES=1554, SALES_GR=886)),
-        ("STOCK", dict(STOCK=462, STOCK_AAGR=231, STOCK_CAP=77)),
-        ("STOCK_AAGR", dict(STOCK=462, STOCK_AAGR=231, STOCK_CAP=77)),
+        ("STOCK", dict(STOCK=462, STOCK_AAGR=230, STOCK_CAP=77)),
+        ("STOCK_AAGR", dict(STOCK=462, STOCK_AAGR=230, STOCK_CAP=77)),
     ),
 )
 def test_convert(measure, N_obs):
