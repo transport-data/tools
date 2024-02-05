@@ -1,6 +1,7 @@
 codecov:
   notify:
     after_n_builds: 5
+  require_ci_to_pass: false
 
 comment:
   behavior: once
@@ -11,7 +12,8 @@ coverage:
   status:
     project:
       default:
-        if_ci_failed: success
+        target: auto
     patch:
       default:
-        if_ci_failed: success
+        informational: true
+        target: 100%
