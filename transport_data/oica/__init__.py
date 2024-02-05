@@ -13,7 +13,7 @@ from functools import lru_cache, partial
 from itertools import count, product
 from operator import itemgetter
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterator, Tuple
+from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple
 
 import pandas as pd
 
@@ -36,7 +36,9 @@ with open(REGISTRY_FILE) as f:
     POOCH = Pooch(module=__name__, base_url=BASE_URL, registry=json.load(f))
 
 
-def convert(measure: str):
+def convert(
+    measure: str,
+) -> Dict[str, "sdmx.model.v21.DataSet"]:
     """Convert OICA stock (vehicle in use) spreadsheets to SDMX."""
     # Retrieve the DFD
     dfd, dsd = get_structures(measure)
@@ -45,7 +47,19 @@ def convert(measure: str):
         raise NotImplementedError(f"Convert OICA data files for {dfd}")
 
     # Convert all fetchable/fetched files related to the DFD
-    [_convert_single_file(path) for path in filenames_for_dfd(dfd)]
+    results = [_convert_single_file(path) for path in filenames_for_dfd(dfd)]
+
+    # Merge observations from multiple files into a single data set per data flow
+    result: Dict[str, "sdmx.model.v21.DataSet"] = {}
+    for r in results:
+        for dfd_id, datasets in r.items():
+            if dfd_id not in result:
+                result[dfd_id] = datasets[0]
+                [result[dfd_id].add_obs(ds.obs) for ds in datasets[1:]]
+            else:
+                [result[dfd_id].add_obs(ds.obs) for ds in datasets]
+
+    return result
 
 
 def _convert_tp(time_period: str, units: str, vehicle_type: str):
@@ -81,7 +95,7 @@ def _convert_tp(time_period: str, units: str, vehicle_type: str):
         raise ValueError(time_period)
 
 
-def _convert_single_file(path: Path):
+def _convert_single_file(path: Path) -> Dict[str, List["sdmx.model.v21.DataSet"]]:
     """Convert single OICA stock spreadsheet to SDMX."""
     from sdmx.model.v21 import DataSet
 
@@ -140,6 +154,8 @@ def _convert_single_file(path: Path):
         axis=1,
     )
 
+    result: Dict[str, List[DataSet]] = {}
+
     # Group data by MEASURE ~ dataflow
     for m, group_df in df.groupby("MEASURE"):
         # Create structures for this measure
@@ -154,9 +170,11 @@ def _convert_single_file(path: Path):
             map(partial(make_obs, dsd=dsd), map(itemgetter(1), group_df.iterrows()))
         )
 
-        # Write the data set to file
-        # TODO Merge with with other data for the same flow
-        STORE.write(ds)
+        # Store the data set
+        result.setdefault(dfd.id, [])
+        result[dfd.id].append(ds)
+
+    return result
 
 
 def fetch(dry_run: bool = False):
@@ -365,35 +383,48 @@ def get_structures(
 
     from transport_data import STORE, org
 
+    base = f"{get_agency().id}_{measure}"
     ma_args = dict(
-        id=f"{get_agency().id}_{measure}", maintainer=org.get_agency()[0], version="0.1"
+        maintainer=org.get_agency()[0],
+        version="0.1",
+        is_final=False,
+        is_external_reference=False,
     )
 
-    dsd = v21.DataStructureDefinition(**ma_args)
+    dfd = STORE.setdefault(v21.DataflowDefinition(id=f"DF_{base}", **ma_args))
+    dsd = STORE.setdefault(v21.DataStructureDefinition(id=f"DS_{base}", **ma_args))
 
-    cs = get_conceptscheme()
+    if not dfd.is_final:
+        # Associate
+        dfd.structure = dsd
 
-    for d, local_rep in (
-        ("GEO", get_cl_geo()),
-        ("VEHICLE_TYPE", None),
-        ("TIME_PERIOD", None),
-    ):
-        dsd.dimensions.getdefault(
-            id=d,
-            concept_identity=cs[d],
-            local_representation=v21.Representation(enumerated=local_rep),
-        )
+        # Mark as complete
+        dfd.is_final = True
+        STORE.write(dfd)
 
-    for a in ("UNIT_MEASURE",):
-        dsd.attributes.getdefault(id=a, concept_identity=cs[d])
+    if not dsd.is_final:
+        cs = get_conceptscheme()
 
-    for m in ("OBS_VALUE",):
-        dsd.measures.getdefault(id=m, concept_identity=cs[d])
+        for d, local_rep in (
+            ("GEO", get_cl_geo()),
+            ("VEHICLE_TYPE", None),
+            ("TIME_PERIOD", None),
+        ):
+            dsd.dimensions.getdefault(
+                id=d,
+                concept_identity=cs[d],
+                local_representation=v21.Representation(enumerated=local_rep),
+            )
 
-    dfd = v21.DataflowDefinition(**ma_args, structure=dsd)
+        for a in ("UNIT_MEASURE",):
+            dsd.attributes.getdefault(id=a, concept_identity=cs[d])
 
-    STORE.write(dfd)
-    STORE.write(dsd)
+        for m in ("OBS_VALUE",):
+            dsd.measures.getdefault(id=m, concept_identity=cs[d])
+
+        # Mark as complete
+        dsd.is_final = True
+        STORE.write(dsd)
 
     return dfd, dsd
 
