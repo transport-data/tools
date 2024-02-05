@@ -43,11 +43,11 @@ def convert(
     # Retrieve the DFD
     dfd, dsd = get_structures(measure)
 
-    if "PROD" in dfd.id or "SALES" in dfd.id:
+    if "PROD" in dfd.id:
         raise NotImplementedError(f"Convert OICA data files for {dfd}")
 
     # Convert all fetchable/fetched files related to the DFD
-    results = [_convert_single_file(path) for path in filenames_for_dfd(dfd)]
+    results = [_convert_single_file(path, dfd) for path in filenames_for_dfd(dfd)]
 
     # Merge observations from multiple files into a single data set per data flow
     result: Dict[str, "sdmx.model.v21.DataSet"] = {}
@@ -63,7 +63,7 @@ def convert(
 
 
 def _convert_tp(time_period: str, units: str, vehicle_type: str):
-    """Identify values for 4 concepts using the TIME_PERIOD."""
+    """Identify values for 4 concepts using column labels melted into TIME_PERIOD."""
     concepts = ["MEASURE", "UNIT_MEASURE", "VEHICLE_TYPE", "TIME_PERIOD"]
 
     def _(*values):
@@ -75,16 +75,33 @@ def _convert_tp(time_period: str, units: str, vehicle_type: str):
         return _("STOCK_AAGR", "1", vehicle_type, "2015–2020")
     elif time_period == "Number of vehicles per 1000 inhabitants":
         return _("STOCK_CAP", "0.001", vehicle_type, "_X")
+    elif match := re.fullmatch(r"Q1-Q4 (\d{4})", time_period):
+        return _("SALES", units, vehicle_type, match.group(1))
+    elif match := re.fullmatch(r"(2\d{3})/\s*(2\d{3})", time_period):
+        return _("SALES_GR", "1", vehicle_type, f"{match.group(2)}–{match.group(1)}")
+    elif time_period == "Scope":
+        # log.warning("Discard values for 'Scope' attribute")
+        return _(None, None, None, None)
     else:  # pragma: no cover
         raise ValueError(time_period)
 
 
-def _convert_single_file(path: Path) -> Dict[str, List["sdmx.model.v21.DataSet"]]:
-    """Convert single OICA stock spreadsheet to SDMX."""
+def _convert_single_file(
+    path: Path, dfd: "sdmx.model.v21.DataflowDefinition"
+) -> Dict[str, List["sdmx.model.v21.DataSet"]]:
+    """Convert single OICA data spreadsheet to SDMX.
+
+    This function currently handles the 2020 and later file format used for sales and
+    stock data.
+    """
     from sdmx.model.v21 import DataSet
 
     from transport_data import STORE
     from transport_data.util.sdmx import make_obs
+
+    if path.stem.endswith("2018") or path.stem.endswith("2019"):
+        log.warning("Skip not implemented 2018–2019 OICA file format")
+        return dict()
 
     # - Read data
     # - Drop entirely empty rows.
@@ -96,11 +113,21 @@ def _convert_single_file(path: Path) -> Dict[str, List["sdmx.model.v21.DataSet"]
     )
 
     # Confirm vehicle type and measure vs. contents of the title cell
-    pat = re.compile(r"(PC|CV|TOTAL) WORLD VEHICLES IN USE +\(in thousand units\)")
-
-    if match := pat.fullmatch(df.iloc[0, 0]):
+    if "SALES" in dfd.id:
+        pattern = r"REGISTRATIONS OR SALES OF NEW VEHICLES - (ALL TYPES|COMMERCIAL VEHICLES|PASSENGER CARS)"
+        units = "vehicle"
+    elif "STOCK" in dfd.id:
+        pattern = r"(PC|CV|TOTAL) WORLD VEHICLES IN USE +\(in thousand units\)"
         units = "kvehicle"
-        vehicle_type = match.group(1)
+
+    if match := re.fullmatch(pattern, df.iloc[0, 0]):
+        # Codes are inconsistent across files; use shorter codes
+        vehicle_type = {
+            "ALL TYPES": "_T",
+            "COMMERCIAL VEHICLES": "CV",
+            "PASSENGER CARS": "PC",
+            "TOTAL": "_T",
+        }.get(match.group(1), match.group(1))
     else:  # pragma: no cover
         raise ValueError(f"Unrecognized table header: {df.iloc[0, 0]!r}")
 
@@ -114,6 +141,7 @@ def _convert_single_file(path: Path) -> Dict[str, List["sdmx.model.v21.DataSet"]
         .set_axis(df.iloc[1, :], axis=1)
         .rename(columns={"REGIONS/COUNTRIES": "GEO"})
         .melt(id_vars="GEO", var_name="TIME_PERIOD", value_name="OBS_VALUE")
+        .dropna(subset=["GEO", "OBS_VALUE"], how="any")
     )
 
     # Prepare a GEO codelist and map using the "GEO" column
@@ -136,7 +164,7 @@ def _convert_single_file(path: Path) -> Dict[str, List["sdmx.model.v21.DataSet"]
             df["OBS_VALUE"],
         ],
         axis=1,
-    )
+    ).dropna(subset=["MEASURE", "VEHICLE_TYPE"], how="any")
 
     result: Dict[str, List[DataSet]] = {}
 
@@ -273,8 +301,9 @@ def _make_geo_codes(
             cl.append(code)  # Add to the code list
         except ValueError:
             pass  # Already exists
-        else:
-            id_for_name.setdefault(value, code.id)  # Update the map
+
+        # Update the map
+        id_for_name.setdefault(value, code.id)
 
     values.sort_values().drop_duplicates().apply(_make_code)
 
@@ -320,6 +349,7 @@ def get_conceptscheme() -> "sdmx.model.common.ConceptScheme":
     for id_, name in (
         ("PROD", "Production"),
         ("SALES", "Sales"),
+        ("SALES_GR", "Sales growth over a given period"),
         ("STOCK", "Vehicles in use"),
         ("STOCK_AAGR", "Vehicles in use, average annual growth rate"),
         ("STOCK_CAP", "Vehicles in use per capita"),
