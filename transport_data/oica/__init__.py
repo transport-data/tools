@@ -12,7 +12,7 @@ This module handles data from the OICA website.
 """
 import json
 import logging
-from functools import partial
+from functools import lru_cache, partial
 from itertools import count, product
 from operator import itemgetter
 from pathlib import Path
@@ -27,25 +27,52 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+#: Base URL for data files.
 BASE_URL = "https://www.oica.net/wp-content/uploads/"
 
+#: Package data file containing :mod:`.pooch` registry information (file names and
+#: hashes).
 REGISTRY_FILE = Path(__file__).parent.joinpath("registry.json")
 
+# Read the registry file
 with open(REGISTRY_FILE) as f:
     POOCH = Pooch(module=__name__, base_url=BASE_URL, registry=json.load(f))
 
 
+@lru_cache
 def get_agency() -> "sdmx.model.common.Agency":
+    """Return the OICA Agency."""
     from sdmx.model import v21
 
     return v21.Agency(
         id="OICA",
         name="International Organization of Motor Vehicle Manufacturers",
-        description="""https://www.oica.net""",
+        description="https://www.oica.net",
     )
 
 
 def _geo_codelist(values: pd.Series) -> Tuple["sdmx.model.common.Codelist", Dict]:
+    """Create a codelist for the ``GEO`` concept, given certain `values`.
+
+    For each unique value in `values`:
+
+    1. Strip leading and trailing whitespace.
+    2. Pass the data through :data`.transport_data.util.pycountry.NAME_MAP` for commonly
+       used non-ISO values.
+    3. Look up the value in ISO 3166-1 via :any:`pycountry.countries`.
+    4. Add a code to the returned code list. If the lookup in (3) succeeds, the code ID
+       is the alpha-2 code, and the name and description are populated from the
+       database. If the lookup in (3) fails, the code ID is a unique integer.
+
+    Returns
+    -------
+    .Codelist
+        One entry for each unique value in `values`.
+    dict
+        Mapping from `values` to codes in the code list. Passing this to
+        :meth:`pandas.Series.replace` should convert the `values` to the corresponding
+        codes.
+    """
     from pycountry import countries
     from sdmx.model import v21
 
@@ -55,13 +82,16 @@ def _geo_codelist(values: pd.Series) -> Tuple["sdmx.model.common.Codelist", Dict
     counter = count()
     id_for_name: Dict[str, str] = {}
 
+    @lru_cache
     def _make_code(value: str):
         name = value.strip()
         try:
+            # - Apply replacements from NAME_MAP.
+            # - Lookup in ISO 3166-1.
             match = countries.lookup(NAME_MAP.get(name.lower(), name))
         except LookupError:
             try:
-                # Look up an existing generated code that matches this `value`
+                # Look up an already-generated code that matches this `value`
                 code = cl[id_for_name[value]]
             except KeyError:
                 # Generate a new code with a serial ID
@@ -73,13 +103,15 @@ def _geo_codelist(values: pd.Series) -> Tuple["sdmx.model.common.Codelist", Dict
                 name=match.name,
                 description="Identical to the ISO 3166-1 entry",
             )
-        try:
-            cl.append(code)
-            id_for_name.setdefault(value, code.id)
-        except ValueError:
-            pass
 
-    values.apply(_make_code)
+        try:
+            cl.append(code)  # Add to the code list
+        except ValueError:
+            pass  # Already exists
+        else:
+            id_for_name.setdefault(value, code.id)  # Update the map
+
+    values.sort_values().drop_duplicates().apply(_make_code)
 
     return cl, id_for_name
 
@@ -89,6 +121,14 @@ def make_structures(
 ) -> Tuple[
     "sdmx.model.v21.DataflowDefinition", "sdmx.model.v21.DataStructureDefinition"
 ]:
+    """Create a data flow and data structure definitions for a given OICA `measure`.
+
+    The DFD and DSD have URNs like ``TDCI:OICA_{MEASURE}(0.1)``. The DSD has:
+
+    - dimensions ``GEO``, ``VEHICLE_TYPE``, ``TIME_PERIOD``,
+    - attributes ``UNIT_MEASURE``, and
+    - primary measure with ID ``OBS_VALUE``.
+    """
     from sdmx.model import v21
 
     from transport_data import org
@@ -113,36 +153,54 @@ def make_structures(
 
 
 def convert():
-    """Convert OICA spreadsheets to SDMX."""
+    """Convert OICA stock (vehicle in use) spreadsheets to SDMX."""
     from sdmx.model.v21 import DataSet
 
     from transport_data import STORE as registry
     from transport_data.util.sdmx import make_obs
 
+    # Select just one spreadsheet
     paths = fetch()
     for p in paths:
         if "PC-World" in p:
             path = Path(p)
             break
 
+    # - Read data
+    # - Drop entirely empty rows.
+    # - Drop entirely empty columns.
     df = (
         pd.read_excel(path)
         .dropna(how="all", axis=0, ignore_index=True)
         .dropna(how="all", axis=1)
     )
 
+    # Confirm vehicle type and measure vs. contents of the title cell
     assert "PC WORLD VEHICLES IN USE  (in thousand units)" == df.iloc[0, 0]
     units = "kvehicle"
     vehicle_type = "PC"
 
+    # - Drop title cell.
+    # - Set index.
+    # - Rename REGIONS/COUNTRIES to GEO.
+    # - Melt to long format.
+    # - Replace float with string year values.
+    df = (
+        df.iloc[2:, :]
+        .set_axis(df.iloc[1, :], axis=1)
+        .rename(columns={"REGIONS/COUNTRIES": "GEO"})
+        .melt(id_vars="GEO", var_name="TIME_PERIOD", value_name="OBS_VALUE")
+    )
+
     def _convert_tp(time_period):
-        if time_period in ("2015", "2020"):
+        """Identify values for 4 concepts using the TIME_PERIOD."""
+        if time_period in (2015.0, 2020.0):
             return pd.Series(
                 dict(
                     MEASURE="STOCK",
                     UNIT_MEASURE=units,
                     VEHICLE_TYPE=vehicle_type,
-                    TIME_PERIOD=time_period,
+                    TIME_PERIOD=str(int(time_period)),
                 )
             )
         elif time_period == "Average Annual Growth Rate\n 2015-2020":
@@ -157,16 +215,14 @@ def convert():
         else:
             raise ValueError(time_period)
 
-    df = (
-        df.iloc[2:, :]
-        .set_axis(df.iloc[1, :], axis=1)
-        .rename(columns={"REGIONS/COUNTRIES": "GEO"})
-        .melt(id_vars="GEO", var_name="TIME_PERIOD", value_name="OBS_VALUE")
-        .replace({"TIME_PERIOD": {2015.0: "2015", 2020.0: "2020"}})
-    )
-
+    # Prepare a GEO codelist and map using the "GEO" column
     cl_geo, geo_map = _geo_codelist(df["GEO"])
 
+    # Transform data
+    # - Replace GEO values with codes from `cl_geo`.
+    # - Replace TIME_PERIOD values with new TIME_PERIOD, MEASURE, UNIT_MEASURE,
+    #   VEHICLE_TYPE.
+    # - Preserve OBS_VALUE.
     df = pd.concat(
         [
             df["GEO"].replace(geo_map),
@@ -176,23 +232,32 @@ def convert():
         axis=1,
     )
 
+    # Group data by MEASURE ~ dataflow
     for m, group_df in df.groupby("MEASURE"):
+        # Create structures for this measure
+        # TODO Retrieve possibly-cached or -stored structures
         dfd, dsd = make_structures(m)
 
+        # Create a data set
         ds = DataSet(described_by=dsd)
+
+        # Convert rows of `group_df` to observations
         ds.add_obs(
             map(partial(make_obs, dsd=dsd), map(itemgetter(1), group_df.iterrows()))
         )
 
+        # Write the data set to file
+        # TODO Merge with with other data for the same flow
         registry.write(ds)
 
+    # Update and store `cl_geo`
     cl_geo.maintainer = get_agency()
     cl_geo.version = "0.1"
     registry.write(cl_geo)
 
 
 def fetch(dry_run: bool = False):
-    """Fetch data files."""
+    """Fetch all known OICA data files."""
     if dry_run:
         for f in POOCH.registry:
             print(f"Valid url for GEO={f}: {POOCH.is_available(f)}")
@@ -205,7 +270,7 @@ def update_registry():
     """Update the registry.
 
     This function crawls :data:`.BASE_URL` for file names matching certain patterns.
-    Files that exist are downloaded, hashed, and added to :file:`registry.json`.
+    Files that exist are downloaded, hashed, and added to the :data:`.REGISTRY_FILE`.
     """
     from pooch import file_hash
 
