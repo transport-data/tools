@@ -1,10 +1,12 @@
 """International Organization of Motor Vehicle Manufacturers (OICA) provider.
 
-This module handles data from the OICA website. "Handle" includes:
+This module handles data from the `OICA website <https://www.oica.net>`__. "Handle"
+includes:
 
-- Fetch.
-- Parse the native spreadsheet layout.
-- Convert to SDMX.
+- Fetch data files.
+- Parse the native spreadsheet layout. This layout differs across data flows and years;
+  currently only the most recent formats are supported.
+- Convert to SDMX following TDCI conventions.
 """
 import json
 import logging
@@ -39,7 +41,23 @@ with open(REGISTRY_FILE) as f:
 def convert(
     measure: str,
 ) -> Dict[str, "sdmx.model.v21.DataSet"]:
-    """Convert OICA stock (vehicle in use) spreadsheets to SDMX."""
+    """Convert OICA spreadsheets to SDMX.
+
+    This method handles OICA's particular arrangement of data from a single data flow
+    across multiple Microsoft Excel files, each with a single sheet. The individual
+    files/sheets are processed by :func:`.convert_single_file`.
+
+    The OICA files each mix data for multiple data flows or measures: for instance, each
+    of the "Vehicles in use" files contains data for up to 3 different measures:
+
+    - ``STOCK``: Number of vehicles in use.
+    - ``STOCK_AAGR``: Average annual growth rate across a specified ``TIME_PERIOD``.
+    - (in some cases) ``STOCK_CAP``: Number of vehicles in use per 1000 capita
+      population.
+
+    This function returns a dictionary in which data flow IDs for each measure are keys,
+    and values are SDMX data sets, each for a single measure.
+    """
     # Retrieve the DFD
     dfd, dsd = get_structures(measure)
 
