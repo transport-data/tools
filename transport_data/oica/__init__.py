@@ -1,6 +1,6 @@
 """International Organization of Motor Vehicle Manufacturers (OICA) provider.
 
-This module handles data from the JRC IDEES 2015 source.
+This module handles data from the OICA website.
 
 "Handle" includes:
 
