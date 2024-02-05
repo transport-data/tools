@@ -1,8 +1,11 @@
 What's new
 **********
 
-Next release
-============
+.. Next release
+.. ============
+
+v24.2.5
+=======
 
 - Improve :mod:`.store` to handle both local and registry storage; expand :doc:`documentation <store>` (:pull:`11`).
 - Add :func:`.iamc.variable_cl_for_dsd`; expand documentation of :doc:`IAM data <iamc>` (:pull:`10`).
