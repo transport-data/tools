@@ -64,33 +64,17 @@ def convert(
 
 def _convert_tp(time_period: str, units: str, vehicle_type: str):
     """Identify values for 4 concepts using the TIME_PERIOD."""
+    concepts = ["MEASURE", "UNIT_MEASURE", "VEHICLE_TYPE", "TIME_PERIOD"]
+
+    def _(*values):
+        return pd.Series(dict(zip(concepts, values)))
+
     if time_period in (2015.0, 2020.0):
-        return pd.Series(
-            dict(
-                MEASURE="STOCK",
-                UNIT_MEASURE=units,
-                VEHICLE_TYPE=vehicle_type,
-                TIME_PERIOD=str(int(time_period)),
-            )
-        )
+        return _("STOCK", units, vehicle_type, str(int(time_period)))
     elif time_period == "Average Annual Growth Rate\n 2015-2020":
-        return pd.Series(
-            dict(
-                MEASURE="STOCK_AAGR",
-                UNIT_MEASURE="1",
-                VEHICLE_TYPE=vehicle_type,
-                TIME_PERIOD="2015–2020",
-            )
-        )
+        return _("STOCK_AAGR", "1", vehicle_type, "2015–2020")
     elif time_period == "Number of vehicles per 1000 inhabitants":
-        return pd.Series(
-            dict(
-                MEASURE="STOCK_CAP",
-                UNIT_MEASURE="0.001",
-                vehicle_type=vehicle_type,
-                TIME_PERIOD="_X",
-            )
-        )
+        return _("STOCK_CAP", "0.001", vehicle_type, "_X")
     else:  # pragma: no cover
         raise ValueError(time_period)
 
