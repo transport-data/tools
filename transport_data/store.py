@@ -112,6 +112,18 @@ class BaseStore(ABC):
             m["agency"], "_".join([m["class"], m["agency"], m["id"]])
         ).with_suffix(".xml")
 
+    def setdefault(self, default: m.MaintainableArtefact) -> m.MaintainableArtefact:
+        """If an object with the URN of `default` is in the registry, return it.
+
+        Otherwise, :meth:`.write` `default`.
+        """
+        try:
+            # Existing object
+            return self.get(sdmx.urn.make(default))
+        except AssertionError:
+            self.write(default)
+            return default
+
     @singledispatchmethod
     def write(
         self,
