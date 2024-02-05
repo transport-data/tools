@@ -1,6 +1,6 @@
 import pytest
 
-from transport_data.oica import convert, update_registry
+from transport_data.oica import convert, get_cl_geo, update_registry
 
 
 @pytest.mark.parametrize(
@@ -14,6 +14,9 @@ from transport_data.oica import convert, update_registry
 )
 def test_convert(measure):
     convert(measure)
+
+    # GEO codelist written with some elements
+    assert 0 < len(get_cl_geo())
 
 
 def test_update_registry():
