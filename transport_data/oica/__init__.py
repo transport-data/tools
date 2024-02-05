@@ -51,7 +51,9 @@ def get_agency() -> "sdmx.model.common.Agency":
     )
 
 
-def _geo_codelist(values: pd.Series) -> Tuple["sdmx.model.common.Codelist", Dict]:
+def _geo_codelist(
+    values: pd.Series, **kwargs
+) -> Tuple["sdmx.model.common.Codelist", Dict]:
     """Create a codelist for the ``GEO`` concept, given certain `values`.
 
     For each unique value in `values`:
@@ -78,7 +80,7 @@ def _geo_codelist(values: pd.Series) -> Tuple["sdmx.model.common.Codelist", Dict
 
     from transport_data.util.pycountry import NAME_MAP
 
-    cl = v21.Codelist(id="GEO")
+    cl = v21.Codelist(id="GEO", **kwargs)
     counter = count()
     id_for_name: Dict[str, str] = {}
 
@@ -116,7 +118,7 @@ def _geo_codelist(values: pd.Series) -> Tuple["sdmx.model.common.Codelist", Dict
     return cl, id_for_name
 
 
-def make_structures(
+def get_structures(
     measure: str,
 ) -> Tuple[
     "sdmx.model.v21.DataflowDefinition", "sdmx.model.v21.DataStructureDefinition"
@@ -131,7 +133,7 @@ def make_structures(
     """
     from sdmx.model import v21
 
-    from transport_data import org
+    from transport_data import STORE, org
 
     ma_args = dict(
         id=f"{get_agency().id}_{measure}", maintainer=org.get_agency()[0], version="0.1"
@@ -149,6 +151,9 @@ def make_structures(
 
     dfd = v21.DataflowDefinition(**ma_args, structure=dsd)
 
+    STORE.write(dfd)
+    STORE.write(dsd)
+
     return dfd, dsd
 
 
@@ -156,7 +161,7 @@ def convert():
     """Convert OICA stock (vehicle in use) spreadsheets to SDMX."""
     from sdmx.model.v21 import DataSet
 
-    from transport_data import STORE as registry
+    from transport_data import STORE
     from transport_data.util.sdmx import make_obs
 
     # Select just one spreadsheet
@@ -216,7 +221,9 @@ def convert():
             raise ValueError(time_period)
 
     # Prepare a GEO codelist and map using the "GEO" column
-    cl_geo, geo_map = _geo_codelist(df["GEO"])
+    cl_geo, geo_map = _geo_codelist(df["GEO"], maintainer=get_agency(), version="0.1")
+    # Store `cl_geo`
+    STORE.write(cl_geo)
 
     # Transform data
     # - Replace GEO values with codes from `cl_geo`.
@@ -236,7 +243,7 @@ def convert():
     for m, group_df in df.groupby("MEASURE"):
         # Create structures for this measure
         # TODO Retrieve possibly-cached or -stored structures
-        dfd, dsd = make_structures(m)
+        dfd, dsd = get_structures(m)
 
         # Create a data set
         ds = DataSet(described_by=dsd)
@@ -248,12 +255,7 @@ def convert():
 
         # Write the data set to file
         # TODO Merge with with other data for the same flow
-        registry.write(ds)
-
-    # Update and store `cl_geo`
-    cl_geo.maintainer = get_agency()
-    cl_geo.version = "0.1"
-    registry.write(cl_geo)
+        STORE.write(ds)
 
 
 def fetch(dry_run: bool = False):
