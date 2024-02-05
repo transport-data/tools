@@ -28,6 +28,7 @@ dependencies = [
   "pandas",
   "platformdirs",
   "pooch",
+  "pycountry",
   "requests",
   "sdmx1 >= 2.9",
 ]
