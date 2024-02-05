@@ -24,11 +24,11 @@ log = logging.getLogger(__name__)
 
 def _full_urn(value: str) -> str:
     """Convert possibly partial `value` to a complete SDMX URN."""
-    urn_base = "urn:sdmx:org.sdmx.infomodel.package."
+    urn_base = "urn:sdmx:org.sdmx.infomodel."
     if value.startswith(urn_base):
         return value
     else:
-        return f"{urn_base}{value}"
+        return f"{urn_base}package.{value}"
 
 
 _SHORT_URN_EXPR = re.compile(r"(urn:sdmx:org\.sdmx\.infomodel\.[^\.]+\.)?(?P<short>.*)")
