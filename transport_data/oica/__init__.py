@@ -13,7 +13,7 @@ This module handles data from the OICA website.
 import json
 import logging
 from functools import partial
-from itertools import count
+from itertools import count, product
 from operator import itemgetter
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Tuple
@@ -29,7 +29,9 @@ log = logging.getLogger(__name__)
 
 BASE_URL = "https://www.oica.net/wp-content/uploads/"
 
-with open(Path(__file__).parent.joinpath("registry.json")) as f:
+REGISTRY_FILE = Path(__file__).parent.joinpath("registry.json")
+
+with open(REGISTRY_FILE) as f:
     POOCH = Pooch(module=__name__, base_url=BASE_URL, registry=json.load(f))
 
 
@@ -197,3 +199,52 @@ def fetch(dry_run: bool = False):
         return
 
     return [POOCH.fetch(f) for f in POOCH.registry]
+
+
+def update_registry():
+    """Update the registry.
+
+    This function crawls :data:`.BASE_URL` for file names matching certain patterns.
+    Files that exist are downloaded, hashed, and added to :file:`registry.json`.
+    """
+    from pooch import file_hash
+
+    for pattern, values in (
+        # Sales statistics
+        ("{}_sales_{}.xlsx", ({"cv", "pc", "total"}, range(2017, 2024))),
+        # Vehicles in use
+        (
+            "{}-World-vehicles-in-use-{}.xlsx",
+            ({"CV", "PC", "Total"}, range(2017, 2024)),
+        ),
+        # Production data
+        (
+            "{}-{}.xlsx",
+            (
+                {
+                    "By-country-region",
+                    "Passenger-Cars",
+                    "Light-Commercial-Vehicles",
+                    "Heavy-Trucks",
+                    "Buses-and-Coaches",
+                },
+                range(2017, 2024),
+            ),
+        ),
+    ):
+        for sub in product(*values):
+            url_part = pattern.format(*sub)
+            existing_hash = POOCH.registry.setdefault(url_part, None)
+
+            if not POOCH.is_available(url_part):
+                # File doesn't exist on the remote
+                POOCH.registry.pop(url_part)
+                continue
+
+            if existing_hash is None:
+                # Download the file to add its hash
+                path = POOCH.fetch(url_part)
+                POOCH.registry[url_part] = file_hash(path)
+
+    with open(REGISTRY_FILE, "w") as f:
+        json.dump(POOCH.registry, f)
