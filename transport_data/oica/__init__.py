@@ -47,7 +47,7 @@ def convert(
         raise NotImplementedError(f"Convert OICA data files for {dfd}")
 
     # Convert all fetchable/fetched files related to the DFD
-    results = [_convert_single_file(path, dfd) for path in filenames_for_dfd(dfd)]
+    results = [convert_single_file(path, dfd) for path in filenames_for_dfd(dfd)]
 
     # Merge observations from multiple files into a single data set per data flow
     result: Dict[str, "sdmx.model.v21.DataSet"] = {}
@@ -62,7 +62,7 @@ def convert(
     return result
 
 
-def _convert_tp(time_period: str, units: str, vehicle_type: str):
+def convert_tp(time_period: str, units: str, vehicle_type: str):
     """Identify values for 4 concepts using column labels melted into TIME_PERIOD."""
     concepts = ["MEASURE", "UNIT_MEASURE", "VEHICLE_TYPE", "TIME_PERIOD"]
 
@@ -86,7 +86,7 @@ def _convert_tp(time_period: str, units: str, vehicle_type: str):
         raise ValueError(time_period)
 
 
-def _convert_single_file(
+def convert_single_file(
     path: Path, dfd: "sdmx.model.v21.DataflowDefinition"
 ) -> Dict[str, List["sdmx.model.v21.DataSet"]]:
     """Convert single OICA data spreadsheet to SDMX.
@@ -158,9 +158,7 @@ def _convert_single_file(
     df = pd.concat(
         [
             df["GEO"].replace(geo_map),
-            df["TIME_PERIOD"].apply(
-                _convert_tp, units=units, vehicle_type=vehicle_type
-            ),
+            df["TIME_PERIOD"].apply(convert_tp, units=units, vehicle_type=vehicle_type),
             df["OBS_VALUE"],
         ],
         axis=1,
@@ -323,6 +321,7 @@ def get_agency() -> "sdmx.model.common.Agency":
 
 
 def get_cl_geo() -> "sdmx.model.common.Codelist":
+    """Retrieve or create the ``Codelist=TDCI:OICA_GEO``."""
     from sdmx.model import common
 
     from transport_data import STORE, org
@@ -387,7 +386,7 @@ def get_structures(
 ]:
     """Create a data flow and data structure definitions for a given OICA `measure`.
 
-    The DFD and DSD have URNs like ``TDCI:OICA_{MEASURE}(0.1)``. The DSD has:
+    The DFD and DSD have URNs like ``TDCI:DF_OICA_{MEASURE}(0.1)``. The DSD has:
 
     - dimensions ``GEO``, ``VEHICLE_TYPE``, ``TIME_PERIOD``,
     - attributes ``UNIT_MEASURE``, and
@@ -448,6 +447,14 @@ def update_registry():
 
     This function crawls :data:`.BASE_URL` for file names matching certain patterns.
     Files that exist are downloaded, hashed, and added to the :data:`.REGISTRY_FILE`.
+
+    As of 2024-02-05, about 40 distinct files can be retrieved with :data:`.POOCH`. To
+    view the list of files, use:
+
+    .. code-block:: python
+
+       from transport_data import oica
+       print(oica.POOCH.registry)
     """
     from pooch import file_hash
 

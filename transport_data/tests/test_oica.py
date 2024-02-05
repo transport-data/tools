@@ -25,6 +25,12 @@ def test_convert(measure, N_obs):
     observed = {dfd_id.split("DF_OICA_")[-1]: len(ds) for dfd_id, ds in result.items()}
     assert N_obs == observed
 
+    # DEBUG
+    # import sdmx
+    #
+    # for _, ds in result.items():
+    #     print(sdmx.to_pandas(ds).to_string())
+
 
 def test_update_registry():
     update_registry()
