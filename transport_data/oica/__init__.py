@@ -77,7 +77,7 @@ def _convert_tp(time_period: str, units: str, vehicle_type: str):
                 TIME_PERIOD="_X",
             )
         )
-    else:
+    else:  # pragma: no cover
         raise ValueError(time_period)
 
 
@@ -103,7 +103,7 @@ def _convert_single_file(path: Path):
     if match := pat.fullmatch(df.iloc[0, 0]):
         units = "kvehicle"
         vehicle_type = match.group(1)
-    else:
+    else:  # pragma: no cover
         raise ValueError(f"Unrecognized table header: {df.iloc[0, 0]!r}")
 
     # - Drop title cell.
@@ -119,7 +119,8 @@ def _convert_single_file(path: Path):
     )
 
     # Prepare a GEO codelist and map using the "GEO" column
-    cl_geo, geo_map = _geo_codelist(df["GEO"], maintainer=get_agency(), version="0.1")
+    cl_geo = get_cl_geo()
+    geo_map = _make_geo_codes(cl_geo, df["GEO"], maintainer=get_agency(), version="0.1")
     # Store `cl_geo`
     STORE.write(cl_geo)
 
@@ -156,85 +157,6 @@ def _convert_single_file(path: Path):
         # Write the data set to file
         # TODO Merge with with other data for the same flow
         STORE.write(ds)
-
-
-@lru_cache
-def get_agency() -> "sdmx.model.common.Agency":
-    """Return the OICA Agency."""
-    from sdmx.model import v21
-
-    return v21.Agency(
-        id="OICA",
-        name="International Organization of Motor Vehicle Manufacturers",
-        description="https://www.oica.net",
-    )
-
-
-def _geo_codelist(
-    values: pd.Series, **kwargs
-) -> Tuple["sdmx.model.common.Codelist", Dict]:
-    """Create a codelist for the ``GEO`` concept, given certain `values`.
-
-    For each unique value in `values`:
-
-    1. Strip leading and trailing whitespace.
-    2. Pass the data through :data`.transport_data.util.pycountry.NAME_MAP` for commonly
-       used non-ISO values.
-    3. Look up the value in ISO 3166-1 via :any:`pycountry.countries`.
-    4. Add a code to the returned code list. If the lookup in (3) succeeds, the code ID
-       is the alpha-2 code, and the name and description are populated from the
-       database. If the lookup in (3) fails, the code ID is a unique integer.
-
-    Returns
-    -------
-    .Codelist
-        One entry for each unique value in `values`.
-    dict
-        Mapping from `values` to codes in the code list. Passing this to
-        :meth:`pandas.Series.replace` should convert the `values` to the corresponding
-        codes.
-    """
-    from pycountry import countries
-    from sdmx.model import v21
-
-    from transport_data.util.pycountry import NAME_MAP
-
-    cl = v21.Codelist(id="GEO", **kwargs)
-    counter = count()
-    id_for_name: Dict[str, str] = {}
-
-    @lru_cache
-    def _make_code(value: str):
-        name = value.strip()
-        try:
-            # - Apply replacements from NAME_MAP.
-            # - Lookup in ISO 3166-1.
-            match = countries.lookup(NAME_MAP.get(name.lower(), name))
-        except LookupError:
-            try:
-                # Look up an already-generated code that matches this `value`
-                code = cl[id_for_name[value]]
-            except KeyError:
-                # Generate a new code with a serial ID
-                code = v21.Code(id=str(next(counter)), name=name)
-        else:
-            # Found an entry in the ISO 3166-1 database; duplicate it into the codelist
-            code = v21.Code(
-                id=match.alpha_2,
-                name=match.name,
-                description="Identical to the ISO 3166-1 entry",
-            )
-
-        try:
-            cl.append(code)  # Add to the code list
-        except ValueError:
-            pass  # Already exists
-        else:
-            id_for_name.setdefault(value, code.id)  # Update the map
-
-    values.sort_values().drop_duplicates().apply(_make_code)
-
-    return cl, id_for_name
 
 
 def fetch(dry_run: bool = False):
@@ -276,7 +198,7 @@ def filenames_for_dfd(
     elif "STOCK" in dfd.id:
         pattern = "{}-World-vehicles-in-use-{}.xlsx"
         values = {"CV", "PC", "Total"}, range(2017, 2024)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(f"Construct OICA file names for {dfd}")
 
     # Generate a cartesian product of the iterables in `values`
@@ -289,6 +211,141 @@ def filenames_for_dfd(
             yield Path(POOCH.fetch(name) if fetch else name)
         except ValueError:
             pass
+
+
+def _make_geo_codes(
+    cl: "sdmx.model.common.Codelist", values: pd.Series, **kwargs
+) -> Dict:
+    """Create a codelist for the ``GEO`` concept, given certain `values`.
+
+    For each unique value in `values`:
+
+    1. Strip leading and trailing whitespace.
+    2. Pass the data through :data`.transport_data.util.pycountry.NAME_MAP` for commonly
+       used non-ISO values.
+    3. Look up the value in ISO 3166-1 via :any:`pycountry.countries`.
+    4. Add a code to the returned code list. If the lookup in (3) succeeds, the code ID
+       is the alpha-2 code, and the name and description are populated from the
+       database. If the lookup in (3) fails, the code ID is a unique integer.
+
+    Returns
+    -------
+    .Codelist
+        One entry for each unique value in `values`.
+    dict
+        Mapping from `values` to codes in the code list. Passing this to
+        :meth:`pandas.Series.replace` should convert the `values` to the corresponding
+        codes.
+    """
+    from pycountry import countries
+    from sdmx.model import v21
+
+    from transport_data.util.pycountry import NAME_MAP
+
+    counter = count()
+    id_for_name: Dict[str, str] = {}
+
+    @lru_cache
+    def _make_code(value: str):
+        name = value.strip()
+        try:
+            # - Apply replacements from NAME_MAP.
+            # - Lookup in ISO 3166-1.
+            match = countries.lookup(NAME_MAP.get(name.lower(), name))
+        except LookupError:
+            try:
+                # Look up an already-generated code that matches this `value`
+                code = cl[id_for_name[value]]
+            except KeyError:
+                # Generate a new code with a serial ID
+                code = v21.Code(id=str(next(counter)), name=name)
+        else:
+            # Found an entry in the ISO 3166-1 database; duplicate it into the codelist
+            code = v21.Code(
+                id=match.alpha_2,
+                name=match.name,
+                description="Identical to the ISO 3166-1 entry",
+            )
+
+        try:
+            cl.append(code)  # Add to the code list
+        except ValueError:
+            pass  # Already exists
+        else:
+            id_for_name.setdefault(value, code.id)  # Update the map
+
+    values.sort_values().drop_duplicates().apply(_make_code)
+
+    return id_for_name
+
+
+@lru_cache
+def get_agency() -> "sdmx.model.common.Agency":
+    """Return the OICA Agency."""
+    from sdmx.model import v21
+
+    return v21.Agency(
+        id="OICA",
+        name="International Organization of Motor Vehicle Manufacturers",
+        description="https://www.oica.net",
+    )
+
+
+def get_cl_geo() -> "sdmx.model.common.Codelist":
+    from sdmx.model import common
+
+    from transport_data import STORE, org
+
+    candidate: common.Codelist = common.Codelist(
+        id=f"{get_agency().id}_GEO", maintainer=org.get_agency()[0], version="0.1"
+    )
+
+    return STORE.setdefault(candidate)
+
+
+@lru_cache
+def get_conceptscheme() -> "sdmx.model.common.ConceptScheme":
+    """Return a concept scheme with OICA concepts."""
+    from sdmx.model import common
+
+    from transport_data import STORE, org
+
+    cs = common.ConceptScheme(
+        id=f"{get_agency().id}_CONCEPTS", maintainer=org.get_agency()[0], version="0.1"
+    )
+
+    # Measures
+    for id_, name in (
+        ("PROD", "Production"),
+        ("SALES", "Sales"),
+        ("STOCK", "Vehicles in use"),
+        ("STOCK_AAGR", "Vehicles in use, average annual growth rate"),
+        ("STOCK_CAP", "Vehicles in use per capita"),
+    ):
+        cs.append(common.Concept(id=id_, name=name))
+
+    # TODO replace the following with references to a common TDCI concept scheme
+    # Used as dimensions
+    for id_, core_rep in (
+        ("GEO", get_cl_geo()),
+        ("VEHICLE_TYPE", None),
+        ("TIME_PERIOD", None),
+    ):
+        c = common.Concept(id=id_)
+        c.core_representation = (
+            common.Representation(enumerated=core_rep) if core_rep else None
+        )
+        cs.append(c)
+    # Used as attributes
+    for id_ in ("UNIT_MEASURE",):
+        cs.append(common.Concept(id=id_))
+    # Used as primary measure
+    for id_ in ("OBS_VALUE",):
+        cs.append(common.Concept(id=id_))
+
+    STORE.write(cs)
+
+    return cs
 
 
 def get_structures(
@@ -311,16 +368,27 @@ def get_structures(
     ma_args = dict(
         id=f"{get_agency().id}_{measure}", maintainer=org.get_agency()[0], version="0.1"
     )
+
     dsd = v21.DataStructureDefinition(**ma_args)
 
-    for d in "GEO", "VEHICLE_TYPE", "TIME_PERIOD":
-        dsd.dimensions.getdefault(id=d)
+    cs = get_conceptscheme()
+
+    for d, local_rep in (
+        ("GEO", get_cl_geo()),
+        ("VEHICLE_TYPE", None),
+        ("TIME_PERIOD", None),
+    ):
+        dsd.dimensions.getdefault(
+            id=d,
+            concept_identity=cs[d],
+            local_representation=v21.Representation(enumerated=local_rep),
+        )
 
     for a in ("UNIT_MEASURE",):
-        dsd.attributes.getdefault(id=a)
+        dsd.attributes.getdefault(id=a, concept_identity=cs[d])
 
     for m in ("OBS_VALUE",):
-        dsd.measures.getdefault(id=m)
+        dsd.measures.getdefault(id=m, concept_identity=cs[d])
 
     dfd = v21.DataflowDefinition(**ma_args, structure=dsd)
 
@@ -338,8 +406,9 @@ def update_registry():
     """
     from pooch import file_hash
 
-    for dfd in map(get_structures, ["PROD", "SALES", "STOCK"]):
-        for filename in filenames_for_dfd(dfd, fetch=False):
+    for dfd, _ in map(get_structures, ["PROD", "SALES", "STOCK"]):
+        for file in filenames_for_dfd(dfd, fetch=False):
+            filename = file.name
             existing_hash = POOCH.registry.setdefault(filename, None)
 
             if not POOCH.is_available(filename):
@@ -347,10 +416,10 @@ def update_registry():
                 POOCH.registry.pop(filename)
                 continue
 
-            if existing_hash is None:
+            if existing_hash is None:  # pragma: no cover
                 # Download the file to add its hash
                 path = POOCH.fetch(filename)
                 POOCH.registry[filename] = file_hash(path)
 
     with open(REGISTRY_FILE, "w") as f:
-        json.dump(POOCH.registry, f)
+        json.dump(POOCH.registry, f, indent=2, sort_keys=True)
