@@ -36,26 +36,7 @@ Design goals
 SDMX usage conventions
 ======================
 
-The SDMX standards are deliberately crafted to be generic and broadly applicable.
-
-In order to support convergence and harmonization of transport data, TDCI has certain conventional ways of using SDMX.
-
-- **Concepts and dimensions.**
-  Following major data providers and the SDMX Global Registry, TDCI applies the following concept IDs (thus, dimension or attribute IDs) when upstream data providers do not provide explicit labels:
-
-  - ``GEO`` for a geographical area (sometimes "country", "region", "economy", "ISO [3166 alpha-2 or alpha-3] code").
-  - ``TIME_PERIOD`` for the primary time dimension.
-  - ``UNIT_MEASURE`` for units of measurement.
-- **Annotations.**
-  :func:`.anno_generated` adds an annotation to any :class:`~sdmx.model.common.AnnotableArtefact` with the ID ``tdc-generated``.
-  This annotation contains text like "2023-05-11T21:42:55.760130 by transport_data v0.1.dev63+g92a2aac.d20230511" indicating the date, time, and version of :mod:`transport_data` code used to generate the SDMX object.
-  This function **should** be called on all objects created in this package.
-- **Code lists.**
-  Some data do not explicitly state the following along some dimensions:
-
-  - ``_T`` for total, no breakdown, a sum across all other codes.
-  - ``_X`` for not specified.
-  - ``_Z`` for not applicable.
+→ moved to :doc:`standards`.
 
 Code style
 ==========

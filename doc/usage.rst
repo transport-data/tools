@@ -32,8 +32,26 @@ You will likely also want to:
 Command-line
 ============
 
-Use the tools via the command-line interface (:mod:`transport_data.cli`).
-Each subcommand has its own :program:`--help` and page in this documentation.
+Use the tools via the command-line interface; the program :program:`tdc` is configured when the package is installed (:mod:`transport_data.cli`).
+Each subcommand has its own :program:`--help` and page in this documentation::
+
+  $ tdc
+  Usage: tdc [OPTIONS] COMMAND [ARGS]...
+
+    Transport Data Commons tools.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    adb       CLI for :mod:`.adb`.
+    config    Manipulate configuration.
+    estat     Eurostat (ESTAT) provider.
+    iamc      Demonstrate IAMC structure generation.
+    jrc       CLI for :mod:`.jrc`.
+    org       Information about the TDCI per se.
+    proto     TDC prototype debugging.
+    registry  Manipulate the registry repo.
 
 From other Python code
 ======================
