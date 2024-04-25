@@ -1,4 +1,5 @@
 """Local data storage."""
+
 import logging
 import re
 import subprocess
@@ -59,8 +60,7 @@ class BaseStore(ABC):
     path: Path
 
     @abstractmethod
-    def __init__(self, config: "transport_data.config.Config") -> None:
-        ...
+    def __init__(self, config: "transport_data.config.Config") -> None: ...
 
     def get(self, urn: str) -> object:
         """Retrieve an object given its full or partial `urn`."""

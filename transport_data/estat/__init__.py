@@ -8,6 +8,7 @@ Eurostat is used as to demonstrate interaction with a data provider that offers:
 In this case, TDC tools can retrieve the structure information and data directly, and no
 provider-specific conversion code is needed.
 """
+
 import click
 import sdmx
 

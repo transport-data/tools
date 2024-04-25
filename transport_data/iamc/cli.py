@@ -5,6 +5,7 @@
    $ tdc iamc --help
 
 """
+
 from pathlib import Path
 
 import click

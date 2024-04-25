@@ -1,4 +1,5 @@
 """Asian Development Bank (ADB) provider."""
+
 from itertools import chain
 from typing import Callable, Tuple
 from urllib.parse import quote

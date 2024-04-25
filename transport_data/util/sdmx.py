@@ -1,4 +1,5 @@
 """Utilities for :mod:`sdmx`."""
+
 from datetime import datetime
 from importlib.metadata import version
 from typing import TYPE_CHECKING
