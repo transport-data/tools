@@ -1,4 +1,5 @@
 """Utilities for :mod:`pooch`."""
+
 from typing import Callable, Optional
 
 import pooch
