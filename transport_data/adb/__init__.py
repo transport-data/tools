@@ -4,6 +4,7 @@ from itertools import chain
 from typing import Callable, Tuple
 from urllib.parse import quote
 
+import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
@@ -167,11 +168,24 @@ def read_sheet(
     data_col_mask = list(map(str.isnumeric, df.columns))
 
     # Handle values not parsed by pd.ExcelFile.parse(). Some cells have values like
-    # "12,345.6\t", which are not parsed to float. Strip the trailing whitespace and
-    # thousands separators, then convert.
+    # "12,345.6\t", which are not parsed to float.
+    #
+    # - Strip trailing whitespace.
+    # - Remove thousands separators ("," in 2023-04-17 edition; " " in 2024-05-20
+    #   edition) and whitespace before the decimal separator ("10860 .6", 2024-05-20
+    #   edition).
+    # - Replace "-" (no data) and "long ton" (erroneous) appearing since 2024-05-20
+    #   edition.
+    # - Finally, convert to float.
     dtypes = df.loc[:, data_col_mask].dtypes  # Dtypes of data columns only
     for col, _ in filter(lambda x: x[1] != "float", dtypes.items()):
-        df[col] = df[col].str.strip().str.replace(",", "").astype(float)
+        df[col] = (
+            df[col]
+            .str.strip()
+            .str.replace(r"(\d)[, ]([\d\.])", r"\1\2", regex=True)
+            .replace("^(-|long ton)$", np.nan, regex=True)
+            .astype(float)
+        )
 
     # Identify remarks columns: any entries at the *end* of `df.columns` with non-
     # numeric labels. Use the index of last data column, counting backwards.
