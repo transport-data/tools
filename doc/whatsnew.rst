@@ -5,6 +5,8 @@ Next release
 ============
 
 - Add :doc:`standards` and :doc:`roadmap` documentation pages (:pull:`9`).
+- Adjust :mod:`.adb` for changes in data format in the 2024-05-20 edition of the ATO National Database (:pull:`20`, :issue:`18`).
+  Document the :ref:`current file format <ato-format>` that the code supports.
 
 v24.2.5
 =======
