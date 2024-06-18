@@ -171,7 +171,7 @@ def read_sheet(
     # "12,345.6\t", which are not parsed to float.
     #
     # - Strip trailing whitespace.
-    # - Remove thousands separators ("," in 2023-04-17 edition; " " in 2024-05-20
+    # - Remove thousands separators ("," in 2022-10-17 edition; " " in 2024-05-20
     #   edition) and whitespace before the decimal separator ("10860 .6", 2024-05-20
     #   edition).
     # - Replace "-" (no data) and "long ton" (erroneous) appearing since 2024-05-20
