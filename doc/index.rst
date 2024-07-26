@@ -53,7 +53,9 @@ They handle tasks including:
 
    adb
    estat
+   giz
    iamc
+   ipcc
    jrc
    oica
    org
@@ -61,7 +63,9 @@ They handle tasks including:
 
 - :mod:`.adb`: :doc:`adb`
 - :mod:`.estat`: :doc:`estat`
+- :doc:`giz`
 - :mod:`.iamc`: :doc:`iamc`
+- :mod:`.ipcc`: :doc:`ipcc`
 - :mod:`.jrc`: :doc:`jrc`
 - :mod:`.oica`: :doc:`oica`
 - :mod:`.org`: :doc:`org`

@@ -129,6 +129,10 @@ If used, annotations with these IDs **must** conform to the given requirements:
 
    The function :func:`.anno_generated` generates such an annotation and **should** be called on all objects created in this package.
 
+``preferred-unit``
+   Especially for :class:`.Concept` in :class:`.ConceptScheme`, the preferred units of measurement if the concept is used as a measure.
+   These correspond to the well-known SDMX concept and attribute ``Concept=SDMX:CROSS_DOMAIN_CONCEPTS(2.0).UNIT_MEASURE``.
+
 Codes
 -----
 
