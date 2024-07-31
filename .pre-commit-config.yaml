@@ -10,6 +10,7 @@ repos:
     - pytest
     - sdmx1
     - Sphinx
+    - types-openpyxl
     - types-requests
     args: []
 - repo: https://github.com/astral-sh/ruff-pre-commit
