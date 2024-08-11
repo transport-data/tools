@@ -24,6 +24,7 @@ For more on the design, status, and plans for this package, see :doc:`dev`.
    usage
    dev
    standards
+   howto/index
    roadmap
    whatsnew
 
@@ -33,6 +34,7 @@ General
 - :doc:`usage`
 - :doc:`dev`
 - :doc:`standards`
+- :doc:`howto/index`
 - :doc:`roadmap`
 - :doc:`whatsnew`
 

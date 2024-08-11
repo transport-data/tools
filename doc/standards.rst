@@ -35,6 +35,8 @@ These standards:
    TDCI develops and supports community development of tutorials, guides, explainers, in multiple languages and media, targeted to different audiences, that help with the adoption of these standards.
    These **must** promote a correct implementation of the standards, and **may** give more detailed and elaborate examples.
 
+.. _std-defs:
+
 Definitions
 ===========
 
