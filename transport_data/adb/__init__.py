@@ -152,13 +152,15 @@ def read_sheet(
     # Convert metadata rows to a collection of temporary annotations
     aa = m.AnnotableArtefact()
     for _, data in meta_df.iterrows():
-        title = data[0].rstrip(":")
+        title = data.iloc[0].rstrip(":")
         anno_id = title.upper().replace(" ", "-")
         aa.annotations.append(
             m.Annotation(
                 id=anno_id,
                 title=title,
-                text=data[1] if isinstance(data[1], str) else repr(data[1]),
+                text=data.iloc[1]
+                if isinstance(data.iloc[1], str)
+                else repr(data.iloc[1]),
             )
         )
 
