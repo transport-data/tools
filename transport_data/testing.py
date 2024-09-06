@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Generator, cast
 
 import pytest
@@ -54,6 +55,12 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     tmp_store.write(sm)
 
     return sm
+
+
+@pytest.fixture(scope="session")
+def test_data_path() -> Generator[Path, None, None]:
+    """Path containing test data."""
+    yield Path(__file__).parent.joinpath("data", "tests")
 
 
 @pytest.fixture(scope="session")
