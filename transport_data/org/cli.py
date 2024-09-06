@@ -6,6 +6,8 @@
 
 """
 
+import pathlib
+
 import click
 
 from transport_data.util.click import common_params
@@ -24,6 +26,18 @@ def refresh(version):
     from . import get_agencyscheme
 
     STORE.write(get_agencyscheme(version=version))
+
+
+@main.command("read")
+@click.argument(
+    "path", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path)
+)
+def read(path: "pathlib.Path"):
+    """Read and summarize metadata."""
+    from .metadata import read_workbook, summarize_metadataset
+
+    mds = read_workbook(path.resolve())
+    summarize_metadataset(mds)
 
 
 @main.command("template")
