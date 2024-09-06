@@ -17,7 +17,7 @@
 import click
 
 
-@click.group("oica", help=__doc__.splitlines()[0])
+@click.group("oica", short_help="OICA provider.")
 def main():
     """International Organization of Motor Vehicle Manufacturers (OICA) provider."""
 
