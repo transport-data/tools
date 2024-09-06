@@ -24,11 +24,13 @@ import pandas as pd
 import sdmx.model.v21 as m
 
 from transport_data import STORE as registry
+from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
 
 
-def get_agency() -> m.Agency:
+@hookimpl
+def get_agencies():
     """Return information about the agency providing the data set.
 
     See :func:`.org.get_agencyscheme`.
@@ -46,7 +48,7 @@ Maintainers of the IDEES data set: https://data.jrc.ec.europa.eu/dataset/jrc-101
         m.Contact(name="Jacopo Tattini", email=["Jacopo.TATTINI@ec.europa.eu"])
     )
 
-    return a
+    return (a,)
 
 
 BASE_URL = (
@@ -448,7 +450,7 @@ def convert(geo):
             registry.write(obj)
 
     # Write code lists, measure concept scheme to file
-    a = get_agency()
+    a = get_agencies()[0]
     for obj in chain(CL.values(), [CS_MEASURE]):
         obj.maintainer = a
         obj.version = "0.1.0"
@@ -468,12 +470,12 @@ def prepare(measure_concept, dims):
     # NB here we set ADB as the maintainer. Precisely, ADB establishes the data
     #    structure, but TDCI is maintaining the SDMX representation of it.
     dsd = m.DataStructureDefinition(
-        id=measure_id, maintainer=get_agency(), version="0.0.0"
+        id=measure_id, maintainer=get_agencies()[0], version="0.0.0"
     )
     anno_generated(dsd)
 
     dfd = m.DataflowDefinition(
-        id=measure_id, maintainer=get_agency(), version="0.0.0", structure=dsd
+        id=measure_id, maintainer=get_agencies()[0], version="0.0.0", structure=dsd
     )
 
     pm = m.PrimaryMeasure(id="OBS_VALUE", concept_identity=c)

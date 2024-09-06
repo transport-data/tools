@@ -11,15 +11,19 @@ import pandas as pd
 import sdmx.model.v21 as m
 from sdmx.message import StructureMessage
 
+from transport_data.util.pluggy import hookimpl
+
 log = logging.getLogger(__name__)
 
 
-def get_agency():
-    return m.Agency(
+@hookimpl
+def get_agencies():
+    a = m.Agency(
         id="IAMC",
         name="Integrated Assessment Modeling Consortium",
         contact=[m.Contact(uri=["https://iamconsortium.org"])],
     )
+    return (a,)
 
 
 def common_structures():
@@ -31,7 +35,7 @@ def common_structures():
         with id "IAMC", containing the concepts for the IAMC dimensions and attribute.
     """
     cs = m.ConceptScheme(
-        id="IAMC", name="Concepts in the IAMC data model", maintainer=get_agency()
+        id="IAMC", name="Concepts in the IAMC data model", maintainer=get_agencies()[0]
     )
 
     cs.extend(

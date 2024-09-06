@@ -27,6 +27,7 @@ dependencies = [
   "packaging",
   "pandas",
   "platformdirs",
+  "pluggy",
   "pooch",
   "pycountry",
   "requests",

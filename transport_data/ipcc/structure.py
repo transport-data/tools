@@ -1,22 +1,24 @@
 """IPCC structural metadata."""
 
-from functools import lru_cache
 from typing import TYPE_CHECKING
+
+from transport_data.util.pluggy import hookimpl
 
 if TYPE_CHECKING:
     import sdmx.model.common
 
 
-@lru_cache
-def get_agency() -> "sdmx.model.common.Agency":
+@hookimpl
+def get_agencies():
     """Return the IPCC :class:`.Agency`."""
     from sdmx.model import v21
 
-    return v21.Agency(
+    a = v21.Agency(
         id="IPCC",
         name="Intergovernmental Panel on Climate Change",
         description="https://www.ipcc.ch/",
     )
+    return (a,)
 
 
 def gen_cl_T311(**kwargs) -> "sdmx.model.Common.Codelist":
@@ -265,7 +267,7 @@ def gen_structures() -> None:
     from transport_data import STORE, org
 
     ma_args = dict(
-        maintainer=org.get_agency()[0],
+        maintainer=org.get_agencies()[0],
         version="0.1",
         is_final=True,
         is_external_reference=False,

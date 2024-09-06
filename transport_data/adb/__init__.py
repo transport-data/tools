@@ -9,12 +9,13 @@ import pandas as pd
 import sdmx.model.v21 as m
 
 from transport_data import STORE as registry
+from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
 
 
-def get_agency() -> m.Agency:
-    # Agency
+@hookimpl
+def get_agencies():
     a = m.Agency(
         id="ADB",
         name="Asian Transport Outlook team at the Asian Development Bank",
@@ -26,7 +27,7 @@ def get_agency() -> m.Agency:
     c3 = m.Contact(name="Sudhir Gota", email=["sudhirgota@gmail.com"])
     a.contact.extend([c1, c2, c3])
 
-    return a
+    return (a,)
 
 
 BASE_URL = "https://asiantransportoutlook.com/exportdl?orig=1"
@@ -240,10 +241,12 @@ def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
     # Data structure definition with an ID matching the measure
     # NB here we set ADB as the maintainer. Precisely, ADB establishes the data
     #    structure, but TDCI is maintaining the SDMX representation of it.
-    dsd = m.DataStructureDefinition(id=measure_id, maintainer=get_agency())
+    dsd = m.DataStructureDefinition(id=measure_id, maintainer=get_agencies()[0])
     anno_generated(dsd)
 
-    dfd = m.DataflowDefinition(id=measure_id, maintainer=get_agency(), structure=dsd)
+    dfd = m.DataflowDefinition(
+        id=measure_id, maintainer=get_agencies()[0], structure=dsd
+    )
 
     pm = m.PrimaryMeasure(id="OBS_VALUE", concept_identity=c)
     dsd.measures.append(pm)
@@ -317,7 +320,7 @@ def convert(part):
 
     # Write the lists of "Economy" codes and measures/concepts accumulated while
     # converting
-    a = get_agency()
+    a = get_agencies()[0]
     for obj in (CL_ECONOMY, CS_MEASURE):
         obj.maintainer = a
         obj.version = "0.1.0"

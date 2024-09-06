@@ -1,18 +1,20 @@
 """Information about the TDCI *per se*."""
 
 from datetime import date
-from importlib import import_module
+from itertools import chain
 from typing import TYPE_CHECKING, Union
 
 import sdmx.model.v21 as m
 
 from transport_data import STORE as registry
+from transport_data.util.pluggy import hookimpl, pm, register_internal
 
 if TYPE_CHECKING:
     import sdmx.model.v21
 
 
-def get_agency() -> "sdmx.model.v21.Agency":
+@hookimpl
+def get_agencies() -> "sdmx.model.v21.Agency":
     # Agency
     a1 = m.Agency(
         id="TDCI",
@@ -48,8 +50,6 @@ def get_agency() -> "sdmx.model.v21.Agency":
 
 def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.AgencyScheme":
     """Generate an AgencyScheme including some TDCI data providers."""
-    agencies = get_agency()
-
     as_ = m.AgencyScheme(
         id="TDCI",
         # NameableArtefact
@@ -57,17 +57,18 @@ def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.Agency
         # VersionableArtefact
         valid_from=date.today().isoformat(),
         # MaintainableArtefact
-        maintainer=agencies[0],
+        maintainer=None,
     )
 
-    for a in agencies:
-        as_.append(a)
+    # Use plugin hooks to collect Agency objects from within transport_data or other
+    # registered code
+    register_internal()
 
-    # Add agencies with corresponding modules in this repository
-    for id_ in ("adb", "jrc"):
-        module = import_module(f"transport_data.{id_}")
-        # Call a function named get_agency() in the module
-        as_.append(module.get_agency())
+    for agency in chain(*pm.hook.get_agencies()):
+        as_.append(agency)
+
+    # TDCI itself is the maintainer
+    as_.maintainer = as_["TDCI"]
 
     as_.version = version
     if as_.version is None:

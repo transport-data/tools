@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple
 
 import pandas as pd
 
+from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 
 if TYPE_CHECKING:
@@ -165,7 +166,9 @@ def convert_single_file(
 
     # Prepare a GEO codelist and map using the "GEO" column
     cl_geo = get_cl_geo()
-    geo_map = _make_geo_codes(cl_geo, df["GEO"], maintainer=get_agency(), version="0.1")
+    geo_map = _make_geo_codes(
+        cl_geo, df["GEO"], maintainer=get_agencies()[0], version="0.1"
+    )
     # Store `cl_geo`
     STORE.write(cl_geo)
 
@@ -327,16 +330,17 @@ def _make_geo_codes(
     return id_for_name
 
 
-@lru_cache
-def get_agency() -> "sdmx.model.common.Agency":
+@hookimpl
+def get_agencies():
     """Return the OICA Agency."""
     from sdmx.model import v21
 
-    return v21.Agency(
+    a = v21.Agency(
         id="OICA",
         name="International Organization of Motor Vehicle Manufacturers",
         description="https://www.oica.net",
     )
+    return (a,)
 
 
 def get_cl_geo() -> "sdmx.model.common.Codelist":
@@ -346,7 +350,9 @@ def get_cl_geo() -> "sdmx.model.common.Codelist":
     from transport_data import STORE, org
 
     candidate: common.Codelist = common.Codelist(
-        id=f"{get_agency().id}_GEO", maintainer=org.get_agency()[0], version="0.1"
+        id=f"{get_agencies()[0].id}_GEO",
+        maintainer=org.get_agencies()[0],
+        version="0.1",
     )
 
     return STORE.setdefault(candidate)
@@ -360,7 +366,9 @@ def get_conceptscheme() -> "sdmx.model.common.ConceptScheme":
     from transport_data import STORE, org
 
     cs = common.ConceptScheme(
-        id=f"{get_agency().id}_CONCEPTS", maintainer=org.get_agency()[0], version="0.1"
+        id=f"{get_agencies()[0].id}_CONCEPTS",
+        maintainer=org.get_agencies()[0],
+        version="0.1",
     )
 
     # Measures
@@ -415,9 +423,9 @@ def get_structures(
 
     from transport_data import STORE, org
 
-    base = f"{get_agency().id}_{measure}"
+    base = f"{get_agencies()[0].id}_{measure}"
     ma_args = dict(
-        maintainer=org.get_agency()[0],
+        maintainer=org.get_agencies()[0],
         version="0.1",
         is_final=False,
         is_external_reference=False,
