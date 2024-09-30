@@ -1,9 +1,11 @@
+import itertools
 import logging
 import re
 from collections import defaultdict
 from functools import lru_cache
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Hashable, List, Optional, Tuple
 
+from pycountry import countries
 from sdmx.model import common, v21
 
 if TYPE_CHECKING:
@@ -180,6 +182,39 @@ def add_template(wb: "Workbook", msd: "v21.MetadataStructureDefinition"):
         ws.cell(row=row, column=2, value="---")
 
 
+def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
+    """Return :any:`True` if `mdr` contains data for `ref_area`.
+
+    :any:`True` is returned if any of the following:
+
+    1. The referenced data flow definition has an ID that starts with `ref_area`.
+    2. The country's ISO 3166 alpha-2 code, alpha-3 code, official name, or common name
+       appears in the value of the ``DATA_DESCR`` metadata attribute.
+
+
+    Parameters
+    ----------
+    ref_area : str
+        ISO 3166 alpha-2 code for a country. Passed to
+        :meth:`pycountry.countries.lookup`.
+    """
+    country = countries.lookup(ref_area)
+
+    if mdr.attaches_to.key_values["DATAFLOW"].obj.id.startswith(ref_area):  # type: ignore [union-attr]
+        return True
+
+    # Pattern to match in DATA_DESCR
+    pat = re.compile(
+        f"({country.alpha_2}|{country.alpha_3}|{country.name}|{country.common_name})"
+    )
+    for ra in mdr.metadata:
+        assert hasattr(ra, "value")
+        if ra.value_for.id == "DATA_DESCR" and pat.search(ra.value):
+            return True
+
+    return False
+
+
 @lru_cache
 def get_cs_common() -> "common.ConceptScheme":
     """Create a shared concept scheme for the concepts referenced by dimensions.
@@ -268,6 +303,19 @@ def getdefault(is_: "common.ItemScheme", other: "common.Item") -> "common.Item":
 
     # Still no match; create the item
     return is_.setdefault(id=other.id)
+
+
+def groupby(
+    mds: "v21.MetadataSet", key=Callable[["v21.MetadataReport"], Hashable]
+) -> dict[Hashable, list["v21.MetadataReport"]]:
+    """Group metadata reports in `mds` according to a `key` function.
+
+    Similar to :func:`itertools.groupby`.
+    """
+    result: dict[Hashable, list["v21.MetadataReport"]] = defaultdict(list)
+    for k, g in itertools.groupby(mds.report, key):
+        result[k].extend(g)
+    return result
 
 
 def make_workbook(name="sample.xlsx") -> None:
