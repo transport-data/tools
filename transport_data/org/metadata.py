@@ -215,47 +215,36 @@ def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
     return False
 
 
-def generate_summary_html(
+def generate_summary_html0(
     mds: "v21.MetadataSet", ref_area: str, path: "pathlib.Path"
 ) -> None:
     """Generate a summary report in HTML."""
-    from jinja2 import Environment, PackageLoader, select_autoescape
-
-    # Create a Jinja environment
-    env = Environment(
-        loader=PackageLoader("transport_data", package_path="data/org"),
-        extensions=["jinja2.ext.loopcontrols"],
-        autoescape=select_autoescape(),
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
 
     grouped = groupby(mds, key=partial(contains_data_for, ref_area=ref_area))
 
-    def _dfd_id(mdr):
-        return mdr.attaches_to.key_values["DATAFLOW"].obj.id
-
-    def _get_reported_attribute(mdr, id_):
-        for ra in mdr.metadata:
-            if ra.value_for.id == id_:
-                return ra.value, ra.value_for
-        return "—", None
-
-    def _format_desc(dim):
-        if desc := str(dim.get_annotation(id="tdc-description").text):
-            return desc
-        else:
-            return "—"
-
-    env.filters["dfd_id"] = _dfd_id
-    env.filters["format_desc"] = _format_desc
+    env, common = get_jinja_env()
 
     path.write_text(
-        env.get_template("template-metadata.html").render(
-            ref_area=ref_area,
-            matched=grouped[True],
-            no_match=grouped[False],
-            get_reported_attribute=_get_reported_attribute,
+        env.get_template("template-metadata-0.html").render(
+            ref_area=ref_area, matched=grouped[True], no_match=grouped[False], **common
+        )
+    )
+
+
+def generate_summary_html1(
+    mds: "v21.MetadataSet", ref_area: list[str], path: "pathlib.Path"
+) -> None:
+    data = {
+        mdr.attaches_to.key_values["DATAFLOW"].obj.id: {  # type: ignore [union-attr]
+            ra: contains_data_for(mdr, ra) for ra in ref_area
+        }
+        for mdr in mds.report
+    }
+
+    env, common = get_jinja_env()
+    path.write_text(
+        env.get_template("template-metadata-1.html").render(
+            ref_area=ref_area, data=data, **common
         )
     )
 
@@ -298,6 +287,43 @@ def get_cs_common() -> "common.ConceptScheme":
     )
 
     return cs
+
+
+@lru_cache
+def get_jinja_env():
+    """Return a Jinja2 environment for rendering templates."""
+    from jinja2 import Environment, PackageLoader, select_autoescape
+
+    # Create a Jinja environment
+    env = Environment(
+        loader=PackageLoader("transport_data", package_path="data/org"),
+        extensions=["jinja2.ext.loopcontrols"],
+        autoescape=select_autoescape(),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+
+    def _dfd_id(mdr):
+        return mdr.attaches_to.key_values["DATAFLOW"].obj.id
+
+    def _get_reported_attribute(mdr, id_):
+        for ra in mdr.metadata:
+            if ra.value_for.id == id_:
+                return ra.value, ra.value_for
+        return "—", None
+
+    def _format_desc(dim):
+        if desc := str(dim.get_annotation(id="tdc-description").text):
+            return desc
+        else:
+            return "—"
+
+    env.filters["dfd_id"] = _dfd_id
+    env.filters["format_desc"] = _format_desc
+
+    return env, dict(
+        get_reported_attribute=_get_reported_attribute,
+    )
 
 
 def get_msd() -> "v21.MetadataStructureDefinition":

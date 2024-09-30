@@ -4,7 +4,8 @@ import pytest
 
 from transport_data.org.metadata import (
     contains_data_for,
-    generate_summary_html,
+    generate_summary_html0,
+    generate_summary_html1,
     groupby,
     make_workbook,
     read_workbook,
@@ -69,10 +70,21 @@ def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
 
 
 @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
-def test_generate_summary_html(tmp_path, example_metadata, ref_area, N_exp) -> None:
+def test_generate_summary_html0(tmp_path, example_metadata, ref_area, N_exp) -> None:
     path = tmp_path.joinpath(f"{ref_area}.html")
 
-    generate_summary_html(example_metadata[0], ref_area=ref_area, path=path)
+    generate_summary_html0(example_metadata[0], ref_area=ref_area, path=path)
+
+    # Output was created
+    assert path.exists()
+
+
+def test_generate_summary_html1(tmp_path, example_metadata) -> None:
+    path = tmp_path.joinpath("all.html")
+
+    generate_summary_html1(
+        example_metadata[0], ref_area=list(item[0] for item in COUNTRIES), path=path
+    )
 
     # Output was created
     assert path.exists()
