@@ -1,9 +1,10 @@
 import logging
+import re
 from collections import defaultdict
-from typing import TYPE_CHECKING, Optional, Tuple
+from functools import lru_cache
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from sdmx.model import v21
-from sdmx.model.v21 import MetadataStructureDefinition
+from sdmx.model import common, v21
 
 if TYPE_CHECKING:
     import pathlib
@@ -145,7 +146,7 @@ def add_readme(wb: "Workbook") -> None:
     ws["A3"] = README_TEXT
 
 
-def add_attributes(wb: "Workbook", msd: "MetadataStructureDefinition"):
+def add_attributes(wb: "Workbook", msd: "v21.MetadataStructureDefinition"):
     """Add an "Attributes" sheet to `wb` listing the metadata attributes from `msd`."""
     ws = wb.create_sheet("Attributes")
 
@@ -163,7 +164,7 @@ def add_attributes(wb: "Workbook", msd: "MetadataStructureDefinition"):
         ws.cell(row=row, column=3, value=attribute.id).style = "top"
 
 
-def add_template(wb: "Workbook", msd: "MetadataStructureDefinition"):
+def add_template(wb: "Workbook", msd: "v21.MetadataStructureDefinition"):
     """Add a "TEMPLATE" sheet to `wb` with a metadata template."""
     ws = wb.create_sheet("TEMPLATE")
 
@@ -179,18 +180,56 @@ def add_template(wb: "Workbook", msd: "MetadataStructureDefinition"):
         ws.cell(row=row, column=2, value="---")
 
 
-def get_msd() -> "MetadataStructureDefinition":
-    from sdmx.model.common import ConceptScheme
-    from sdmx.model.v21 import ReportStructure
+@lru_cache
+def get_cs_common() -> "common.ConceptScheme":
+    """Create a shared concept scheme for the concepts referenced by dimensions.
 
+    Concepts in this scheme have an annotation ``tdc-aka``, which is a list of alternate
+    IDs recognized for the concept.
+    """
+    from . import get_agencyscheme
+
+    as_ = get_agencyscheme()
+    cs = common.ConceptScheme(id="CONCEPTS", maintainer=as_["TDCI"])
+
+    cs.setdefault(
+        id="CONFIDENTIALITY",
+        annotations=[common.Annotation(id="tdc-aka", text=repr(["CONFIDIENTALITY"]))],
+    )
+    cs.setdefault(
+        id="FUEL_TYPE",
+        annotations=[common.Annotation(id="tdc-aka", text=repr(["Fuel type"]))],
+    )
+    cs.setdefault(
+        id="REF_AREA",
+        annotations=[
+            common.Annotation(
+                id="tdc-aka", text=repr(["Area", "Country", "Country code", "Region"])
+            )
+        ],
+    )
+    cs.setdefault(
+        id="SERVICE",
+        annotations=[common.Annotation(id="tdc-aka", text=repr(["FREIGHT_PASSENGER"]))],
+    )
+    cs.setdefault(
+        id="TIME_PERIOD",
+        annotations=[common.Annotation(id="tdc-aka", text=repr(["Time", "Year"]))],
+    )
+
+    return cs
+
+
+def get_msd() -> "v21.MetadataStructureDefinition":
     from transport_data import STORE
 
     from . import get_agencyscheme
 
-    as_ = get_agencyscheme()
-    cs = ConceptScheme(id="METADATA_CONCEPTS", maintainer=as_["TDCI"])
-    msd = MetadataStructureDefinition(id="SIMPLE", version="1", maintainer=as_["TDCI"])
-    rs = msd.report_structure["ALL"] = ReportStructure(id="ALL")
+    TDCI = get_agencyscheme()["TDCI"]
+
+    cs = common.ConceptScheme(id="METADATA_CONCEPTS", maintainer=TDCI)
+    msd = v21.MetadataStructureDefinition(id="SIMPLE", version="1", maintainer=TDCI)
+    rs = msd.report_structure["ALL"] = v21.ReportStructure(id="ALL")
 
     for id_, (name, description) in CONCEPTS.items():
         ci = cs.setdefault(id=id_, name=name, description=description)
@@ -200,6 +239,35 @@ def get_msd() -> "MetadataStructureDefinition":
     STORE.write(msd)
 
     return msd
+
+
+def getdefault(is_: "common.ItemScheme", other: "common.Item") -> "common.Item":
+    """Return an item from `is_` matching `other`.
+
+    Several methods are attempted to match `other` with an existing item:
+
+    1. ID of `other` is identical to that of an existing item.
+    2. Transformed ID of `other`—in upper case, " " replaced with "_" is identical to
+       that of an existing item.
+    3. ID of `other` is in the annotation ``tdc-aka``
+
+    """
+    # Exact match on ID or transformed ID
+    for candidate in (other.id, other.id.upper().replace(" ", "_")):
+        try:
+            return is_[candidate]
+        except KeyError:
+            pass
+
+    # Iterate over existing items
+    for item in is_:
+        # Eval the annotation "tdc-aka" for a list of alternate IDs for the item
+        if aka := item.eval_annotation(id="tdc-aka"):
+            if other.id in aka:
+                return item
+
+    # Still no match; create the item
+    return is_.setdefault(id=other.id)
 
 
 def make_workbook(name="sample.xlsx") -> None:
@@ -236,7 +304,42 @@ def make_workbook(name="sample.xlsx") -> None:
     wb.save(name)
 
 
-def read_workbook(path: "pathlib.Path") -> "v21.MetadataSet":
+def parse_dimension(value: str) -> List[v21.Concept]:
+    """Parse the description of a dimension from `value`.
+
+    Supported values include:
+
+    1. Multiple lines, with each line beginning "- ".
+    2. A single line, with dimensions separated by ", ".
+    3. A single dimension ID.
+    """
+    # Partial regular expressions for a dimension
+    entry = r"(?P<id>.+?)(?: \((?P<description>[^\)]*)\))?"
+
+    # Split `value` into potentially multiple values; separate dimension IDs from
+    # description/annotation
+    parts = []
+    if matches := re.findall(f"^- {entry}$", value, flags=re.MULTILINE):
+        # Multiple lines, with each line beginning "- "
+        parts.extend(matches)
+    elif matches := re.findall(f"{entry}(?:, |$)", value):
+        # Single line, with dimensions separated by ", "
+        # TODO Check behaviour if the ", " is within parentheses
+        parts.extend(matches)
+    elif 0 == len(parts):
+        # None of the above → a single dimension label
+        parts.append(value)
+
+    # Convert to a list of Concept objects
+    return [
+        v21.Concept(id=id_, name=id_, description=description)
+        for id_, description in parts
+    ]
+
+
+def read_workbook(
+    path: "pathlib.Path",
+) -> tuple["v21.MetadataSet", "v21.ConceptScheme"]:
     """Read a metadata set from the workbook at `path`."""
     from openpyxl import load_workbook
 
@@ -246,19 +349,26 @@ def read_workbook(path: "pathlib.Path") -> "v21.MetadataSet":
 
     mds = v21.MetadataSet(structured_by=msd)
 
+    # Create a shared concept scheme for the concepts referenced by dimensions
+    # TODO Collect, maybe with get_msd()
+    cs_dims = get_cs_common()
+
     for ws in wb.worksheets:
         # Skip information sheets generated by methods in this file
         if ws.title in ("README", "Attributes", "TEMPLATE"):
             continue
 
-        mds.report.append(read_worksheet(ws, msd))
+        if r := read_worksheet(ws, msd, cs_dims):
+            mds.report.append(r)
 
-    return mds
+    return mds, cs_dims
 
 
 def read_worksheet(
-    ws: "Worksheet", msd: "MetadataStructureDefinition"
-) -> "v21.MetadataReport":
+    ws: "Worksheet",
+    msd: "v21.MetadataStructureDefinition",
+    cs_dims: "v21.ConceptScheme",
+) -> Optional["v21.MetadataReport"]:
     """Read a metadata report from the worksheet `ws`.
 
     Parameters
@@ -276,6 +386,8 @@ def read_worksheet(
     # TODO Expand this DFD and its associated data structure definition
     df_id_from_title = ws.title
     dfd = v21.DataflowDefinition(id=ws.title, maintainer=msd.maintainer)
+    dsd = v21.DataStructureDefinition(id=ws.title, maintainer=msd.maintainer)
+    dfd.structure = dsd
 
     # Create objects to associate the metadata report with the data flow definition
     iot = v21.IdentifiableObjectTarget()
@@ -287,14 +399,22 @@ def read_worksheet(
     mdr = v21.MetadataReport()
     mdr.attaches_to = tok
 
-    # Iterate over rows in the worksheet
-    mda = None
-    for row in ws.iter_rows():
-        # Column B: value in the row
-        ra_value = row[1].value
+    mda = None  # Reference to the MetaDataAttribute describing the current row
+    dimension_concepts = []
 
-        if ra_value is None:
-            continue
+    # Iterate over rows in the worksheet, skipping the first
+    for row in ws.iter_rows(min_row=2):
+        try:
+            # Column B: value in the row
+            ra_value = row[1].value
+
+            if ra_value is None:
+                continue
+        except IndexError:
+            log.warning(
+                f"Sheet {df_id_from_title!r} has only < 2 columns in the first row; skip"
+            )
+            return None
 
         # Column A: name of the metadata attribute
         mda_name = row[0].value
@@ -305,18 +425,27 @@ def read_worksheet(
         # TODO Protect against other malformed data.
         mda = mda_for_name.get(str(mda_name), mda)
 
-        # Store as OtherNonEnumeratedAttributeValue
-        # TODO Use EnumeratedAttributeValue, once code lists are available corresponding
-        #      to dimensions
-        ra = v21.OtherNonEnumeratedAttributeValue(value=str(ra_value), value_for=mda)
+        if mda and mda.id == "DIMENSION":
+            # Parse 1 or more dimension(s) and add to the DSD
+            dimension_concepts.extend(parse_dimension(str(ra_value)))
+        else:
+            # Store as OtherNonEnumeratedAttributeValue
+            # TODO Use EnumeratedAttributeValue, once code lists are available
+            #      corresponding to dimensions
+            ra = v21.OtherNonEnumeratedAttributeValue(
+                value=str(ra_value), value_for=mda
+            )
 
-        # Attend the reported attribute to the report
-        mdr.metadata.append(ra)
+            # Attend the reported attribute to the report
+            mdr.metadata.append(ra)
 
     # Basic checks
     df_id_from_cell = _get(mdr, "DATAFLOW")
     if not df_id_from_cell:
         log.warning(f"Sheet {df_id_from_title!r} does not identify a data flow; skip")
+        return None
+
+    update_dimension_descriptor(dsd, cs_dims, *dimension_concepts)
 
     return mdr
 
@@ -331,28 +460,85 @@ def _get(mdr: "v21.MetadataReport", mda_id: str) -> Optional[str]:
     return None
 
 
+def summarize_metadataattribute(mds: "v21.MetadataSet", mda_id: str) -> None:
+    """Summarize unique values appear in metadata for attribute `mda_id`."""
+    value_id = defaultdict(set)
+
+    for r in mds.report:
+        value_id[_get(r, mda_id) or "MISSING"].add(_get(r, "DATAFLOW") or "MISSING")
+
+    assert mds.structured_by
+    mda = mds.structured_by.report_structure["ALL"].get(mda_id)
+
+    print("\n\n" + uline(f"{mda}: {len(value_id)} unique values"))
+    for value, df_ids in sorted(value_id.items()):
+        print(f"{value}\n    " + " ".join(sorted(df_ids)))
+
+
+def summarize_metadatareport(mdr: "v21.MetadataReport") -> None:
+    lines = ["", uline("Metadata report")]
+
+    # Retrieve references to the data flow and data structure
+    dfd: v21.DataflowDefinition = mdr.attaches_to.key_values["DATAFLOW"].obj  # type: ignore [union-attr]
+    dsd = dfd.structure
+
+    # Summarize the data flow and data structure
+
+    lines.extend(
+        [f"Refers to {dfd!r}", f"  with structure {dsd!r}", "    with dimensions:"]
+    )
+    for dim in dsd.dimensions:
+        line = f"    - {dim.id}:"
+        if desc := str(dim.get_annotation(id="tdc-description").text):
+            line += f" {desc!s}"
+        else:
+            line += " —"
+        try:
+            original_id = dim.get_annotation(id="tdc-original-id").text
+            line += f" ('{original_id!s}' in input file)"
+        except KeyError:
+            pass
+        lines.append(line)
+
+    lines.append("")
+
+    for ra in mdr.metadata:
+        if ra.value_for.id == "DATAFLOW":
+            continue
+        assert hasattr(ra, "value")
+        lines.append(f"{ra.value_for}: {ra.value}")
+
+    print("\n".join(lines))
+
+
 def summarize_metadataset(mds: "v21.MetadataSet") -> None:
     """Print a summary of the contents of `mds`."""
     print(f"Metadata set containing {len(mds.report)} metadata reports")
 
-    def uline(text: str, char: str = "=") -> str:
-        """Underline `text`."""
-        return f"{text}\n{char * len(text)}"
+    summarize_metadataattribute(mds, "MEASURE")
+    summarize_metadataattribute(mds, "DATA_PROVIDER")
+    summarize_metadataattribute(mds, "UNIT_MEASURE")
 
-    def summarize_metadataattribute(mda_id: str) -> None:
-        """Summarize unique values appear in metadata for attribute `mda_id`."""
-        value_id = defaultdict(set)
+    for r in mds.report:
+        summarize_metadatareport(r)
 
-        for r in mds.report:
-            value_id[_get(r, mda_id) or "MISSING"].add(_get(r, "DATAFLOW") or "MISSING")
 
-        assert mds.structured_by
-        mda = mds.structured_by.report_structure["ALL"].get(mda_id)
+def uline(text: str, char: str = "=") -> str:
+    """Underline `text`."""
+    return f"{text}\n{char * len(text)}"
 
-        print("\n\n" + uline(f"{mda}: {len(value_id)} unique values"))
-        for value, df_ids in sorted(value_id.items()):
-            print(f"{value}\n    " + " ".join(sorted(df_ids)))
 
-    summarize_metadataattribute("MEASURE")
-    summarize_metadataattribute("DATA_PROVIDER")
-    summarize_metadataattribute("UNIT_MEASURE")
+def update_dimension_descriptor(
+    dsd: "v21.DataStructureDefinition", cs_dims: "v21.ConceptScheme", *concepts
+) -> None:
+    """Update the DimensionDescriptor of `dsd` with `concepts`."""
+    for dc in concepts:
+        # Identify the concept in `cs_dims` with the same ID
+        c = getdefault(cs_dims, dc)
+
+        # Construct annotations
+        anno = [common.Annotation(id="tdc-description", text=dc.description)]
+        if c.id != dc.id:
+            anno.append(common.Annotation(id="tdc-original-id", text=dc.id))
+
+        dsd.dimensions.getdefault(id=c.id, concept_identity=c, annotations=anno)
