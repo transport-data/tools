@@ -1,0 +1,53 @@
+{% macro summarize_metadatareport(report, heading="h2") %}
+{% set dataflow = report.attaches_to.key_values["DATAFLOW"].obj %}
+<{{ heading }} id="{{ report | dfd_id }}">Data flow <code>'{{ report | dfd_id }}'</code> <a href="#top">^</a></{{ heading }}>
+{{ summarize_dataflow(dataflow) }}
+{% for metadata_concept in ["DATA_PROVIDER", "URL", "MEASURE", "UNIT_MEASURE", "DATA_DESCR", "COMMENT"] %}
+{% set ra_value, mda = get_reported_attribute(report, metadata_concept) %}
+{% if not mda %}{% continue %}{% endif %}
+<p><em>{{ mda.concept_identity.name }}</em>:
+{% if metadata_concept == "DATA_PROVIDER" %}
+<strong>{{ ra_value }}</strong>
+{% elif metadata_concept == "URL" %}
+<a href="{{ ra_value }}">{{ ra_value}}</a>
+{% elif metadata_concept in ("DATA_DESCR", "COMMENTS") %}
+<br/>{{ ra_value.replace('\n', '<br>') | safe }}
+{% else %}
+{{ ra_value }}
+{% endif %}
+</p>
+{% endfor %}
+{% endmacro %}
+
+{% macro summarize_dataflow(dfd) %}
+…with dimensions:
+<ol>
+  {% for dim in dfd.structure.dimensions %}
+  <li><strong>{{ dim.id }}</strong>: {{ dim | format_desc }}</li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+<html>
+  <body>
+    <a name="#top">
+    <p><strong>Direct links:</strong><br/>
+    <strong> {{ matched | length }} </strong> data flows containing data on {{ ref_area }}:
+    {% for mdr in matched %}<a href="#{{ mdr | dfd_id }}">{{ mdr | dfd_id }}</a>{{ ", " if not loop.last }}{% endfor %}
+    <br/>
+    <strong> {{ no_match | length }} </strong> other data flows:
+    {% for mdr in no_match %}<a href="#{{ mdr | dfd_id }}">{{ mdr | dfd_id }}</a>{{ ", " if not loop.last }}{% endfor %}
+    </p>
+    <h1>Data flows containing data on {{ ref_area }}</h1>
+    <p>These data flows are explicitly marked as containing data pertaining to the country.</p>
+    {% for mdr in matched %}
+    {{ summarize_metadatareport(mdr) }}
+    {% endfor %}
+    <h1>Other data flows</h1>
+    <p>These data flows are not <em>explicitly</em> identified as containing data on the country.
+    This doesn't completely rule out that they <em>may</em> contain such data, but this is less likely and would require further investigation and inspection.</p>
+    {% for mdr in no_match %}
+    {{ summarize_metadatareport(mdr) }}
+    {% endfor %}
+  </body>
+</html>

@@ -2,7 +2,7 @@ import itertools
 import logging
 import re
 from collections import defaultdict
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Callable, Hashable, List, Optional, Tuple
 
 from pycountry import countries
@@ -213,6 +213,51 @@ def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
             return True
 
     return False
+
+
+def generate_summary_html(
+    mds: "v21.MetadataSet", ref_area: str, path: "pathlib.Path"
+) -> None:
+    """Generate a summary report in HTML."""
+    from jinja2 import Environment, PackageLoader, select_autoescape
+
+    # Create a Jinja environment
+    env = Environment(
+        loader=PackageLoader("transport_data", package_path="data/org"),
+        extensions=["jinja2.ext.loopcontrols"],
+        autoescape=select_autoescape(),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+
+    grouped = groupby(mds, key=partial(contains_data_for, ref_area=ref_area))
+
+    def _dfd_id(mdr):
+        return mdr.attaches_to.key_values["DATAFLOW"].obj.id
+
+    def _get_reported_attribute(mdr, id_):
+        for ra in mdr.metadata:
+            if ra.value_for.id == id_:
+                return ra.value, ra.value_for
+        return "—", None
+
+    def _format_desc(dim):
+        if desc := str(dim.get_annotation(id="tdc-description").text):
+            return desc
+        else:
+            return "—"
+
+    env.filters["dfd_id"] = _dfd_id
+    env.filters["format_desc"] = _format_desc
+
+    path.write_text(
+        env.get_template("template-metadata.html").render(
+            ref_area=ref_area,
+            matched=grouped[True],
+            no_match=grouped[False],
+            get_reported_attribute=_get_reported_attribute,
+        )
+    )
 
 
 @lru_cache

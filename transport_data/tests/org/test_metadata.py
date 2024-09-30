@@ -4,6 +4,7 @@ import pytest
 
 from transport_data.org.metadata import (
     contains_data_for,
+    generate_summary_html,
     groupby,
     make_workbook,
     read_workbook,
@@ -43,18 +44,18 @@ def test_summarize_metadataset(capsys, example_metadata) -> None:
     # TODO expand with further assertions
 
 
-@pytest.mark.parametrize(
-    "ref_area, N_exp",
-    [
-        ("CN", 19),
-        ("ID", 17),
-        ("IN", 19),
-        ("PH", 14),
-        ("NP", 0),
-        ("TH", 17),
-        ("VN", 18),
-    ],
-)
+COUNTRIES = [
+    ("CN", 19),
+    ("ID", 17),
+    ("IN", 19),
+    ("PH", 14),
+    ("NP", 0),
+    ("TH", 17),
+    ("VN", 18),
+]
+
+
+@pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
 def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
     predicate = partial(contains_data_for, ref_area=ref_area)
     result = groupby(example_metadata[0], predicate)
@@ -65,3 +66,13 @@ def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
 
     # Observed counts match
     assert exp >= {(k, len(v)) for k, v in result.items()}
+
+
+@pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
+def test_generate_summary_html(tmp_path, example_metadata, ref_area, N_exp) -> None:
+    path = tmp_path.joinpath(f"{ref_area}.html")
+
+    generate_summary_html(example_metadata[0], ref_area=ref_area, path=path)
+
+    # Output was created
+    assert path.exists()

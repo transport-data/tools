@@ -23,6 +23,7 @@ readme = "README.rst"
 requires-python = ">=3.8"
 dependencies = [
   "click",
+  "Jinja2",
   "openpyxl",
   "packaging",
   "pandas",
