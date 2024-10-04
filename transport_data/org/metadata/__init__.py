@@ -3,7 +3,7 @@ import logging
 import re
 from collections import defaultdict
 from functools import lru_cache
-from typing import TYPE_CHECKING, Callable, Hashable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Hashable, Iterable, List, Optional, Tuple
 
 from pycountry import countries
 from sdmx.model import common, v21
@@ -200,15 +200,24 @@ def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
         ISO 3166 alpha-2 code for a country. Passed to
         :meth:`pycountry.countries.lookup`.
     """
-    country = countries.lookup(ref_area)
-
     if mdr.attaches_to.key_values["DATAFLOW"].obj.id.startswith(ref_area):  # type: ignore [union-attr]
         return True
 
-    # Pattern to match in DATA_DESCR
-    pat = re.compile(
-        f"({country.alpha_2}|{country.alpha_3}|{country.name}|{country.common_name})"
+    # Valid identifiers for `country`: its ISO 3166 alpha-[23] codes and names
+    # NB In pycountry 23.12.11, "common_name" would fall back to "official_name" or
+    #    "name" if not explicitly defined. In 24.6.1, this was reverted and
+    #    AttributeError is raised.
+    country = countries.lookup(ref_area)
+    values: Iterable[str] = filter(
+        None,
+        (
+            getattr(country, a, None)
+            for a in "alpha_2 alpha_3 common_name name official_name".split()
+        ),
     )
+    # Pattern to match in DATA_DESCR
+    pat = re.compile("(" + "|".join(values) + ")")
+
     for ra in mdr.metadata:
         assert hasattr(ra, "value")
         if ra.value_for.id == "DATA_DESCR" and pat.search(ra.value):
