@@ -35,7 +35,8 @@ def refresh(version):
 )
 def read(path: "pathlib.Path"):
     """Read and summarize metadata."""
-    from .metadata import read_workbook, summarize_metadataset
+    from .metadata import summarize_metadataset
+    from .metadata.spreadsheet import read_workbook
 
     mds, _ = read_workbook(path.resolve())
     summarize_metadataset(mds)
@@ -56,8 +57,8 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
     generated of the (meta)data pertaining to that country/area. If multiple values are
     given (e.g. --ref-area=AF,ZW), a summary table is generated.
     """
-    from .metadata import read_workbook
     from .metadata.report import SummaryHTML0, SummaryHTML1, SummaryODT
+    from .metadata.spreadsheet import read_workbook
 
     mds, _ = read_workbook(path_in.resolve())
 
@@ -82,6 +83,6 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
 @main.command("template")
 def template():
     """Generate the metadata template."""
-    from .metadata import make_workbook
+    from .metadata.spreadsheet import make_workbook
 
     make_workbook()

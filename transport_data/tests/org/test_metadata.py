@@ -5,11 +5,10 @@ import pytest
 from transport_data.org.metadata import (
     contains_data_for,
     groupby,
-    make_workbook,
-    read_workbook,
     summarize_metadataset,
 )
 from transport_data.org.metadata.report import SummaryHTML0, SummaryHTML1, SummaryODT
+from transport_data.org.metadata.spreadsheet import make_workbook, read_workbook
 
 
 def test_make_workbook(tmp_path) -> None:
