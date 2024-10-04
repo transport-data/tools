@@ -8,8 +8,6 @@ from typing import Callable, Hashable, Iterable, Optional
 from pycountry import countries
 from sdmx.model import common, v21
 
-from transport_data.util import uline
-
 log = logging.getLogger(__name__)
 
 #: Concepts and metadata attributes in the TDC metadata structure.
@@ -215,66 +213,3 @@ def _get(mdr: "v21.MetadataReport", mda_id: str) -> Optional[str]:
             return mda.value
     # No match
     return None
-
-
-def summarize_metadataattribute(mds: "v21.MetadataSet", mda_id: str) -> None:
-    """Summarize unique values appear in metadata for attribute `mda_id`."""
-    value_id = defaultdict(set)
-
-    for r in mds.report:
-        value_id[_get(r, mda_id) or "MISSING"].add(_get(r, "DATAFLOW") or "MISSING")
-
-    assert mds.structured_by
-    mda = mds.structured_by.report_structure["ALL"].get(mda_id)
-
-    print("\n\n" + uline(f"{mda}: {len(value_id)} unique values"))
-    for value, df_ids in sorted(value_id.items()):
-        print(f"{value}\n    " + " ".join(sorted(df_ids)))
-
-
-def summarize_metadatareport(mdr: "v21.MetadataReport") -> None:
-    lines = ["", uline("Metadata report")]
-
-    # Retrieve references to the data flow and data structure
-    dfd: v21.DataflowDefinition = mdr.attaches_to.key_values["DATAFLOW"].obj  # type: ignore [union-attr]
-    dsd = dfd.structure
-
-    # Summarize the data flow and data structure
-
-    lines.extend(
-        [f"Refers to {dfd!r}", f"  with structure {dsd!r}", "    with dimensions:"]
-    )
-    for dim in dsd.dimensions:
-        line = f"    - {dim.id}:"
-        if desc := str(dim.get_annotation(id="tdc-description").text):
-            line += f" {desc!s}"
-        else:
-            line += " (no info)"
-        try:
-            original_id = dim.get_annotation(id="tdc-original-id").text
-            line += f" ('{original_id!s}' in input file)"
-        except KeyError:
-            pass
-        lines.append(line)
-
-    lines.append("")
-
-    for ra in mdr.metadata:
-        if ra.value_for.id == "DATAFLOW":
-            continue
-        assert hasattr(ra, "value")
-        lines.append(f"{ra.value_for}: {ra.value}")
-
-    print("\n".join(lines))
-
-
-def summarize_metadataset(mds: "v21.MetadataSet") -> None:
-    """Print a summary of the contents of `mds`."""
-    print(f"Metadata set containing {len(mds.report)} metadata reports")
-
-    summarize_metadataattribute(mds, "MEASURE")
-    summarize_metadataattribute(mds, "DATA_PROVIDER")
-    summarize_metadataattribute(mds, "UNIT_MEASURE")
-
-    for r in mds.report:
-        summarize_metadatareport(r)

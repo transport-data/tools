@@ -2,13 +2,20 @@ from functools import partial
 
 import pytest
 
-from transport_data.org.metadata import (
-    contains_data_for,
-    groupby,
-    summarize_metadataset,
-)
-from transport_data.org.metadata.report import SummaryHTML0, SummaryHTML1, SummaryODT
+from transport_data.org.metadata import contains_data_for, groupby, report
 from transport_data.org.metadata.spreadsheet import make_workbook, read_workbook
+
+#: Number of metadata reports in the test specimen for which contains_data_for() returns
+#: :any:`True`.
+COUNTRIES = [
+    ("CN", 19),
+    ("ID", 17),
+    ("IN", 19),
+    ("PH", 14),
+    ("NP", 0),
+    ("TH", 17),
+    ("VN", 18),
+]
 
 
 def test_make_workbook(tmp_path) -> None:
@@ -28,32 +35,6 @@ def test_read_workbook(example_metadata) -> None:
     assert 45 == len(result.report)
 
 
-def test_summarize_metadataset(capsys, example_metadata) -> None:
-    mds, cs_dims = example_metadata
-
-    # Function runs successfully
-    summarize_metadataset(mds)
-
-    captured = capsys.readouterr()
-    # pathlib.Path("debug.txt").write_text(captured.out)  # DEBUG Write to a file
-
-    # Output contains certain text
-    assert "MEASURE: 39 unique values" in captured.out
-
-    # TODO expand with further assertions
-
-
-COUNTRIES = [
-    ("CN", 19),
-    ("ID", 17),
-    ("IN", 19),
-    ("PH", 14),
-    ("NP", 0),
-    ("TH", 17),
-    ("VN", 18),
-]
-
-
 @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
 def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
     predicate = partial(contains_data_for, ref_area=ref_area)
@@ -67,22 +48,22 @@ def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
     assert exp >= {(k, len(v)) for k, v in result.items()}
 
 
-class TestSummaryHTML0:
+class TestMetadataSetHTML0:
     @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
     def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
         path = tmp_path.joinpath(f"{ref_area}.html")
 
-        SummaryHTML0(example_metadata[0], ref_area=ref_area).write_file(path)
+        report.MetadataSetHTML0(example_metadata[0], ref_area=ref_area).write_file(path)
 
         # Output was created
         assert path.exists()
 
 
-class TestSummaryHTML1:
+class TestMetadataSetHTML1:
     def test_write_file(self, tmp_path, example_metadata) -> None:
         path = tmp_path.joinpath("all.html")
 
-        SummaryHTML1(
+        report.MetadataSetHTML1(
             example_metadata[0], ref_area=list(item[0] for item in COUNTRIES)
         ).write_file(path)
 
@@ -91,11 +72,29 @@ class TestSummaryHTML1:
 
 
 @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
-class TestSummaryODT:
+class TestMetadataSetODT:
     def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
         path = tmp_path.joinpath(f"{ref_area}.odt")
 
-        SummaryODT(example_metadata[0], ref_area=ref_area).write_file(path=path)
+        report.MetadataSetODT(example_metadata[0], ref_area=ref_area).write_file(
+            path=path
+        )
 
         # Output was created
         assert path.exists()
+
+
+class TestMetadataSetPlain:
+    def test_render(self, capsys, example_metadata) -> None:
+        mds, cs_dims = example_metadata
+
+        # Function runs successfully
+        result = report.MetadataSetPlain(mds).render()
+
+        # pathlib.Path("debug.txt").write_text(result)  # DEBUG Write to a file
+        # print(result)  # DEBUG Write to stdout
+
+        # Output contains certain text
+        assert "MEASURE: 39 unique values" in result
+
+        # TODO expand with further assertions

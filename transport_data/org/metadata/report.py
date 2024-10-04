@@ -1,15 +1,85 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING
 
 from transport_data.report import Report
+from transport_data.util import uline
 
 if TYPE_CHECKING:
     from sdmx.model import v21
 
 
 @dataclass
-class SummaryHTML0(Report):
+class MetadataAttributePlain(Report):
+    """Summarize unique values appearing in `mds` for attribute `mda_id`."""
+
+    mds: "v21.MetadataSet"
+    mda_id: str
+
+    def render(self) -> str:
+        from transport_data.org.metadata import _get
+
+        value_id = defaultdict(set)
+
+        for r in self.mds.report:
+            value_id[_get(r, self.mda_id) or "MISSING"].add(
+                _get(r, "DATAFLOW") or "MISSING"
+            )
+
+        assert self.mds.structured_by
+        mda = self.mds.structured_by.report_structure["ALL"].get(self.mda_id)
+
+        lines = ["", "", uline(f"{mda}: {len(value_id)} unique values")]
+
+        for value, df_ids in sorted(value_id.items()):
+            lines.extend([value, "    " + " ".join(sorted(df_ids))])
+
+        return "\n".join(lines)
+
+
+@dataclass
+class MetadataReportPlain(Report):
+    mdr: "v21.MetadataReport"
+
+    def render(self) -> str:
+        lines = ["", uline("Metadata report")]
+
+        # Retrieve references to the data flow and data structure
+        dfd: "v21.DataflowDefinition" = self.mdr.attaches_to.key_values["DATAFLOW"].obj  # type: ignore [union-attr]
+        dsd = dfd.structure
+
+        # Summarize the data flow and data structure
+
+        lines.extend(
+            [f"Refers to {dfd!r}", f"  with structure {dsd!r}", "    with dimensions:"]
+        )
+        for dim in dsd.dimensions:
+            line = f"    - {dim.id}:"
+            if desc := str(dim.get_annotation(id="tdc-description").text):
+                line += f" {desc!s}"
+            else:
+                line += " (no info)"
+            try:
+                original_id = dim.get_annotation(id="tdc-original-id").text
+                line += f" ('{original_id!s}' in input file)"
+            except KeyError:
+                pass
+            lines.append(line)
+
+        lines.append("")
+
+        for ra in self.mdr.metadata:
+            if ra.value_for.id == "DATAFLOW":
+                continue
+            assert hasattr(ra, "value")
+            lines.append(f"{ra.value_for}: {ra.value}")
+
+        return "\n".join(lines)
+
+
+@dataclass
+class MetadataSetHTML0(Report):
     """Generate a summary report in HTML."""
 
     template_name = "metadata-0.html"
@@ -32,7 +102,7 @@ class SummaryHTML0(Report):
 
 
 @dataclass
-class SummaryHTML1(Report):
+class MetadataSetHTML1(Report):
     """Generate a summary report in HTML."""
 
     template_name = "metadata-1.html"
@@ -56,7 +126,7 @@ class SummaryHTML1(Report):
 
 
 @dataclass
-class SummaryODT(Report):
+class MetadataSetODT(Report):
     template_name = "metadata-2.rst"
 
     #: Metadata set to summarize.
@@ -82,3 +152,23 @@ class SummaryODT(Report):
 
         # Convert reStructuredText → OpenDocumentText
         return self.rst2odt(rst_source)
+
+
+@dataclass
+class MetadataSetPlain(Report):
+    """Print a summary of the contents of `mds`."""
+
+    mds: "v21.MetadataSet"
+
+    def render(self) -> str:
+        lines = [
+            f"Metadata set containing {len(self.mds.report)} metadata reports",
+            MetadataAttributePlain(self.mds, "MEASURE").render(),
+            MetadataAttributePlain(self.mds, "DATA_PROVIDER").render(),
+            MetadataAttributePlain(self.mds, "UNIT_MEASURE").render(),
+        ]
+
+        for r in self.mds.report:
+            lines.append(MetadataReportPlain(r).render())
+
+        return "\n".join(lines)

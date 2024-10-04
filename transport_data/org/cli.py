@@ -35,11 +35,12 @@ def refresh(version):
 )
 def read(path: "pathlib.Path"):
     """Read and summarize metadata."""
-    from .metadata import summarize_metadataset
+    from .metadata import report
     from .metadata.spreadsheet import read_workbook
 
     mds, _ = read_workbook(path.resolve())
-    summarize_metadataset(mds)
+
+    print(report.MetadataSetPlain(mds).render())
 
 
 @main.command
@@ -57,7 +58,7 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
     generated of the (meta)data pertaining to that country/area. If multiple values are
     given (e.g. --ref-area=AF,ZW), a summary table is generated.
     """
-    from .metadata.report import SummaryHTML0, SummaryHTML1, SummaryODT
+    from .metadata import report
     from .metadata.spreadsheet import read_workbook
 
     mds, _ = read_workbook(path_in.resolve())
@@ -68,16 +69,18 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
         if path_out is None:
             path_out = pathlib.Path.cwd().joinpath(f"{ref_areas[0]}.{{html,odt}}")
             print(f"Write to {path_out}")
-        SummaryHTML0(mds, ref_area=ref_areas[0]).write_file(
+        report.MetadataSetHTML0(mds, ref_area=ref_areas[0]).write_file(
             path_out.with_suffix(".html")
         )
-        SummaryODT(mds, ref_area=ref_areas[0]).write_file(path_out.with_suffix(".odt"))
+        report.MetadataSetODT(mds, ref_area=ref_areas[0]).write_file(
+            path_out.with_suffix(".odt")
+        )
     elif 1 < len(ref_areas):
         # Report for multiple REF_AREA
         if path_out is None:
             path_out = pathlib.Path.cwd().joinpath("all.html")
             print(f"Write to {path_out}")
-        SummaryHTML1(mds, ref_area=ref_areas).write_file(path_out)
+        report.MetadataSetHTML1(mds, ref_area=ref_areas).write_file(path_out)
 
 
 @main.command("template")
