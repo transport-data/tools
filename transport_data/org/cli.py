@@ -7,6 +7,7 @@
 """
 
 import pathlib
+from typing import Optional
 
 import click
 
@@ -36,8 +37,46 @@ def read(path: "pathlib.Path"):
     """Read and summarize metadata."""
     from .metadata import read_workbook, summarize_metadataset
 
-    mds = read_workbook(path.resolve())
+    mds, _ = read_workbook(path.resolve())
     summarize_metadataset(mds)
+
+
+@main.command
+@click.option("--ref-area", required=True)
+@click.argument(
+    "path_in", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path)
+)
+@click.argument(
+    "path_out", type=click.Path(dir_okay=False, path_type=pathlib.Path), required=False
+)
+def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_area):
+    """Generate HTML metadata summary.
+
+    If a single value is given for --ref-area (e.g. --ref-area=CA), a summary is
+    generated of the (meta)data pertaining to that country/area. If multiple values are
+    given (e.g. --ref-area=AF,ZW), a summary table is generated.
+    """
+    from .metadata import read_workbook
+    from .metadata.report import SummaryHTML0, SummaryHTML1, SummaryODT
+
+    mds, _ = read_workbook(path_in.resolve())
+
+    ref_areas = ref_area.split(",")
+    if 1 == len(ref_areas):
+        # Report for a single REF_AREA
+        if path_out is None:
+            path_out = pathlib.Path.cwd().joinpath(f"{ref_areas[0]}.{{html,odt}}")
+            print(f"Write to {path_out}")
+        SummaryHTML0(mds, ref_area=ref_areas[0]).write_file(
+            path_out.with_suffix(".html")
+        )
+        SummaryODT(mds, ref_area=ref_areas[0]).write_file(path_out.with_suffix(".odt"))
+    elif 1 < len(ref_areas):
+        # Report for multiple REF_AREA
+        if path_out is None:
+            path_out = pathlib.Path.cwd().joinpath("all.html")
+            print(f"Write to {path_out}")
+        SummaryHTML1(mds, ref_area=ref_areas).write_file(path_out)
 
 
 @main.command("template")

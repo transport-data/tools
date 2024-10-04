@@ -5,11 +5,13 @@ repos:
   - id: mypy
     additional_dependencies:
     - click
+    - lxml-stubs
     - pandas-stubs
     - platformdirs
     - pytest
     - sdmx1
     - Sphinx
+    - types-docutils
     - types-openpyxl
     - types-requests
     args: []

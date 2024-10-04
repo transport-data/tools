@@ -2,11 +2,13 @@ import itertools
 import logging
 import re
 from collections import defaultdict
-from functools import lru_cache, partial
+from functools import lru_cache
 from typing import TYPE_CHECKING, Callable, Hashable, List, Optional, Tuple
 
 from pycountry import countries
 from sdmx.model import common, v21
+
+from transport_data.util import uline
 
 if TYPE_CHECKING:
     import pathlib
@@ -215,40 +217,6 @@ def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
     return False
 
 
-def generate_summary_html0(
-    mds: "v21.MetadataSet", ref_area: str, path: "pathlib.Path"
-) -> None:
-    """Generate a summary report in HTML."""
-
-    grouped = groupby(mds, key=partial(contains_data_for, ref_area=ref_area))
-
-    env, common = get_jinja_env()
-
-    path.write_text(
-        env.get_template("template-metadata-0.html").render(
-            ref_area=ref_area, matched=grouped[True], no_match=grouped[False], **common
-        )
-    )
-
-
-def generate_summary_html1(
-    mds: "v21.MetadataSet", ref_area: list[str], path: "pathlib.Path"
-) -> None:
-    data = {
-        mdr.attaches_to.key_values["DATAFLOW"].obj.id: {  # type: ignore [union-attr]
-            ra: contains_data_for(mdr, ra) for ra in ref_area
-        }
-        for mdr in mds.report
-    }
-
-    env, common = get_jinja_env()
-    path.write_text(
-        env.get_template("template-metadata-1.html").render(
-            ref_area=ref_area, data=data, **common
-        )
-    )
-
-
 @lru_cache
 def get_cs_common() -> "common.ConceptScheme":
     """Create a shared concept scheme for the concepts referenced by dimensions.
@@ -256,7 +224,7 @@ def get_cs_common() -> "common.ConceptScheme":
     Concepts in this scheme have an annotation ``tdc-aka``, which is a list of alternate
     IDs recognized for the concept.
     """
-    from . import get_agencyscheme
+    from transport_data.org import get_agencyscheme
 
     as_ = get_agencyscheme()
     cs = common.ConceptScheme(id="CONCEPTS", maintainer=as_["TDCI"])
@@ -289,47 +257,9 @@ def get_cs_common() -> "common.ConceptScheme":
     return cs
 
 
-@lru_cache
-def get_jinja_env():
-    """Return a Jinja2 environment for rendering templates."""
-    from jinja2 import Environment, PackageLoader, select_autoescape
-
-    # Create a Jinja environment
-    env = Environment(
-        loader=PackageLoader("transport_data", package_path="data/org"),
-        extensions=["jinja2.ext.loopcontrols"],
-        autoescape=select_autoescape(),
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
-
-    def _dfd_id(mdr):
-        return mdr.attaches_to.key_values["DATAFLOW"].obj.id
-
-    def _get_reported_attribute(mdr, id_):
-        for ra in mdr.metadata:
-            if ra.value_for.id == id_:
-                return ra.value, ra.value_for
-        return "—", None
-
-    def _format_desc(dim):
-        if desc := str(dim.get_annotation(id="tdc-description").text):
-            return desc
-        else:
-            return "—"
-
-    env.filters["dfd_id"] = _dfd_id
-    env.filters["format_desc"] = _format_desc
-
-    return env, dict(
-        get_reported_attribute=_get_reported_attribute,
-    )
-
-
 def get_msd() -> "v21.MetadataStructureDefinition":
     from transport_data import STORE
-
-    from . import get_agencyscheme
+    from transport_data.org import get_agencyscheme
 
     TDCI = get_agencyscheme()["TDCI"]
 
@@ -611,7 +541,7 @@ def summarize_metadatareport(mdr: "v21.MetadataReport") -> None:
         if desc := str(dim.get_annotation(id="tdc-description").text):
             line += f" {desc!s}"
         else:
-            line += " —"
+            line += " (no info)"
         try:
             original_id = dim.get_annotation(id="tdc-original-id").text
             line += f" ('{original_id!s}' in input file)"
@@ -640,11 +570,6 @@ def summarize_metadataset(mds: "v21.MetadataSet") -> None:
 
     for r in mds.report:
         summarize_metadatareport(r)
-
-
-def uline(text: str, char: str = "=") -> str:
-    """Underline `text`."""
-    return f"{text}\n{char * len(text)}"
 
 
 def update_dimension_descriptor(

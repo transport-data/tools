@@ -4,13 +4,12 @@ import pytest
 
 from transport_data.org.metadata import (
     contains_data_for,
-    generate_summary_html0,
-    generate_summary_html1,
     groupby,
     make_workbook,
     read_workbook,
     summarize_metadataset,
 )
+from transport_data.org.metadata.report import SummaryHTML0, SummaryHTML1, SummaryODT
 
 
 def test_make_workbook(tmp_path) -> None:
@@ -69,22 +68,35 @@ def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
     assert exp >= {(k, len(v)) for k, v in result.items()}
 
 
+class TestSummaryHTML0:
+    @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
+    def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
+        path = tmp_path.joinpath(f"{ref_area}.html")
+
+        SummaryHTML0(example_metadata[0], ref_area=ref_area).write_file(path)
+
+        # Output was created
+        assert path.exists()
+
+
+class TestSummaryHTML1:
+    def test_write_file(self, tmp_path, example_metadata) -> None:
+        path = tmp_path.joinpath("all.html")
+
+        SummaryHTML1(
+            example_metadata[0], ref_area=list(item[0] for item in COUNTRIES)
+        ).write_file(path)
+
+        # Output was created
+        assert path.exists()
+
+
 @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
-def test_generate_summary_html0(tmp_path, example_metadata, ref_area, N_exp) -> None:
-    path = tmp_path.joinpath(f"{ref_area}.html")
+class TestSummaryODT:
+    def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
+        path = tmp_path.joinpath(f"{ref_area}.odt")
 
-    generate_summary_html0(example_metadata[0], ref_area=ref_area, path=path)
+        SummaryODT(example_metadata[0], ref_area=ref_area).write_file(path=path)
 
-    # Output was created
-    assert path.exists()
-
-
-def test_generate_summary_html1(tmp_path, example_metadata) -> None:
-    path = tmp_path.joinpath("all.html")
-
-    generate_summary_html1(
-        example_metadata[0], ref_area=list(item[0] for item in COUNTRIES), path=path
-    )
-
-    # Output was created
-    assert path.exists()
+        # Output was created
+        assert path.exists()
