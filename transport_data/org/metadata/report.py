@@ -11,7 +11,18 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class MetadataAttributePlain(Report):
+class MetadataAttribute0HTML(Report):
+    """Summarize unique values appearing in `mds` for attribute `mda_id`."""
+
+    mds: "v21.MetadataSet"
+    mda_id: str
+
+    def render(self) -> str:
+        raise NotImplementedError
+
+
+@dataclass
+class MetadataAttribute0Plain(Report):
     """Summarize unique values appearing in `mds` for attribute `mda_id`."""
 
     mds: "v21.MetadataSet"
@@ -39,7 +50,15 @@ class MetadataAttributePlain(Report):
 
 
 @dataclass
-class MetadataReportPlain(Report):
+class MetadataReport0HTML(Report):
+    mdr: "v21.MetadataReport"
+
+    def render(self) -> str:
+        raise NotImplementedError
+
+
+@dataclass
+class MetadataReport0Plain(Report):
     mdr: "v21.MetadataReport"
 
     def render(self) -> str:
@@ -79,10 +98,51 @@ class MetadataReportPlain(Report):
 
 
 @dataclass
-class MetadataSetHTML0(Report):
-    """Generate a summary report in HTML."""
+class MetadataSet0HTML(Report):
+    """Print a summary of the contents of `mds`."""
 
     template_name = "metadata-0.html"
+    mds: "v21.MetadataSet"
+
+    def render(self) -> str:
+        lines = [
+            f"Metadata set containing {len(self.mds.report)} metadata reports",
+            MetadataAttribute0HTML(self.mds, "MEASURE").render(),
+            MetadataAttribute0HTML(self.mds, "DATA_PROVIDER").render(),
+            MetadataAttribute0HTML(self.mds, "UNIT_MEASURE").render(),
+        ]
+
+        for r in self.mds.report:
+            lines.append(MetadataReport0HTML(r).render())
+
+        return "\n".join(lines)
+
+
+@dataclass
+class MetadataSet0Plain(Report):
+    """Print a summary of the contents of `mds`."""
+
+    mds: "v21.MetadataSet"
+
+    def render(self) -> str:
+        lines = [
+            f"Metadata set containing {len(self.mds.report)} metadata reports",
+            MetadataAttribute0Plain(self.mds, "MEASURE").render(),
+            MetadataAttribute0Plain(self.mds, "DATA_PROVIDER").render(),
+            MetadataAttribute0Plain(self.mds, "UNIT_MEASURE").render(),
+        ]
+
+        for r in self.mds.report:
+            lines.append(MetadataReport0Plain(r).render())
+
+        return "\n".join(lines)
+
+
+@dataclass
+class MetadataSet1HTML(Report):
+    """Generate a summary report in HTML."""
+
+    template_name = "metadata-set-1.html"
 
     #: Metadata set to summarize.
     mds: "v21.MetadataSet"
@@ -102,10 +162,10 @@ class MetadataSetHTML0(Report):
 
 
 @dataclass
-class MetadataSetHTML1(Report):
+class MetadataSet2HTML(Report):
     """Generate a summary report in HTML."""
 
-    template_name = "metadata-1.html"
+    template_name = "metadata-set-2.html"
 
     #: Metadata set to summarize.
     mds: "v21.MetadataSet"
@@ -126,8 +186,8 @@ class MetadataSetHTML1(Report):
 
 
 @dataclass
-class MetadataSetODT(Report):
-    template_name = "metadata-2.rst"
+class MetadataSet1ODT(Report):
+    template_name = "metadata-set-1.rst"
 
     #: Metadata set to summarize.
     mds: "v21.MetadataSet"
@@ -152,23 +212,3 @@ class MetadataSetODT(Report):
 
         # Convert reStructuredText → OpenDocumentText
         return self.rst2odt(rst_source)
-
-
-@dataclass
-class MetadataSetPlain(Report):
-    """Print a summary of the contents of `mds`."""
-
-    mds: "v21.MetadataSet"
-
-    def render(self) -> str:
-        lines = [
-            f"Metadata set containing {len(self.mds.report)} metadata reports",
-            MetadataAttributePlain(self.mds, "MEASURE").render(),
-            MetadataAttributePlain(self.mds, "DATA_PROVIDER").render(),
-            MetadataAttributePlain(self.mds, "UNIT_MEASURE").render(),
-        ]
-
-        for r in self.mds.report:
-            lines.append(MetadataReportPlain(r).render())
-
-        return "\n".join(lines)

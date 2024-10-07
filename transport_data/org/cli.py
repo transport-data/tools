@@ -40,7 +40,7 @@ def read(path: "pathlib.Path"):
 
     mds, _ = read_workbook(path.resolve())
 
-    print(report.MetadataSetPlain(mds).render())
+    print(report.MetadataSet0Plain(mds).render())
 
 
 @main.command
@@ -69,10 +69,10 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
         if path_out is None:
             path_out = pathlib.Path.cwd().joinpath(f"{ref_areas[0]}.{{html,odt}}")
             print(f"Write to {path_out}")
-        report.MetadataSetHTML0(mds, ref_area=ref_areas[0]).write_file(
+        report.MetadataSet1HTML(mds, ref_area=ref_areas[0]).write_file(
             path_out.with_suffix(".html")
         )
-        report.MetadataSetODT(mds, ref_area=ref_areas[0]).write_file(
+        report.MetadataSet1ODT(mds, ref_area=ref_areas[0]).write_file(
             path_out.with_suffix(".odt")
         )
     elif 1 < len(ref_areas):
@@ -80,7 +80,7 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
         if path_out is None:
             path_out = pathlib.Path.cwd().joinpath("all.html")
             print(f"Write to {path_out}")
-        report.MetadataSetHTML1(mds, ref_area=ref_areas).write_file(path_out)
+        report.MetadataSet2HTML(mds, ref_area=ref_areas).write_file(path_out)
 
 
 @main.command("template")

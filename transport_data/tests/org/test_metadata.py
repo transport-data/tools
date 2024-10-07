@@ -48,50 +48,12 @@ def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
     assert exp >= {(k, len(v)) for k, v in result.items()}
 
 
-class TestMetadataSetHTML0:
-    @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
-    def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
-        path = tmp_path.joinpath(f"{ref_area}.html")
-
-        report.MetadataSetHTML0(example_metadata[0], ref_area=ref_area).write_file(
-            path, encoding="utf-8"
-        )
-
-        # Output was created
-        assert path.exists()
-
-
-class TestMetadataSetHTML1:
-    def test_write_file(self, tmp_path, example_metadata) -> None:
-        path = tmp_path.joinpath("all.html")
-
-        report.MetadataSetHTML1(
-            example_metadata[0], ref_area=list(item[0] for item in COUNTRIES)
-        ).write_file(path, encoding="utf-8")
-
-        # Output was created
-        assert path.exists()
-
-
-@pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
-class TestMetadataSetODT:
-    def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
-        path = tmp_path.joinpath(f"{ref_area}.odt")
-
-        report.MetadataSetODT(example_metadata[0], ref_area=ref_area).write_file(
-            path=path
-        )
-
-        # Output was created
-        assert path.exists()
-
-
-class TestMetadataSetPlain:
+class TestMetadataSet0Plain:
     def test_render(self, capsys, example_metadata) -> None:
         mds, cs_dims = example_metadata
 
         # Function runs successfully
-        result = report.MetadataSetPlain(mds).render()
+        result = report.MetadataSet0Plain(mds).render()
 
         # pathlib.Path("debug.txt").write_text(result)  # DEBUG Write to a file
         # print(result)  # DEBUG Write to stdout
@@ -100,3 +62,41 @@ class TestMetadataSetPlain:
         assert "MEASURE: 39 unique values" in result
 
         # TODO expand with further assertions
+
+
+class TestMetadataSet1HTML:
+    @pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
+    def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
+        path = tmp_path.joinpath(f"{ref_area}.html")
+
+        report.MetadataSet1HTML(example_metadata[0], ref_area=ref_area).write_file(
+            path, encoding="utf-8"
+        )
+
+        # Output was created
+        assert path.exists()
+
+
+@pytest.mark.parametrize("ref_area, N_exp", COUNTRIES)
+class TestMetadataSet1ODT:
+    def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
+        path = tmp_path.joinpath(f"{ref_area}.odt")
+
+        report.MetadataSet1ODT(example_metadata[0], ref_area=ref_area).write_file(
+            path=path
+        )
+
+        # Output was created
+        assert path.exists()
+
+
+class TestMetadataSet2HTML:
+    def test_write_file(self, tmp_path, example_metadata) -> None:
+        path = tmp_path.joinpath("all.html")
+
+        report.MetadataSet2HTML(
+            example_metadata[0], ref_area=list(item[0] for item in COUNTRIES)
+        ).write_file(path, encoding="utf-8")
+
+        # Output was created
+        assert path.exists()
