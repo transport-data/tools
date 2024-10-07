@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Generator, cast
 
+import click.testing
 import pytest
 import sdmx.message
 import sdmx.model.v21 as m
@@ -55,6 +56,19 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     tmp_store.write(sm)
 
     return sm
+
+
+class CliRunner(click.testing.CliRunner):
+    def invoke(self, *args, **kwargs):
+        import transport_data.cli
+
+        return super().invoke(transport_data.cli.main, *args, **kwargs)
+
+
+@pytest.fixture
+def tdc_cli():
+    """A :class:`.CliRunner` object that invokes the :program:`tdc` CLI."""
+    yield CliRunner()
 
 
 @pytest.fixture(scope="session")

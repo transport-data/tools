@@ -1,4 +1,5 @@
 from functools import partial
+from pathlib import Path
 
 import pytest
 
@@ -20,6 +21,19 @@ COUNTRIES = [
 
 def test_make_workbook(tmp_path) -> None:
     make_workbook()
+
+
+def test_make_workbook_cli(tmp_path, tdc_cli) -> None:
+    with tdc_cli.isolated_filesystem(temp_dir=tmp_path) as td:
+        # Expected output path
+        exp = Path(td, "sample.xlsx")
+        result = tdc_cli.invoke(["org", "template"])
+
+    # Command ran without error
+    assert 0 == result.exit_code
+
+    # Expected file was generated
+    assert exp.exists()
 
 
 @pytest.fixture(scope="module")
@@ -113,3 +127,61 @@ class TestMetadataSet2HTML:
 
         # Output was created
         assert path.exists()
+
+
+def test_read_cli(tmp_path, tdc_cli, test_data_path) -> None:
+    path_in = test_data_path.joinpath("metadata-input.xlsx")
+
+    result = tdc_cli.invoke(["org", "read", str(path_in)])
+
+    # Command ran without error
+    assert 0 == result.exit_code, result.output
+
+    assert "MEASURE: 39 unique values" in result.output
+
+
+def test_refresh_cli(tdc_cli) -> None:
+    result = tdc_cli.invoke(["org", "refresh"])
+
+    # Command ran without error
+    assert 0 == result.exit_code, result.output
+
+
+def test_summarize_cli(tmp_path, tdc_cli, test_data_path) -> None:
+    path_in = test_data_path.joinpath("metadata-input.xlsx")
+
+    # --ref-area= single value
+    with tdc_cli.isolated_filesystem(temp_dir=tmp_path) as td:
+        path_out = Path(td, "VN")
+        result = tdc_cli.invoke(["org", "summarize", "--ref-area=VN", str(path_in)])
+
+    # Command ran without error
+    assert 0 == result.exit_code, result.output
+    # Output files are generated
+    assert path_out.with_suffix(".html").exists()
+    assert path_out.with_suffix(".odt").exists()
+
+    # --ref-area= multiple values
+    with tdc_cli.isolated_filesystem(temp_dir=tmp_path) as td:
+        path_out = Path(td, "all")
+        result = tdc_cli.invoke(["org", "summarize", "--ref-area=TH,VN", str(path_in)])
+
+    # Command ran without error
+    assert 0 == result.exit_code, result.output
+    # Output files are generated
+    assert path_out.with_suffix(".html").exists()
+    assert path_out.with_suffix(".odt").exists()
+
+
+def test_tuewas_cli(tmp_path, tdc_cli, test_data_path) -> None:
+    path_in = test_data_path.joinpath("metadata-input.xlsx")
+    with tdc_cli.isolated_filesystem(temp_dir=tmp_path) as td:
+        dir_out = Path(td, "output")
+        result = tdc_cli.invoke(["org", "tuewas", str(path_in)])
+
+    # Command ran without error
+    assert 0 == result.exit_code, result.output
+    # Expected files were generated
+    assert dir_out.joinpath("Metadata summary.odt").exists()
+    assert dir_out.joinpath("Metadata summary table.html").exists()
+    assert dir_out.joinpath("CN", "Summary.odt").exists()
