@@ -4,6 +4,7 @@ What's new
 Next release
 ============
 
+- Python 3.8 support is dropped (:pull:`21`), as it has reached end-of-life.
 - Add :mod:`.ipcc` (:doc:`ipcc`) module (:issue:`15`, :pull:`21`).
 - Add :doc:`standards` and :doc:`roadmap` documentation pages (:pull:`9`).
 - Adjust :mod:`.adb` for changes in data format in the 2024-05-20 edition of the ATO National Database (:pull:`20`, :issue:`18`).
