@@ -70,7 +70,7 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
             path_out = pathlib.Path.cwd().joinpath(f"{ref_areas[0]}.{{html,odt}}")
             print(f"Write to {path_out}")
         report.MetadataSet1HTML(mds, ref_area=ref_areas[0]).write_file(
-            path_out.with_suffix(".html")
+            path_out.with_suffix(".html"), encoding="utf-8"
         )
         report.MetadataSet1ODT(mds, ref_area=ref_areas[0]).write_file(
             path_out.with_suffix(".odt")
@@ -82,7 +82,7 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
             print(f"Write to {path_out}")
         report.MetadataSet0ODT(mds).write_file(path_out.with_suffix(".odt"))
         report.MetadataSet2HTML(mds, ref_area=ref_areas).write_file(
-            path_out.with_suffix(".html")
+            path_out.with_suffix(".html"), encoding="utf-8"
         )
 
 
@@ -115,7 +115,9 @@ def _tuewas_all(path_in):
     print(f"Wrote {path_out[-1]}")
 
     path_out.append(dir_out.joinpath("Metadata summary table.html"))
-    report.MetadataSet2HTML(mds, ref_area=ref_areas).write_file(path_out[-1])
+    report.MetadataSet2HTML(mds, ref_area=ref_areas).write_file(
+        path_out[-1], encoding="utf-8"
+    )
     print(f"Wrote {path_out[-1]}")
 
     path_zip = dir_out.joinpath("all.zip")
