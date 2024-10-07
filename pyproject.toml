@@ -52,6 +52,7 @@ exclude_also = [
   "if TYPE_CHECKING:",
   # Abstract methods
   '\.\.\.',
+  "raise NotImplementedError",
 ]
 
 [[tool.mypy.overrides]]
