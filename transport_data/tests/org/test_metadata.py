@@ -53,7 +53,9 @@ class TestMetadataSetHTML0:
     def test_write_file(self, tmp_path, example_metadata, ref_area, N_exp) -> None:
         path = tmp_path.joinpath(f"{ref_area}.html")
 
-        report.MetadataSetHTML0(example_metadata[0], ref_area=ref_area).write_file(path)
+        report.MetadataSetHTML0(example_metadata[0], ref_area=ref_area).write_file(
+            path, encoding="utf-8"
+        )
 
         # Output was created
         assert path.exists()
@@ -65,7 +67,7 @@ class TestMetadataSetHTML1:
 
         report.MetadataSetHTML1(
             example_metadata[0], ref_area=list(item[0] for item in COUNTRIES)
-        ).write_file(path)
+        ).write_file(path, encoding="utf-8")
 
         # Output was created
         assert path.exists()
