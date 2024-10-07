@@ -48,6 +48,19 @@ def test_groupby(example_metadata, ref_area, N_exp: int) -> None:
     assert exp >= {(k, len(v)) for k, v in result.items()}
 
 
+class TestMetadataSet0ODT:
+    def test_render(self, tmp_path, example_metadata) -> None:
+        mds, cs_dims = example_metadata
+
+        path = tmp_path.joinpath("all.odt")
+
+        # Function runs successfully
+        report.MetadataSet0ODT(mds).write_file(path)
+
+        # Output was created
+        assert path.exists()
+
+
 class TestMetadataSet0Plain:
     def test_render(self, capsys, example_metadata) -> None:
         mds, cs_dims = example_metadata

@@ -153,10 +153,11 @@ def get_cs_common() -> "common.ConceptScheme":
         annotations=[common.Annotation(id="tdc-aka", text=repr(["Fuel type"]))],
     )
     cs.setdefault(
-        id="REF_AREA",
+        id="GEO",
         annotations=[
             common.Annotation(
-                id="tdc-aka", text=repr(["Area", "Country", "Country code", "Region"])
+                id="tdc-aka",
+                text=repr(["Area", "Country", "Country code", "REF_AREA", "Region"]),
             )
         ],
     )
@@ -213,3 +214,32 @@ def _get(mdr: "v21.MetadataReport", mda_id: str) -> Optional[str]:
             return mda.value
     # No match
     return None
+
+
+def map_values_to_ids(mds: "v21.MetadataSet", mda_id: str) -> dict[str, set[str]]:
+    """Return a mapping from unique reported attribute values to data flow IDs."""
+    result = defaultdict(set)
+
+    for r in mds.report:
+        result[_get(r, mda_id) or "MISSING"].add(_get(r, "DATAFLOW") or "MISSING")
+
+    return result
+
+
+def map_dims_to_ids(mds: "v21.MetadataSet") -> dict[str, set[str]]:
+    """Return a mapping from unique concept IDs used for dimensions to data flow IDs."""
+    result = defaultdict(set)
+
+    for r in mds.report:
+        dfd = r.attaches_to.key_values["DATAFLOW"].obj  # type: ignore [union-attr]
+        for dim in dfd.structure.dimensions:
+            key = f"{dim.id!r}"
+            try:
+                anno = dim.get_annotation(id="tdc-original-id")
+                key += f" (as '{anno.text!s}')"
+            except KeyError:
+                pass
+
+            result[key].add(dfd.id)
+
+    return result

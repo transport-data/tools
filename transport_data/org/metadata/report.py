@@ -1,4 +1,3 @@
-from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING
@@ -11,17 +10,6 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class MetadataAttribute0HTML(Report):
-    """Summarize unique values appearing in `mds` for attribute `mda_id`."""
-
-    mds: "v21.MetadataSet"
-    mda_id: str
-
-    def render(self) -> str:
-        raise NotImplementedError
-
-
-@dataclass
 class MetadataAttribute0Plain(Report):
     """Summarize unique values appearing in `mds` for attribute `mda_id`."""
 
@@ -29,14 +17,9 @@ class MetadataAttribute0Plain(Report):
     mda_id: str
 
     def render(self) -> str:
-        from transport_data.org.metadata import _get
+        from transport_data.org.metadata import map_values_to_ids
 
-        value_id = defaultdict(set)
-
-        for r in self.mds.report:
-            value_id[_get(r, self.mda_id) or "MISSING"].add(
-                _get(r, "DATAFLOW") or "MISSING"
-            )
+        value_id = map_values_to_ids(self.mds, self.mda_id)
 
         assert self.mds.structured_by
         mda = self.mds.structured_by.report_structure["ALL"].get(self.mda_id)
@@ -47,6 +30,24 @@ class MetadataAttribute0Plain(Report):
             lines.extend([value, "    " + " ".join(sorted(df_ids))])
 
         return "\n".join(lines)
+
+
+@dataclass
+class MetadataAttribute0RST(Report):
+    """Summarize unique values appearing in `mds` for attribute `mda_id`."""
+
+    template_name = "metadata-attribute-0.rst"
+    mds: "v21.MetadataSet"
+    mda_id: str
+
+    def render(self) -> str:
+        from transport_data.org.metadata import map_values_to_ids
+
+        value_id = map_values_to_ids(self.mds, self.mda_id)
+        assert self.mds.structured_by
+        mda = self.mds.structured_by.report_structure["ALL"].get(self.mda_id)
+
+        return self.render_jinja_template(mda=mda, value_id=value_id)
 
 
 @dataclass
@@ -98,24 +99,27 @@ class MetadataReport0Plain(Report):
 
 
 @dataclass
-class MetadataSet0HTML(Report):
+class MetadataSet0ODT(Report):
     """Print a summary of the contents of `mds`."""
 
-    template_name = "metadata-0.html"
+    template_name = "metadata-set-0.rst"
     mds: "v21.MetadataSet"
 
-    def render(self) -> str:
-        lines = [
-            f"Metadata set containing {len(self.mds.report)} metadata reports",
-            MetadataAttribute0HTML(self.mds, "MEASURE").render(),
-            MetadataAttribute0HTML(self.mds, "DATA_PROVIDER").render(),
-            MetadataAttribute0HTML(self.mds, "UNIT_MEASURE").render(),
+    def render(self) -> bytes:
+        from transport_data.org.metadata import map_dims_to_ids
+
+        # Mapping from reported attribute values to data flow IDs
+        mda = [
+            MetadataAttribute0RST(self.mds, "DATA_PROVIDER").render(),
+            MetadataAttribute0RST(self.mds, "MEASURE").render(),
+            MetadataAttribute0RST(self.mds, "UNIT_MEASURE").render(),
         ]
+        # Mapping from dimension IDs to data flow IDs
+        dim_id = map_dims_to_ids(self.mds)
 
-        for r in self.mds.report:
-            lines.append(MetadataReport0HTML(r).render())
-
-        return "\n".join(lines)
+        rst_source = self.render_jinja_template(mda=mda, dim_id=dim_id)
+        # print(rst_source)  # DEBUG
+        return self.rst2odt(rst_source)
 
 
 @dataclass
