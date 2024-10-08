@@ -34,7 +34,7 @@ class UnionStore(dsss.store.UnionStore):
 
     def __init__(self, config: "transport_data.config.Config") -> None:
         super().__init__(
-            hook={"pre-write": anno_generated},
+            hook={"before set": anno_generated},
             store=dict(
                 local=dsss.store.FlatFileStore(path=config.data_path.joinpath("local")),
                 registry=dsss.store.GitStore(

@@ -268,10 +268,10 @@ def gen_structures() -> None:
 
     ma_args = dict(
         maintainer=org.get_agencies()[0],
-        version="0.1",
+        version="0.1.0",
         is_final=True,
         is_external_reference=False,
     )
 
-    STORE.setdefault(gen_cl_T311(**ma_args))
-    STORE.setdefault(gen_cs_ch3(**ma_args))
+    STORE.set(gen_cl_T311(**ma_args))
+    STORE.set(gen_cs_ch3(**ma_args))

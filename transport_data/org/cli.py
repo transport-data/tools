@@ -29,7 +29,7 @@ def refresh(version):
 
     from . import get_agencyscheme
 
-    STORE.write(get_agencyscheme(version=version))
+    STORE.set(get_agencyscheme(version=version))
 
 
 @main.command("read")
