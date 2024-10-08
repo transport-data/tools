@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
-from transport_data import STORE as registry
+from transport_data import STORE
 from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
@@ -447,14 +447,14 @@ def convert(geo):
                     id="tdc-comment", text=f"Primary measure is {measure_concept!r}"
                 )
             )
-            registry.write(obj)
+            STORE.set(obj)
 
     # Write code lists, measure concept scheme to file
     a = get_agencies()[0]
     for obj in chain(CL.values(), [CS_MEASURE]):
         obj.maintainer = a
         obj.version = "0.1.0"
-        registry.write(obj)
+        STORE.set(obj)
 
     raise NotImplementedError("Merging data for multiple GEO")
 

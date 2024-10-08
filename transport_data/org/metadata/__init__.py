@@ -191,7 +191,7 @@ def get_msd() -> "v21.MetadataStructureDefinition":
         rs.getdefault(id_, concept_identity=ci)
 
     # NB Currently not supported by sdmx1; results in an empty XML collection
-    STORE.write(msd)
+    STORE.set(msd)
 
     return msd
 

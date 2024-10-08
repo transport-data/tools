@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
-from transport_data import STORE as registry
+from transport_data import STORE
 from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
@@ -152,13 +152,15 @@ def read_sheet(
     # Convert metadata rows to a collection of temporary annotations
     aa = m.AnnotableArtefact()
     for _, data in meta_df.iterrows():
-        title = data[0].rstrip(":")
+        title = data.iloc[0].rstrip(":")
         anno_id = title.upper().replace(" ", "-")
         aa.annotations.append(
             m.Annotation(
                 id=anno_id,
                 title=title,
-                text=data[1] if isinstance(data[1], str) else repr(data[1]),
+                text=data.iloc[1]
+                if isinstance(data.iloc[1], str)
+                else repr(data.iloc[1]),
             )
         )
 
@@ -313,10 +315,10 @@ def convert(part):
         ds = convert_sheet(df, annos)
 
         # Write the DSD and DFD
-        registry.write(ds.described_by)
-        registry.write(ds.structured_by)
+        STORE.set(ds.described_by)
+        STORE.set(ds.structured_by)
         # Write the data itself, to SDMX-ML and CSV
-        registry.write(ds)
+        STORE.set(ds)
 
     # Write the lists of "Economy" codes and measures/concepts accumulated while
     # converting
@@ -324,4 +326,4 @@ def convert(part):
     for obj in (CL_ECONOMY, CS_MEASURE):
         obj.maintainer = a
         obj.version = "0.1.0"
-        registry.write(obj)
+        STORE.set(obj)

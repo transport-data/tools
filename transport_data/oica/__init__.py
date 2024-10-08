@@ -170,7 +170,7 @@ def convert_single_file(
         cl_geo, df["GEO"], maintainer=get_agencies()[0], version="0.1"
     )
     # Store `cl_geo`
-    STORE.write(cl_geo)
+    STORE.set(cl_geo)
 
     # Transform data
     # - Replace GEO values with codes from `cl_geo`.
@@ -355,7 +355,8 @@ def get_cl_geo() -> "sdmx.model.common.Codelist":
         version="0.1",
     )
 
-    return STORE.setdefault(candidate)
+    STORE.set(candidate)
+    return candidate
 
 
 @lru_cache
@@ -401,7 +402,7 @@ def get_conceptscheme() -> "sdmx.model.common.ConceptScheme":
     for id_ in ("OBS_VALUE",):
         cs.append(common.Concept(id=id_))
 
-    STORE.write(cs)
+    STORE.set(cs)
 
     return cs
 
@@ -431,8 +432,10 @@ def get_structures(
         is_external_reference=False,
     )
 
-    dfd = STORE.setdefault(v21.DataflowDefinition(id=f"DF_{base}", **ma_args))
-    dsd = STORE.setdefault(v21.DataStructureDefinition(id=f"DS_{base}", **ma_args))
+    dfd = v21.DataflowDefinition(id=f"DF_{base}", **ma_args)
+    STORE.set(dfd)
+    dsd = v21.DataStructureDefinition(id=f"DS_{base}", **ma_args)
+    STORE.set(dsd)
 
     if not dfd.is_final:
         # Associate
@@ -440,7 +443,7 @@ def get_structures(
 
         # Mark as complete
         dfd.is_final = True
-        STORE.write(dfd)
+        STORE.set(dfd)
 
     if not dsd.is_final:
         cs = get_conceptscheme()
@@ -464,7 +467,7 @@ def get_structures(
 
         # Mark as complete
         dsd.is_final = True
-        STORE.write(dsd)
+        STORE.set(dsd)
 
     return dfd, dsd
 
