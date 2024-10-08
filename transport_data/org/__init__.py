@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 @hookimpl
 def get_agencies() -> "sdmx.model.v21.Agency":
+    """Return agencies and organizations including and subsidiary to TDCI itself."""
     # Agency
     a1 = m.Agency(
         id="TDCI",

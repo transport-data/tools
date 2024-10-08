@@ -1,3 +1,21 @@
+"""Generate reports about TDC-structured metadata.
+
+:class:`.Report` subclasses in this file **should** have names like::
+
+    { Type }{ ID }{ Format }
+
+…wherein:
+
+- ``{ Type }`` refers to the type of object(s) from the SDMX Information Model that
+  is/are represented in the report.
+  Usually the first argument to the :py:`__init__()` method is an instance of this type.
+- ``{ ID }`` is a number that distinguishes different ‘kinds’ of reports for the same
+  ``{ Type }``.
+  Report classes with the same ``{ Type }{ ID }`` **should** display roughly the same
+  information in the same order and layout, regardless of ``{ Format }``.
+- ``{ Format }`` is the output format or file type.
+"""
+
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING
@@ -11,9 +29,15 @@ if TYPE_CHECKING:
 
 @dataclass
 class MetadataAttribute0Plain(Report):
-    """Summarize unique values appearing in `mds` for attribute `mda_id`."""
+    """Unique values appearing in `mds` for metadata attribute `mda_id`.
 
+    Each unique value is shown with the IDs of the data flows that contain the value for
+    `mda_id`.
+    """
+
+    #: Metadata set to report.
     mds: "v21.MetadataSet"
+    #: ID of a Metadata Attribute to report.
     mda_id: str
 
     def render(self) -> str:
@@ -34,10 +58,16 @@ class MetadataAttribute0Plain(Report):
 
 @dataclass
 class MetadataAttribute0RST(Report):
-    """Summarize unique values appearing in `mds` for attribute `mda_id`."""
+    """Unique values appearing in `mds` for the metadata attribute `mda_id`.
 
+    Same as :class:`.MetadataAttribute0Plain`, but in reStructuredText.
+    """
+
+    #: Jinja2 reStructuredText template.
     template_name = "metadata-attribute-0.rst"
+    #: Metadata set to report.
     mds: "v21.MetadataSet"
+    #: ID of a Metadata Attribute to report.
     mda_id: str
 
     def render(self) -> str:
@@ -52,6 +82,9 @@ class MetadataAttribute0RST(Report):
 
 @dataclass
 class MetadataReport0HTML(Report):
+    """Same as :class:`.MetadataReport0Plain`, but in HTML."""
+
+    #: Metadata report to report.
     mdr: "v21.MetadataReport"
 
     def render(self) -> str:
@@ -60,6 +93,15 @@ class MetadataReport0HTML(Report):
 
 @dataclass
 class MetadataReport0Plain(Report):
+    """Contents of a single metadata report.
+
+    This includes:
+
+    1. The reported attribute values for all metadata attributes.
+    2. The data flow that is targeted by the report and its dimensions.
+    """
+
+    #: Metadata report to report.
     mdr: "v21.MetadataReport"
 
     def render(self) -> str:
@@ -100,9 +142,15 @@ class MetadataReport0Plain(Report):
 
 @dataclass
 class MetadataSet0ODT(Report):
-    """Print a summary of the contents of `mds`."""
+    """Summary of the unique reported attribute values in `mds`.
+
+    Similar to :class:`.MetadataSet0Plain`, but also including:
+
+    - The unique dimension concepts appearing in the data structure definitions.
+    """
 
     template_name = "metadata-set-0.rst"
+    #: Metadata set to report.
     mds: "v21.MetadataSet"
 
     def render(self) -> bytes:
@@ -124,8 +172,15 @@ class MetadataSet0ODT(Report):
 
 @dataclass
 class MetadataSet0Plain(Report):
-    """Print a summary of the contents of `mds`."""
+    """Summary of the unique reported attribute values in `mds`.
 
+    This includes:
+
+    - Unique values of the metadata attributes ``MEASURE``, ``DATA_PROVIDER``, and
+      ``UNIT_MEASURE``.
+    """
+
+    #: Metadata set to report.
     mds: "v21.MetadataSet"
 
     def render(self) -> str:
@@ -144,7 +199,7 @@ class MetadataSet0Plain(Report):
 
 @dataclass
 class MetadataSet1HTML(Report):
-    """Generate a summary report in HTML."""
+    """Metadata reports related to `ref_area`."""
 
     template_name = "metadata-set-1.html"
 
@@ -166,31 +221,12 @@ class MetadataSet1HTML(Report):
 
 
 @dataclass
-class MetadataSet2HTML(Report):
-    """Generate a summary report in HTML."""
-
-    template_name = "metadata-set-2.html"
-
-    #: Metadata set to summarize.
-    mds: "v21.MetadataSet"
-    #: Geography.
-    ref_area: list[str]
-
-    def render(self) -> str:
-        from transport_data.org.metadata import contains_data_for
-
-        data = {
-            mdr.attaches_to.key_values["DATAFLOW"].obj.id: {  # type: ignore [union-attr]
-                ra: contains_data_for(mdr, ra) for ra in self.ref_area
-            }
-            for mdr in self.mds.report
-        }
-
-        return self.render_jinja_template(ref_area=self.ref_area, data=data)
-
-
-@dataclass
 class MetadataSet1ODT(Report):
+    """Metadata reports related to `ref_area`.
+
+    Same as :class:`.MetadataSet1HTML` but as OpenDocument Text.
+    """
+
     template_name = "metadata-set-1.rst"
 
     #: Metadata set to summarize.
@@ -216,3 +252,35 @@ class MetadataSet1ODT(Report):
 
         # Convert reStructuredText → OpenDocumentText
         return self.rst2odt(rst_source)
+
+
+@dataclass
+class MetadataSet2HTML(Report):
+    """Table of metadata reports.
+
+    This table has:
+
+    - One *column* per value in `ref_areas`.
+    - One *row* per metadata report in `mds`.
+    - A check-mark in cells where :func:`.contains_data_for` indicates that the metadata
+      report targets a data flow that contains data for the reference area.
+    """
+
+    template_name = "metadata-set-2.html"
+
+    #: Metadata set to summarize.
+    mds: "v21.MetadataSet"
+    #: Geographies to show.
+    ref_area: list[str]
+
+    def render(self) -> str:
+        from transport_data.org.metadata import contains_data_for
+
+        data = {
+            mdr.attaches_to.key_values["DATAFLOW"].obj.id: {  # type: ignore [union-attr]
+                ra: contains_data_for(mdr, ra) for ra in self.ref_area
+            }
+            for mdr in self.mds.report
+        }
+
+        return self.render_jinja_template(ref_area=self.ref_area, data=data)

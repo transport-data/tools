@@ -1,3 +1,5 @@
+"""Utilities for :mod:`pluggy`."""
+
 from importlib import import_module
 
 import pluggy

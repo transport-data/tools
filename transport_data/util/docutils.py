@@ -1,3 +1,5 @@
+"""Utilities for :mod:`docutils`."""
+
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 

@@ -33,6 +33,15 @@ extensions = [
 nitpicky = True
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+# A string of reStructuredText included at the beginning of every source file.
+rst_prolog = r"""
+.. role:: py(code)
+   :language: python
+
+.. role:: xml(code)
+   :language: xml
+"""
+
 
 def setup(app: "sphinx.application.Sphinx"):
     from sphinx.ext.autosummary.generate import generate_autosummary_docs
@@ -72,8 +81,11 @@ extlinks = {
 
 intersphinx_mapping = {
     "click": ("https://click.palletsprojects.com/en/8.1.x/", None),
+    "docutils": ("https://sphinx-docutils.readthedocs.io/en/latest", None),
+    "jinja2": ("https://jinja.palletsprojects.com/en/3.1.x", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
     "platformdirs": ("https://platformdirs.readthedocs.io/en/latest/", None),
+    "pluggy": ("https://pluggy.readthedocs.io/en/stable", None),
     "pooch": ("https://www.fatiando.org/pooch/latest/", None),
     "py": ("https://docs.python.org/3/", None),
     "pytest": ("https://docs.pytest.org/en/stable/", None),

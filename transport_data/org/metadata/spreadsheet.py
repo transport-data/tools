@@ -1,3 +1,5 @@
+"""Non-standard TDC Excel file format for collecting metadata."""
+
 import logging
 import re
 from typing import TYPE_CHECKING, List, Optional, Tuple

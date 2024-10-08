@@ -1,5 +1,8 @@
 """CLI for :mod:`.org`.
 
+Use the :program:`--help` command-line option to see help for individual commands
+defined in this module.
+
 .. runblock:: console
 
    $ tdc org --help

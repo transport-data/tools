@@ -1,3 +1,5 @@
+"""Utilities for :mod:`jinja2`."""
+
 from functools import lru_cache
 
 

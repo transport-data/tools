@@ -84,6 +84,7 @@ The following modules contain *generic* code and utilities usable with (meta)dat
 
    cli
    config
+   report
    store
    testing
    tests
@@ -91,6 +92,7 @@ The following modules contain *generic* code and utilities usable with (meta)dat
 
 - :mod:`~transport_data.cli`: :doc:`cli`
 - :mod:`.config`: :doc:`config`
+- :mod:`.report`: :doc:`report`
 - :mod:`.store`: :doc:`store`
 - :mod:`.testing`: :doc:`testing`
 - :mod:`.tests`: :doc:`tests`

@@ -1,3 +1,5 @@
+"""Plug-in hooks to be implemented by submodules and other packages."""
+
 from typing import TYPE_CHECKING, Iterable
 
 import pluggy

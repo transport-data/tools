@@ -1,3 +1,5 @@
+"""Handle TDC-structured metadata."""
+
 import itertools
 import logging
 import re
@@ -174,6 +176,7 @@ def get_cs_common() -> "common.ConceptScheme":
 
 
 def get_msd() -> "v21.MetadataStructureDefinition":
+    """Generate and return the TDC metadata structure definition."""
     from transport_data import STORE
     from transport_data.org import get_agencyscheme
 
