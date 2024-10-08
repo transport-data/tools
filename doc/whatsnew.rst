@@ -1,8 +1,11 @@
 What's new
 **********
 
-Next release
-============
+.. Next release
+.. ============
+
+v24.10.8
+========
 
 - Add tools and data for the :ref:`project-tuewas` project (:pull:`21`).
 
