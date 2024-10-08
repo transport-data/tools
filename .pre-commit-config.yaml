@@ -1,19 +1,22 @@
 repos:
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.9.0
+  rev: v1.11.2
   hooks:
   - id: mypy
     additional_dependencies:
     - click
+    - lxml-stubs
     - pandas-stubs
     - platformdirs
     - pytest
     - sdmx1
     - Sphinx
+    - types-docutils
+    - types-openpyxl
     - types-requests
     args: []
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.4.1
+  rev: v0.6.9
   hooks:
   - id: ruff
   - id: ruff-format

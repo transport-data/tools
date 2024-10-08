@@ -23,19 +23,11 @@ jobs:
         - windows-latest
 
         python-version:
-        - "3.8"
+        # These should match pyproject.toml
         - "3.9"
         - "3.10"
         - "3.11"
         - "3.12"
-
-        # Work around https://github.com/actions/setup-python/issues/696
-        exclude:
-        - {os: macos-latest, python-version: "3.8"}
-        - {os: macos-latest, python-version: "3.9"}
-        include:
-        - {os: macos-13, python-version: "3.8"}
-        - {os: macos-13, python-version: "3.9"}
 
       fail-fast: false
 
@@ -44,6 +36,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        lfs: true
 
     - uses: actions/setup-python@v5
       with:

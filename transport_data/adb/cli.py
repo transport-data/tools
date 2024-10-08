@@ -18,7 +18,7 @@ import click
 from . import FILES, convert, fetch
 
 
-@click.group("adb", help=__doc__)
+@click.group("adb")
 def main():
     """Asian Development Bank (ADB) provider."""
 

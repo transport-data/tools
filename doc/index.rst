@@ -24,6 +24,7 @@ For more on the design, status, and plans for this package, see :doc:`dev`.
    usage
    dev
    standards
+   howto/index
    roadmap
    whatsnew
 
@@ -33,6 +34,7 @@ General
 - :doc:`usage`
 - :doc:`dev`
 - :doc:`standards`
+- :doc:`howto/index`
 - :doc:`roadmap`
 - :doc:`whatsnew`
 
@@ -53,7 +55,9 @@ They handle tasks including:
 
    adb
    estat
+   giz
    iamc
+   ipcc
    jrc
    oica
    org
@@ -61,7 +65,9 @@ They handle tasks including:
 
 - :mod:`.adb`: :doc:`adb`
 - :mod:`.estat`: :doc:`estat`
+- :doc:`giz`
 - :mod:`.iamc`: :doc:`iamc`
+- :mod:`.ipcc`: :doc:`ipcc`
 - :mod:`.jrc`: :doc:`jrc`
 - :mod:`.oica`: :doc:`oica`
 - :mod:`.org`: :doc:`org`
@@ -78,6 +84,7 @@ The following modules contain *generic* code and utilities usable with (meta)dat
 
    cli
    config
+   report
    store
    testing
    tests
@@ -85,6 +92,7 @@ The following modules contain *generic* code and utilities usable with (meta)dat
 
 - :mod:`~transport_data.cli`: :doc:`cli`
 - :mod:`.config`: :doc:`config`
+- :mod:`.report`: :doc:`report`
 - :mod:`.store`: :doc:`store`
 - :mod:`.testing`: :doc:`testing`
 - :mod:`.tests`: :doc:`tests`

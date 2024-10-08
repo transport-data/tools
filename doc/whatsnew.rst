@@ -4,6 +4,16 @@ What's new
 Next release
 ============
 
+- Add tools and data for the :ref:`project-tuewas` project (:pull:`21`).
+
+  - Add :mod:`.metadata.spreadsheet`,  :mod:`.metadata.report` submodules; expand :mod:`.metadata`.
+  - Add :program:`tdc org read`, :program:`tdc org summarize`, :program:`tdc org tuewas` CLI commands.
+
+- Add :class:`.report.Report`, a base class for generating ‘reports’ (documents derived from SDMX (meta)data) and supporting code in :mod:`.util.docutils`, :mod:`.util.jinja2` (:pull:`21`).
+- Adopt :mod:`pluggy <.util.pluggy>` for plug-in hooks and implementations (:pull:`21`); use the :func:`.hooks.get_agencies` hook across existing modules.
+- Add :func:`.tdc_cli`, :func:`.test_data_path` test fixtures (:pull:`21`).
+- Python 3.8 support is dropped (:pull:`21`), as it has reached end-of-life.
+- Add :mod:`.ipcc` (:doc:`ipcc`) module (:issue:`15`, :pull:`21`).
 - Add :doc:`standards` and :doc:`roadmap` documentation pages (:pull:`9`).
 - Adjust :mod:`.adb` for changes in data format in the 2024-05-20 edition of the ATO National Database (:pull:`20`, :issue:`18`).
   Document the :ref:`current file format <ato-format>` that the code supports.

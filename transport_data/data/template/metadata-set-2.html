@@ -1,0 +1,24 @@
+<html>
+  <body>
+    <table>
+      <thead style="font-weight: bold">
+        <tr>
+          <td>Dataflow ID</td>
+          {% for ra in ref_area | sort %}
+          <td>{{ ra }}</td>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for dfd_id, row_data in data | items | sort %}
+        <tr>
+          <td style="font-weight: bold">{{ dfd_id }}</td>
+          {% for ra in ref_area | sort %}
+          <td>{{ "✔" if row_data[ra] else "" }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

@@ -1,2 +1,4 @@
 # Reduce the number of merge/rebase conflicts
 doc/whatsnew.rst merge=union
+# Git LFS
+*.xlsx filter=lfs diff=lfs merge=lfs -text

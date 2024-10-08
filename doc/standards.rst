@@ -35,6 +35,8 @@ These standards:
    TDCI develops and supports community development of tutorials, guides, explainers, in multiple languages and media, targeted to different audiences, that help with the adoption of these standards.
    These **must** promote a correct implementation of the standards, and **may** give more detailed and elaborate examples.
 
+.. _std-defs:
+
 Definitions
 ===========
 
@@ -128,6 +130,10 @@ If used, annotations with these IDs **must** conform to the given requirements:
       `2023-05-11T21:42:55.760130 by transport_data v0.1.dev63+g92a2aac.d20230511`
 
    The function :func:`.anno_generated` generates such an annotation and **should** be called on all objects created in this package.
+
+``preferred-unit``
+   Especially for :class:`.Concept` in :class:`.ConceptScheme`, the preferred units of measurement if the concept is used as a measure.
+   These correspond to the well-known SDMX concept and attribute ``Concept=SDMX:CROSS_DOMAIN_CONCEPTS(2.0).UNIT_MEASURE``.
 
 Codes
 -----

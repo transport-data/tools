@@ -18,7 +18,7 @@ import click
 from . import GEO, convert, fetch
 
 
-@click.group("jrc", help=__doc__.splitlines()[0])
+@click.group("jrc")
 def main():
     """EU Joint Research Center (JRC) provider."""
 

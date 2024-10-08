@@ -9,10 +9,12 @@
    config
    estat
    iamc
+   ipcc
    jrc
    oica
    org
    proto
+   report
    store
    testing
    tests
