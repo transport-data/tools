@@ -83,4 +83,4 @@ def refresh():
     from transport_data import STORE
 
     as_ = get_agencyscheme()
-    STORE.write(as_)
+    STORE.set(as_)
