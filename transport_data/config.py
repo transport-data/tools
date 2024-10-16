@@ -19,6 +19,12 @@ class Config:
         default_factory=lambda: user_data_path("transport-data", ensure_exists=True)
     )
 
+    #: Git remote URL for the TDC SDMX registry.
+    #:
+    #: Users with SSH keys registered on github.com may wish to use instead
+    #: ``git@github.com:transport-data/registry.git``.
+    registry_remote_url: str = "https://github.com/transport-data/registry.git"
+
     #: Mapping from maintainer IDs to either "local" (stored in a :class:`.LocalStore`)
     #: or "registry" (stored in the :class:`.Registry`).
     store_map: dict = field(
