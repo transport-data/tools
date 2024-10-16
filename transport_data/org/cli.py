@@ -110,7 +110,7 @@ def _tuewas_all(path_in):
     for ref_area in ref_areas:
         path_out.append(dir_out.joinpath(ref_area, "Summary.odt"))
         path_out[-1].parent.mkdir(parents=True, exist_ok=True)
-        report.MetadataSet1ODT(mds, ref_area=ref_areas[0]).write_file(path_out[-1])
+        report.MetadataSet1ODT(mds, ref_area=ref_area).write_file(path_out[-1])
         print(f"Wrote {path_out[-1]}")
 
     path_out.append(dir_out.joinpath("Metadata summary.odt"))
