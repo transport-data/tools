@@ -24,7 +24,25 @@ from transport_data.report import Report
 from transport_data.util import uline
 
 if TYPE_CHECKING:
+    import pathlib
+
     from sdmx.model import v21
+
+
+def odt_to_pdf(path: "pathlib.Path") -> None:
+    from subprocess import check_call
+
+    check_call(
+        [
+            "soffice",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(path.parent),
+            str(path),
+        ]
+    )
 
 
 @dataclass
@@ -174,6 +192,11 @@ class MetadataSet0ODT(Report):
         # print(rst_source)  # DEBUG
         return self.rst2odt(rst_source)
 
+    def write_file(self, path: "pathlib.Path", **kwargs) -> None:
+        """:meth:`render` the report and write to `path`."""
+        super().write_file(path, **kwargs)
+        odt_to_pdf(path)
+
 
 @dataclass
 class MetadataSet0Plain(Report):
@@ -257,6 +280,11 @@ class MetadataSet1ODT(Report):
 
         # Convert reStructuredText → OpenDocumentText
         return self.rst2odt(rst_source)
+
+    def write_file(self, path: "pathlib.Path", **kwargs) -> None:
+        """:meth:`render` the report and write to `path`."""
+        super().write_file(path, **kwargs)
+        odt_to_pdf(path)
 
 
 @dataclass

@@ -115,11 +115,13 @@ def _tuewas_all(path_in):
         path_out.append(dir_out.joinpath(ref_area, "Summary.odt"))
         path_out[-1].parent.mkdir(parents=True, exist_ok=True)
         report.MetadataSet1ODT(mds, ref_area=ref_area).write_file(path_out[-1])
-        print(f"Wrote {path_out[-1]}")
+        path_out.append(path_out[-1].with_suffix(".pdf"))
+        print(f"Wrote {path_out[-2:]}")
 
     path_out.append(dir_out.joinpath("Metadata summary.odt"))
     report.MetadataSet0ODT(mds).write_file(path_out[-1])
-    print(f"Wrote {path_out[-1]}")
+    path_out.append(path_out[-1].with_suffix(".pdf"))
+    print(f"Wrote {path_out[-2:]}")
 
     path_out.append(dir_out.joinpath("Metadata summary table.html"))
     report.MetadataSet2HTML(mds, ref_area=ref_areas).write_file(
