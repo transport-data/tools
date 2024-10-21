@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
-from transport_data import STORE
 from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
@@ -302,6 +301,8 @@ def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
 
 
 def convert(part):
+    from transport_data import STORE
+
     path = POOCH.fetch(part)
     ef = pd.ExcelFile(path, engine="openpyxl")
 
