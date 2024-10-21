@@ -97,12 +97,16 @@ def _tuewas_all(path_in):
     """Generate all outputs for TUEWAS."""
     from zipfile import ZipFile
 
-    from .metadata import report
+    from .metadata import merge_ato, report
     from .metadata.spreadsheet import read_workbook
 
     ref_areas = "CN ID IN PH TH VN".split()
 
+    # Read collected metadata for the project
     mds, _ = read_workbook(path_in.resolve())
+
+    # Merge metadata available through ATO
+    merge_ato(mds)
 
     dir_out = pathlib.Path.cwd().joinpath("output")
     path_out = []

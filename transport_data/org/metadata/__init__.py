@@ -159,7 +159,9 @@ def get_cs_common() -> "common.ConceptScheme":
         annotations=[
             common.Annotation(
                 id="tdc-aka",
-                text=repr(["Area", "Country", "Country code", "REF_AREA", "Region"]),
+                text=repr(
+                    ["Area", "Country", "Country code", "ECONOMY", "REF_AREA", "Region"]
+                ),
             )
         ],
     )
@@ -259,3 +261,30 @@ def map_dims_to_ids(mds: "v21.MetadataSet") -> dict[str, set[str]]:
             result[key].add(dfd.id)
 
     return result
+
+
+def merge_ato(mds: "v21.MetadataSet") -> None:
+    """Extend `mds` with metadata reports for ADB ATO data flows."""
+    from transport_data import STORE
+    from transport_data.adb import dataset_to_metadata_report
+
+    assert mds.structured_by
+
+    N = len(mds.report)
+
+    # Iterate over ADB data sets
+    for key in STORE.list(v21.DataSet, maintainer="ADB"):
+        # Retrieve the data set
+        ds: v21.DataSet = STORE.get(key)
+
+        # Convert the attributes of `ds` into a metadata report
+        try:
+            mdr = dataset_to_metadata_report(ds, mds.structured_by)
+        except KeyError as e:
+            log.info(f"Not in local store: {e.args[0]}")
+            continue
+
+        # Add to the mds
+        mds.report.append(mdr)
+
+    log.info(f"Appended {len(mds.report) - N} metadata reports for ATO data flows")

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from transport_data.org.metadata import contains_data_for, groupby, report
+from transport_data.org.metadata import contains_data_for, groupby, merge_ato, report
 from transport_data.org.metadata.spreadsheet import make_workbook, read_workbook
 
 #: Number of metadata reports in the test specimen for which contains_data_for() returns
@@ -34,6 +34,36 @@ def test_make_workbook_cli(tmp_path, tdc_cli) -> None:
 
     # Expected file was generated
     assert exp.exists()
+
+
+@pytest.fixture(scope="session")
+def converted_adb(tmp_store):
+    """Converted ADB data and structures in the test data directory."""
+    # 'Proper' method: repeat the conversion in the test data directory
+    # from transport_data.adb import convert
+
+    # for part in ("ACC", "APH", "CLC", "INF", "MIS", "RSA", "SEC", "TAS"):
+    #     convert(part)
+
+    # 'Fast' method: mirror the files from the user's directory
+    from shutil import copyfile
+
+    from transport_data import Config
+
+    source_dir = Config().data_path.joinpath("local")
+    dest_dir = tmp_store.store["local"].path
+
+    def predicate(p: Path) -> bool:
+        return "ADB:" in p.name
+
+    for p in filter(predicate, source_dir.iterdir()):
+        copyfile(p, dest_dir.joinpath(p.name))
+
+
+def test_merge_ato(converted_adb, example_metadata) -> None:
+    mds, cs = example_metadata
+
+    merge_ato(mds)
 
 
 @pytest.fixture(scope="module")
