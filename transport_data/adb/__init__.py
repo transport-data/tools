@@ -4,7 +4,6 @@ from itertools import chain
 from typing import Callable, Tuple
 from urllib.parse import quote
 
-import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
@@ -178,8 +177,18 @@ def read_sheet(
     # - Remove thousands separators ("," in 2022-10-17 edition; " " in 2024-05-20
     #   edition) and whitespace before the decimal separator ("10860 .6", 2024-05-20
     #   edition).
-    # - Replace "-" (no data) and "long ton" (erroneous) appearing since 2024-05-20
-    #   edition.
+    # - RSA-RSI-007_1 contains erroneous values like "55.0g", likely intended to be
+    #   "55.0%"; correct this.
+    # - Replace miscellaneous erroneous values appearing since the 2024-05-20 edition:
+    #   - "-", "n/a", "N/Appl." (both indicating no data)
+    #   - "_" (likely erroneous)
+    #   - "long ton" (erroneous)
+    # - Some sheets contain columns with text labels in miscellaneous/undocumented
+    #   formats, not supported by this function:
+    #   - SEC-SEG-009: "land", "port"
+    #   - MIS-SUM-002: "A", "B", "C", "D"
+    #
+    #   TODO Ask ATO to provide these data as SDMX, or extend code to convert
     # - Finally, convert to float.
     dtypes = df.loc[:, data_col_mask].dtypes  # Dtypes of data columns only
     for col, _ in filter(lambda x: x[1] != "float", dtypes.items()):
@@ -187,13 +196,18 @@ def read_sheet(
             df[col]
             .str.strip()
             .str.replace(r"(\d)[, ]([\d\.])", r"\1\2", regex=True)
-            .replace("^(-|long ton)$", np.nan, regex=True)
+            .str.replace(r"^([\d\.]+)g", r"\1", regex=True)
+            .str.replace(r"^(-|long ton|N/Appl\.|n/a|_)$", "NaN", regex=True)
+            .str.replace(r"^(land|port|A|B|C|D)$", "NaN", regex=True)
             .astype(float)
         )
 
     # Identify remarks columns: any entries at the *end* of `df.columns` with non-
     # numeric labels. Use the index of last data column, counting backwards.
-    N = list(reversed(data_col_mask)).index(True)
+    try:
+        N = list(reversed(data_col_mask)).index(True)
+    except ValueError:
+        N = 0
     # Label(s) of any remarks columns
     remark_cols = df.columns.tolist()[-N:] if N else []
     # Store a list of these as another annotation
