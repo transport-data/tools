@@ -11,23 +11,6 @@ from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
 
-
-@hookimpl
-def get_agencies():
-    a = m.Agency(
-        id="ADB",
-        name="Asian Transport Outlook team at the Asian Development Bank",
-        description="""See https://www.adb.org/what-we-do/topics/transport/asian-transport-outlook""",  # noqa: E501
-    )
-
-    c1 = m.Contact(name="James Leather", email=["jleather@adb.org"])
-    c2 = m.Contact(name="Cornie Huizenga", email=["chuizenga@cesg.biz"])
-    c3 = m.Contact(name="Sudhir Gota", email=["sudhirgota@gmail.com"])
-    a.contact.extend([c1, c2, c3])
-
-    return (a,)
-
-
 BASE_URL = "https://asiantransportoutlook.com/exportdl?orig=1"
 
 #: List of all "ECONOMY" codes appearing in processed data.
@@ -82,6 +65,64 @@ POOCH = Pooch(
 )
 
 
+def convert(part):
+    from transport_data import STORE
+
+    path = POOCH.fetch(part)
+    ef = pd.ExcelFile(path, engine="openpyxl")
+
+    for sheet_name in ef.sheet_names:
+        if sheet_name == "TOC":
+            # Skip the TOC
+            continue
+        print(f"Process data flow {sheet_name!r}")
+
+        df, annos = read_sheet(ef, sheet_name)
+        ds = convert_sheet(df, annos)
+
+        # Write the DSD and DFD
+        STORE.set(ds.described_by)
+        STORE.set(ds.structured_by)
+        # Write the data itself, to SDMX-ML and CSV
+        STORE.set(ds)
+
+    # Write the lists of "Economy" codes and measures/concepts accumulated while
+    # converting
+    a = get_agencies()[0]
+    for obj in (CL_ECONOMY, CS_MEASURE):
+        obj.maintainer = a
+        obj.version = VERSION
+        STORE.set(obj)
+
+
+def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
+    """Convert `df` and `aa` from :func:`read_sheet` into SDMX data structures."""
+    # Prepare an empty data set, associated structures, and a helper function
+    ds, _make_obs = prepare(aa)
+
+    # - Validate values in "Economy Code", "Economy Name" against CL_ECONOMY; then keep
+    #   only the former as "ECONOMY".
+    # - Melt into long format (one observation per row), preserving remarks columns.
+    # - Drop NA values in the "OBS_VALUE" column
+    data = (
+        df.pipe(validate_economy)
+        .melt(
+            id_vars=["ECONOMY"] + (ds.eval_annotation("remark-cols") or []),
+            var_name="TIME_PERIOD",
+            value_name="OBS_VALUE",
+        )
+        .dropna(subset=["OBS_VALUE"])
+    )
+
+    # Convert rows of `data` into SDMX Observation objects
+    ds.obs.extend(_make_obs(row) for _, row in data.iterrows())
+    assert len(ds) == len(data)
+
+    ds.pop_annotation(id="remark-cols")
+
+    return ds
+
+
 def fetch(*parts, dry_run: bool = False):
     if dry_run:
         for p in parts:
@@ -91,33 +132,97 @@ def fetch(*parts, dry_run: bool = False):
     return list(chain(*[POOCH.fetch(p) for p in parts]))
 
 
-def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
-    """Validate codes for the "ECONOMY" dimension of `df` against :data:`CL_ECONOMY`.
-
-    - Every unique pair of (Economy Code, Economy Name) is converted to a
-      :class:`~sdmx.model.common.Code`.
-    - These are added to :data:`CL_ECONOMY`. If a Code with the same ID already exists,
-      it is checked for an exact match (name, description, etc.)
-    - The "Economy Code" column of `df` is renamed "ECONOMY", and contains only values
-      from :data:`CL_ECONOMY`. The "Economy Name" column is dropped.
-    """
-    codes = (
-        df[["Economy Code", "Economy Name"]]
-        .sort_values("Economy Code")
-        .drop_duplicates()
-        .apply(
-            lambda row: m.Code(id=row["Economy Code"], name=row["Economy Name"]), axis=1
-        )
+@hookimpl
+def get_agencies():
+    a = m.Agency(
+        id="ADB",
+        name="Asian Transport Outlook team at the Asian Development Bank",
+        description="""See https://www.adb.org/what-we-do/topics/transport/asian-transport-outlook""",  # noqa: E501
     )
-    for c in codes:
-        try:
-            CL_ECONOMY.append(c)
-        except ValueError:
-            assert CL_ECONOMY[c.id].compare(
-                c
-            ), f"Existing {CL_ECONOMY[c.id]} does not match {c}"
 
-    return df.rename(columns={"Economy Code": "ECONOMY"}).drop(columns=["Economy Name"])
+    c1 = m.Contact(name="James Leather", email=["jleather@adb.org"])
+    c2 = m.Contact(name="Cornie Huizenga", email=["chuizenga@cesg.biz"])
+    c3 = m.Contact(name="Sudhir Gota", email=["sudhirgota@gmail.com"])
+    a.contact.extend([c1, c2, c3])
+
+    return (a,)
+
+
+def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
+    """Prepare an empty data set and associated structures."""
+    # Measure identifier and description
+    measure_id = (
+        str(aa.pop_annotation(id="INDICATOR-ATO-CODE").text)
+        .replace("(", "_")
+        .replace(")", "")
+    )
+    measure_name = aa.pop_annotation(id="INDICATOR").text
+    measure_desc = aa.pop_annotation(id="DESCRIPTION").text
+
+    # Add to the "Measure" concept scheme
+    # TODO avoid duplicating items for e.g. TDC-PAT-001(1), TDC-PAT-001(2)
+    c = m.Concept(id=measure_id, name=measure_name, description=measure_desc)
+    # TODO Extend an existing code list if converting only 1 or a few data sets
+    CS_MEASURE.append(c)
+
+    # Data structure definition with an ID matching the measure
+    # NB here we set ADB as the maintainer. Precisely, ADB establishes the data
+    #    structure, but TDCI is maintaining the SDMX representation of it.
+    ma_args = dict(maintainer=get_agencies()[0], version=VERSION)
+    dsd = m.DataStructureDefinition(id=measure_id, **ma_args)
+    anno_generated(dsd)
+
+    dfd = m.DataflowDefinition(id=measure_id, structure=dsd, **ma_args)
+
+    pm = m.PrimaryMeasure(id="OBS_VALUE", concept_identity=c)
+    dsd.measures.append(pm)
+
+    # Dimensions
+    dsd.dimensions.extend(m.Dimension(id=d) for d in ("ECONOMY", "TIME_PERIOD"))
+
+    # Convert annotations to DataAttributes. "NoSpecifiedRelationship" means that the
+    # attribute is attached to an entire data set (not a series, individual obs, etc.).
+    da = {}  # Store references for use below
+    for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
+        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship())
+        dsd.attributes.append(da[a.id])
+
+    _PMR = m.PrimaryMeasureRelationship  # Shorthand
+
+    # Convert remark column labels to DataAttributes. "PrimaryMeasureRelationship" means
+    # that the attribute is attached to individual observations.
+    for name in aa.eval_annotation("remark-cols"):
+        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR()))
+
+    # Empty data set structured by this DSD
+    ds = m.DataSet(
+        described_by=dfd,
+        structured_by=dsd,
+        annotations=[aa.get_annotation(id="remark-cols")],
+    )
+    anno_generated(ds)
+
+    # Convert temporary annotation values to attributes attached to the data set
+    for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
+        ds.attrib[a.id] = m.AttributeValue(value=str(a.text), value_for=da[a.id])
+
+    def _make_obs(row):
+        """Helper function for making :class:`sdmx.model.Observation` objects."""
+        key = dsd.make_key(m.Key, row[[d.id for d in dsd.dimensions]])
+
+        # Attributes
+        attrs = {}
+        for a in filter(lambda a: a.related_to is _PMR, dsd.attributes):
+            # Only store an AttributeValue if there is some text
+            value = row[a.id]
+            if not pd.isna(value):
+                attrs[a.id] = m.AttributeValue(value_for=a, value=value)
+
+        return m.Observation(
+            dimension=key, attached_attribute=attrs, value_for=pm, value=row[pm.id]
+        )
+
+    return ds, _make_obs
 
 
 def read_sheet(
@@ -218,136 +323,30 @@ def read_sheet(
     return df, aa
 
 
-def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
-    """Convert `df` and `aa` from :func:`read_sheet` into SDMX data structures."""
-    # Prepare an empty data set, associated structures, and a helper function
-    ds, _make_obs = prepare(aa)
+def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
+    """Validate codes for the "ECONOMY" dimension of `df` against :data:`CL_ECONOMY`.
 
-    # - Validate values in "Economy Code", "Economy Name" against CL_ECONOMY; then keep
-    #   only the former as "ECONOMY".
-    # - Melt into long format (one observation per row), preserving remarks columns.
-    # - Drop NA values in the "OBS_VALUE" column
-    data = (
-        df.pipe(validate_economy)
-        .melt(
-            id_vars=["ECONOMY"] + (ds.eval_annotation("remark-cols") or []),
-            var_name="TIME_PERIOD",
-            value_name="OBS_VALUE",
+    - Every unique pair of (Economy Code, Economy Name) is converted to a
+      :class:`~sdmx.model.common.Code`.
+    - These are added to :data:`CL_ECONOMY`. If a Code with the same ID already exists,
+      it is checked for an exact match (name, description, etc.)
+    - The "Economy Code" column of `df` is renamed "ECONOMY", and contains only values
+      from :data:`CL_ECONOMY`. The "Economy Name" column is dropped.
+    """
+    codes = (
+        df[["Economy Code", "Economy Name"]]
+        .sort_values("Economy Code")
+        .drop_duplicates()
+        .apply(
+            lambda row: m.Code(id=row["Economy Code"], name=row["Economy Name"]), axis=1
         )
-        .dropna(subset=["OBS_VALUE"])
     )
+    for c in codes:
+        try:
+            CL_ECONOMY.append(c)
+        except ValueError:
+            assert CL_ECONOMY[c.id].compare(
+                c
+            ), f"Existing {CL_ECONOMY[c.id]} does not match {c}"
 
-    # Convert rows of `data` into SDMX Observation objects
-    ds.obs.extend(_make_obs(row) for _, row in data.iterrows())
-    assert len(ds) == len(data)
-
-    ds.pop_annotation(id="remark-cols")
-
-    return ds
-
-
-def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
-    """Prepare an empty data set and associated structures."""
-    # Measure identifier and description
-    measure_id = (
-        str(aa.pop_annotation(id="INDICATOR-ATO-CODE").text)
-        .replace("(", "_")
-        .replace(")", "")
-    )
-    measure_name = aa.pop_annotation(id="INDICATOR").text
-    measure_desc = aa.pop_annotation(id="DESCRIPTION").text
-
-    # Add to the "Measure" concept scheme
-    # TODO avoid duplicating items for e.g. TDC-PAT-001(1), TDC-PAT-001(2)
-    c = m.Concept(id=measure_id, name=measure_name, description=measure_desc)
-    # TODO Extend an existing code list if converting only 1 or a few data sets
-    CS_MEASURE.append(c)
-
-    # Data structure definition with an ID matching the measure
-    # NB here we set ADB as the maintainer. Precisely, ADB establishes the data
-    #    structure, but TDCI is maintaining the SDMX representation of it.
-    ma_args = dict(maintainer=get_agencies()[0], version=VERSION)
-    dsd = m.DataStructureDefinition(id=measure_id, **ma_args)
-    anno_generated(dsd)
-
-    dfd = m.DataflowDefinition(id=measure_id, structure=dsd, **ma_args)
-
-    pm = m.PrimaryMeasure(id="OBS_VALUE", concept_identity=c)
-    dsd.measures.append(pm)
-
-    # Dimensions
-    dsd.dimensions.extend(m.Dimension(id=d) for d in ("ECONOMY", "TIME_PERIOD"))
-
-    # Convert annotations to DataAttributes. "NoSpecifiedRelationship" means that the
-    # attribute is attached to an entire data set (not a series, individual obs, etc.).
-    da = {}  # Store references for use below
-    for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
-        da[a.id] = m.DataAttribute(id=a.id, related_to=m.NoSpecifiedRelationship())
-        dsd.attributes.append(da[a.id])
-
-    _PMR = m.PrimaryMeasureRelationship  # Shorthand
-
-    # Convert remark column labels to DataAttributes. "PrimaryMeasureRelationship" means
-    # that the attribute is attached to individual observations.
-    for name in aa.eval_annotation("remark-cols"):
-        dsd.attributes.append(m.DataAttribute(id=name, related_to=_PMR()))
-
-    # Empty data set structured by this DSD
-    ds = m.DataSet(
-        described_by=dfd,
-        structured_by=dsd,
-        annotations=[aa.get_annotation(id="remark-cols")],
-    )
-    anno_generated(ds)
-
-    # Convert temporary annotation values to attributes attached to the data set
-    for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
-        ds.attrib[a.id] = m.AttributeValue(value=str(a.text), value_for=da[a.id])
-
-    def _make_obs(row):
-        """Helper function for making :class:`sdmx.model.Observation` objects."""
-        key = dsd.make_key(m.Key, row[[d.id for d in dsd.dimensions]])
-
-        # Attributes
-        attrs = {}
-        for a in filter(lambda a: a.related_to is _PMR, dsd.attributes):
-            # Only store an AttributeValue if there is some text
-            value = row[a.id]
-            if not pd.isna(value):
-                attrs[a.id] = m.AttributeValue(value_for=a, value=value)
-
-        return m.Observation(
-            dimension=key, attached_attribute=attrs, value_for=pm, value=row[pm.id]
-        )
-
-    return ds, _make_obs
-
-
-def convert(part):
-    from transport_data import STORE
-
-    path = POOCH.fetch(part)
-    ef = pd.ExcelFile(path, engine="openpyxl")
-
-    for sheet_name in ef.sheet_names:
-        if sheet_name == "TOC":
-            # Skip the TOC
-            continue
-        print(f"Process data flow {sheet_name!r}")
-
-        df, annos = read_sheet(ef, sheet_name)
-        ds = convert_sheet(df, annos)
-
-        # Write the DSD and DFD
-        STORE.set(ds.described_by)
-        STORE.set(ds.structured_by)
-        # Write the data itself, to SDMX-ML and CSV
-        STORE.set(ds)
-
-    # Write the lists of "Economy" codes and measures/concepts accumulated while
-    # converting
-    a = get_agencies()[0]
-    for obj in (CL_ECONOMY, CS_MEASURE):
-        obj.maintainer = a
-        obj.version = VERSION
-        STORE.set(obj)
+    return df.rename(columns={"Economy Code": "ECONOMY"}).drop(columns=["Economy Name"])
