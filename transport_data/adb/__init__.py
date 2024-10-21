@@ -53,15 +53,15 @@ CS_MEASURE = m.ConceptScheme(
 #: Mapping from short codes for ATO data categories to file names.
 FILES = {
     # "ATO National Database Masterlist of Indicators",
-    "INF": "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
-    "TAS": "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
     "ACC": "ATO Workbook (ACCESS & CONNECTIVITY (ACC)).xlsx",
-    "RSA": "ATO Workbook (ROAD SAFETY (RSA)).xlsx",
     "APH": "ATO Workbook (AIR POLLUTION & HEALTH (APH)).xlsx",
     "CLC": "ATO Workbook (CLIMATE CHANGE (CLC)).xlsx",
-    "SEC": "ATO Workbook (SOCIO-ECONOMIC (SEC)).xlsx",
-    "POL": "ATO Workbook (TRANSPORT POLICY (POL)).xlsx",
+    "INF": "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
     "MIS": "ATO Workbook (MISCELLANEOUS (MIS)).xlsx",
+    "POL": "ATO Workbook (TRANSPORT POLICY (POL)).xlsx",
+    "RSA": "ATO Workbook (ROAD SAFETY (RSA)).xlsx",
+    "SEC": "ATO Workbook (SOCIO-ECONOMIC (SEC)).xlsx",
+    "TAS": "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
 }
 
 
