@@ -219,12 +219,25 @@ def _get(mdr: "v21.MetadataReport", mda_id: str) -> Optional[str]:
     return None
 
 
+# TODO Keep this dictionary as small as possible, by making appropriate changes in the
+# input metadata
+RENAME = {
+    "IRF - International Road Federation": "International Road Federation (IRF)",
+    "UIC": "International Union of Railways (UIC)",
+}
+
+
 def map_values_to_ids(mds: "v21.MetadataSet", mda_id: str) -> dict[str, set[str]]:
     """Return a mapping from unique reported attribute values to data flow IDs."""
     result = defaultdict(set)
 
     for r in mds.report:
-        result[_get(r, mda_id) or "MISSING"].add(_get(r, "DATAFLOW") or "MISSING")
+        value = _get(r, mda_id) or "MISSING"
+
+        # Merge or relabel certain values
+        value = RENAME.get(value, value)
+
+        result[value].add(_get(r, "DATAFLOW") or "MISSING")
 
     return result
 
