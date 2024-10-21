@@ -30,9 +30,13 @@ def get_env():
         return "—", None
 
     def _format_desc(dim):
-        if desc := str(dim.get_annotation(id="tdc-description").text):
-            return desc
-        else:
+        try:
+            anno_description = dim.get_annotation(id="tdc-description")
+            if desc := str(anno_description.text):
+                return desc
+            else:
+                raise KeyError
+        except KeyError:
             return "—"
 
     env.filters["dfd_id"] = _dfd_id

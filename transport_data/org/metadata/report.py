@@ -118,10 +118,15 @@ class MetadataReport0Plain(Report):
         )
         for dim in dsd.dimensions:
             line = f"    - {dim.id}:"
-            if desc := str(dim.get_annotation(id="tdc-description").text):
-                line += f" {desc!s}"
-            else:
+            try:
+                anno_description = dim.get_annotation(id="tdc-description")
+                if desc := str(anno_description.text):
+                    line += f" {desc!s}"
+                else:
+                    raise KeyError
+            except KeyError:
                 line += " (no info)"
+
             try:
                 original_id = dim.get_annotation(id="tdc-original-id").text
                 line += f" ('{original_id!s}' in input file)"
