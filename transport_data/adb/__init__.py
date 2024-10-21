@@ -147,7 +147,9 @@ def read_sheet(
       the same row (i.e. for a single "Economy Code" and 1 or more time periods).
     """
     # Read metadata section
-    meta_df = ef.parse(sheet_name, skiprows=1, nrows=9, usecols="A:B").dropna(how="all")
+    meta_df = ef.parse(
+        sheet_name, header=None, skiprows=1, nrows=9, usecols="A:B"
+    ).dropna(how="all")
 
     # Convert metadata rows to a collection of temporary annotations
     aa = m.AnnotableArtefact()
@@ -247,12 +249,18 @@ def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
 def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
     """Prepare an empty data set and associated structures."""
     # Measure identifier and description
-    measure_id = str(aa.pop_annotation(id="INDICATOR-ATO-CODE").text)
-    measure_desc = str(aa.pop_annotation(id="DESCRIPTION").text)
+    measure_id = (
+        str(aa.pop_annotation(id="INDICATOR-ATO-CODE").text)
+        .replace("(", "_")
+        .replace(")", "")
+    )
+    measure_name = aa.pop_annotation(id="INDICATOR").text
+    measure_desc = aa.pop_annotation(id="DESCRIPTION").text
 
     # Add to the "Measure" concept scheme
     # TODO avoid duplicating items for e.g. TDC-PAT-001(1), TDC-PAT-001(2)
-    c = m.Concept(id=measure_id, description=measure_desc)
+    c = m.Concept(id=measure_id, name=measure_name, description=measure_desc)
+    # TODO Extend an existing code list if converting only 1 or a few data sets
     CS_MEASURE.append(c)
 
     # Data structure definition with an ID matching the measure
