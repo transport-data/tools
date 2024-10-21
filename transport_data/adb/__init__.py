@@ -63,6 +63,8 @@ FILES = {
     "TAS": "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
 }
 
+VERSION = "0.1.0"
+
 
 def expand(fname: str) -> str:
     return FILES.get(fname, fname)
@@ -242,12 +244,11 @@ def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
     # Data structure definition with an ID matching the measure
     # NB here we set ADB as the maintainer. Precisely, ADB establishes the data
     #    structure, but TDCI is maintaining the SDMX representation of it.
-    dsd = m.DataStructureDefinition(id=measure_id, maintainer=get_agencies()[0])
+    ma_args = dict(maintainer=get_agencies()[0], version=VERSION)
+    dsd = m.DataStructureDefinition(id=measure_id, **ma_args)
     anno_generated(dsd)
 
-    dfd = m.DataflowDefinition(
-        id=measure_id, maintainer=get_agencies()[0], structure=dsd
-    )
+    dfd = m.DataflowDefinition(id=measure_id, structure=dsd, **ma_args)
 
     pm = m.PrimaryMeasure(id="OBS_VALUE", concept_identity=c)
     dsd.measures.append(pm)
@@ -326,5 +327,5 @@ def convert(part):
     a = get_agencies()[0]
     for obj in (CL_ECONOMY, CS_MEASURE):
         obj.maintainer = a
-        obj.version = "0.1.0"
+        obj.version = VERSION
         STORE.set(obj)
