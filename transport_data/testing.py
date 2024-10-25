@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Generator, cast
 import click.testing
 import pytest
 import sdmx.message
-from sdmx.model import common, v21
+from sdmx.model import common, v21, v30
 
 import transport_data
 from transport_data.config import Config
@@ -21,6 +21,26 @@ class CliRunner(click.testing.CliRunner):
         import transport_data.cli
 
         return super().invoke(transport_data.cli.main, *args, **kwargs)
+
+
+def ember_dfd() -> "v30.Dataflow":
+    """Construct a Dataflow used in testing :func:`.read_csv` and related code.
+
+    .. todo:: Instead ensure these artefacts are available from :data:`.STORE`.
+    """
+
+    # Construct a DSD corresponding to the data
+    ma_kw: "MAKeywords" = dict(
+        id="EMBER_001", version="1.0.0", maintainer=common.Agency(id="TDCI")
+    )
+    dsd = v30.DataStructureDefinition(**ma_kw)
+    dsd.dimensions.append(v30.Dimension(id="COUNTRY"))
+    dsd.dimensions.append(v30.Dimension(id="YEAR"))
+    dsd.measures.append(v30.Measure(id="OBS_VALUE"))
+    dsd.attributes.append(common.DataAttribute(id="COMMENT"))
+
+    # Construct a DFD
+    return v30.Dataflow(**ma_kw, structure=dsd)
 
 
 @pytest.fixture(scope="session")

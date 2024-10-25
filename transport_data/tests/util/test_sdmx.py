@@ -1,21 +1,8 @@
 import pytest
 import sdmx
-from sdmx.model import common, v30
 
+from transport_data.testing import ember_dfd
 from transport_data.util.sdmx import read_csv
-
-
-@pytest.fixture(scope="module")
-def dfd():
-    # Construct a DSD corresponding to the data
-    ma_kw = dict(id="EMBER_001", version="1.0.0", maintainer=common.Agency(id="TDCI"))
-    dsd = v30.DataStructureDefinition(**ma_kw)
-    dsd.dimensions.append(v30.Dimension(id="COUNTRY"))
-    dsd.dimensions.append(v30.Dimension(id="YEAR"))
-    dsd.measures.append(v30.Measure(id="OBS_VALUE"))
-    dsd.attributes.append(common.DataAttribute(id="COMMENT"))
-    # Construct a DFD
-    yield v30.Dataflow(**ma_kw, structure=dsd)
 
 
 @pytest.mark.parametrize(
@@ -34,7 +21,9 @@ def dfd():
         ),
     ),
 )
-def test_read_csv(test_data_path, dfd, filename, adapt) -> None:
+def test_read_csv(test_data_path, filename, adapt) -> None:
+    dfd = ember_dfd()
+
     # CSV data are read without error
     dm = read_csv(test_data_path.joinpath(filename), dfd, adapt)
 
