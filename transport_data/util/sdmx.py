@@ -9,9 +9,22 @@ import pandas as pd
 
 if TYPE_CHECKING:
     import pathlib
+    from typing import TypedDict
 
+    import sdmx.model.common
     import sdmx.model.v21
     import sdmx.model.v30
+
+    # Types for dicts holding keyword arguments to SDMX classes
+    # TODO Move upstream
+    class IAKeywords(TypedDict, total=False):
+        id: str
+
+    class VAKeywords(IAKeywords):
+        version: str
+
+    class MAKeywords(VAKeywords):
+        maintainer: sdmx.model.common.Agency
 
 
 class CSVAdapter(io.RawIOBase):
