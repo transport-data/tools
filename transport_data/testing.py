@@ -14,6 +14,13 @@ if TYPE_CHECKING:
     import dsss.store
 
 
+class CliRunner(click.testing.CliRunner):
+    def invoke(self, *args, **kwargs):
+        import transport_data.cli
+
+        return super().invoke(transport_data.cli.main, *args, **kwargs)
+
+
 @pytest.fixture(scope="session")
 def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     """SDMX structures for use in tests."""
@@ -59,13 +66,6 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     tmp_store.update_from(sm)
 
     return sm
-
-
-class CliRunner(click.testing.CliRunner):
-    def invoke(self, *args, **kwargs):
-        import transport_data.cli
-
-        return super().invoke(transport_data.cli.main, *args, **kwargs)
 
 
 @pytest.fixture
