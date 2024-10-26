@@ -1,8 +1,13 @@
 What's new
 **********
 
-.. Next release
-.. ============
+Next release
+============
+
+- Use :mod:`dsss.store` classes for SDMX artefact storage (:pull:`27`).
+
+  - :class:`transport_data.store.UnionStore` is now a lightweight subclass of :class:`dsss.store.UnionStore`.
+  - Add :attr:`.Config.registry_remote_url`.
 
 v24.10.8
 ========
