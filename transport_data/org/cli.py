@@ -97,6 +97,8 @@ def _tuewas_all(path_in):
     """Generate all outputs for TUEWAS."""
     from zipfile import ZipFile
 
+    from transport_data.util.libreoffice import HAS_LIBREOFFICE
+
     from .metadata import merge_ato, report
     from .metadata.spreadsheet import read_workbook
 
@@ -111,17 +113,23 @@ def _tuewas_all(path_in):
     dir_out = pathlib.Path.cwd().joinpath("output")
     path_out = []
 
+    def _maybe_pdf():
+        if HAS_LIBREOFFICE:
+            # Also mark the auto-converted PDF to be added to the ZIP archive
+            path_out.append(path_out[-1].with_suffix(".pdf"))
+            print(f"Wrote {path_out[-2:]}")
+        else:
+            print(f"Wrote {path_out[-1]}")
+
     for ref_area in ref_areas:
         path_out.append(dir_out.joinpath(ref_area, "Summary.odt"))
         path_out[-1].parent.mkdir(parents=True, exist_ok=True)
         report.MetadataSet1ODT(mds, ref_area=ref_area).write_file(path_out[-1])
-        path_out.append(path_out[-1].with_suffix(".pdf"))
-        print(f"Wrote {path_out[-2:]}")
+        _maybe_pdf()
 
     path_out.append(dir_out.joinpath("Metadata summary.odt"))
     report.MetadataSet0ODT(mds).write_file(path_out[-1])
-    path_out.append(path_out[-1].with_suffix(".pdf"))
-    print(f"Wrote {path_out[-2:]}")
+    _maybe_pdf()
 
     path_out.append(dir_out.joinpath("Metadata summary table.html"))
     report.MetadataSet2HTML(mds, ref_area=ref_areas).write_file(
