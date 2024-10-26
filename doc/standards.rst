@@ -166,11 +166,17 @@ TDC formatted data **should** use the IDs; but if not **must** include a ``tdc-c
 
 .. [2] These IDs follow the practice of major data providers and the SDMX Global Registry.
 
+
+.. _std-data-file-format:
+
 Data
 ====
 
-TDC formatted data **must** be provided together with structure information and metadata, as described above.
-In other words, an SDMX data message alone, without accompanying SDMX structure message(s) that give the structure of the data, is *not* TDC formatted.
+TDC formatted data:
+
+- **must** be in an SDMX file format: SDMX-ML (XML), SDMX-CSV, or SDMX-JSON.
+- **must** be provided together with, or clearly identify, structural metadata as described above.
+  In other words, an SDMX data message alone, without accompanying SDMX structure message(s) that give the structure of the data, is *not* TDC formatted.
 
 Processes
 =========

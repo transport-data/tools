@@ -10,4 +10,5 @@ Put another way, a HOWTO shows *just one possible or suggested* way to comply wi
 .. toctree::
    :maxdepth: 1
 
+   data-csv
    metadata

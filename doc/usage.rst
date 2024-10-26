@@ -1,6 +1,8 @@
 Usage
 *****
 
+.. _install:
+
 Installation
 ============
 
