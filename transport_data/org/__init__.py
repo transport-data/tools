@@ -73,7 +73,7 @@ def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.Agency
 
     as_.version = version
     if as_.version is None:
-        registry.assign_version(as_)
+        registry.assign_version(as_, patch=1)
 
     return as_
 
@@ -83,4 +83,4 @@ def refresh():
     from transport_data import STORE
 
     as_ = get_agencyscheme()
-    STORE.write(as_)
+    STORE.set(as_)

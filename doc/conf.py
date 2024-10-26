@@ -82,6 +82,7 @@ extlinks = {
 intersphinx_mapping = {
     "click": ("https://click.palletsprojects.com/en/8.1.x/", None),
     "docutils": ("https://sphinx-docutils.readthedocs.io/en/latest", None),
+    "dsss": ("https://dsss.readthedocs.io/en/stable", None),
     "jinja2": ("https://jinja.palletsprojects.com/en/3.1.x", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
     "platformdirs": ("https://platformdirs.readthedocs.io/en/latest/", None),

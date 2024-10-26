@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Generator, cast
+from typing import TYPE_CHECKING, Generator, cast
 
 import click.testing
 import pytest
@@ -8,7 +8,10 @@ import sdmx.model.v21 as m
 
 import transport_data
 from transport_data.config import Config
-from transport_data.store import Registry, UnionStore
+from transport_data.store import UnionStore
+
+if TYPE_CHECKING:
+    import dsss.store
 
 
 @pytest.fixture(scope="session")
@@ -53,7 +56,7 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
         )
         sm.add(dsd)
 
-    tmp_store.write(sm)
+    tmp_store.update_from(sm)
 
     return sm
 
@@ -80,10 +83,14 @@ def test_data_path() -> Generator[Path, None, None]:
 @pytest.fixture(scope="session")
 def tmp_config(tmp_path_factory) -> Generator[Config, None, None]:
     """A :class:`.Config` instance pointing to a temporary directory."""
+    from platformdirs import user_data_path
+
     base = tmp_path_factory.mktemp("transport-data")
     result = Config(
         config_path=base.joinpath("config.json"),
         data_path=base.joinpath("data"),
+        # Default value in .config.Config.data_path → clone from another local directory
+        registry_remote_url=str(user_data_path("transport-data").joinpath("registry")),
     )
 
     with pytest.MonkeyPatch().context() as mp:
@@ -97,9 +104,9 @@ def tmp_store(tmp_config) -> Generator[UnionStore, None, None]:
     result = UnionStore(tmp_config)
 
     # Initialize an empty Git repo
-    registry = cast(Registry, result.store["registry"])
+    registry = cast("dsss.store.GitStore", result.store["registry"])
     registry.path.mkdir(exist_ok=True)
-    registry._git("init")
+    registry.clone()
 
     with pytest.MonkeyPatch().context() as mp:
         mp.setattr(transport_data, "STORE", result)

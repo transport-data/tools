@@ -5,6 +5,7 @@ repos:
   - id: mypy
     additional_dependencies:
     - click
+    - dsss
     - lxml-stubs
     - pandas-stubs
     - platformdirs
