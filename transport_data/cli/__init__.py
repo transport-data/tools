@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 
-from . import CONFIG  # noqa: F401
+from transport_data import CONFIG  # noqa: F401
 
 
 @click.group("tdc")
@@ -18,6 +18,7 @@ def main():
 MODULES_WITH_CLI = [
     "adb.cli",
     "config",
+    "cli.interactive",
     "estat",
     "iamc.cli",
     "iso.cli",

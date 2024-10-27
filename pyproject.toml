@@ -31,6 +31,7 @@ dependencies = [
   "platformdirs",
   "pluggy",
   "pooch",
+  "prompt-toolkit",
   "pycountry",
   "requests",
   "sdmx1 >= 2.9",

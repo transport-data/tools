@@ -10,6 +10,7 @@ repos:
     - lxml-stubs
     - pandas-stubs
     - platformdirs
+    - prompt-toolkit
     - pytest
     - sdmx1
     - Sphinx
