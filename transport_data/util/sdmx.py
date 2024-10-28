@@ -24,7 +24,7 @@ if TYPE_CHECKING:
         version: str
 
     class MAKeywords(VAKeywords):
-        maintainer: sdmx.model.common.Agency
+        maintainer: Optional[sdmx.model.common.Agency]
 
 
 class CSVAdapter(io.RawIOBase):

@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from openpyxl import Workbook
     from openpyxl.worksheet.worksheet import Worksheet
 
+    from transport_data.util.sdmx import MAKeywords
+
 log = logging.getLogger(__name__)
 
 
@@ -253,8 +255,13 @@ def read_worksheet(
     # Create the target of the report: a data flow definition
     # TODO Expand this DFD and its associated data structure definition
     df_id_from_title = ws.title
-    dfd = v21.DataflowDefinition(id=ws.title, maintainer=msd.maintainer)
-    dsd = v21.DataStructureDefinition(id=ws.title, maintainer=msd.maintainer)
+    ma_args: "MAKeywords" = dict(
+        id=ws.title, maintainer=msd.maintainer, version="1.0.0"
+    )
+    dfd = v21.DataflowDefinition(**ma_args)
+    dsd = v21.DataStructureDefinition(**ma_args)
+    dsd.measures.getdefault(id="OBS_VALUE")
+    dsd.attributes.getdefault(id="COMMENT")
     dfd.structure = dsd
 
     # Create objects to associate the metadata report with the data flow definition
