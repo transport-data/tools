@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 # -- Project information ---------------------------------------------------------------
 
-project = "TDC tools"
+project = "Tools for the Transport Data Commons (TDC)"
 copyright = "2023–2024, Transport Data Commons Initiative"
 author = "Transport Data Commons Initiative"
 

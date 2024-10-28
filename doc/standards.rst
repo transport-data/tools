@@ -19,7 +19,7 @@ These standards:
    `file an issue <https://github.com/transport-data/tools/issues>`_, or
    `open a pull request <https://github.com/transport-data/tools/pulls>`_ for review.
 
-…use key words from `RFC 2119 <https://www.rfc-editor.org/rfc/rfc2119.html>`_ to indicate *requirement levels*.
+…use key words from :rfc:`2119` to indicate *requirement levels*.
    These include words in boldface like **must** / **required**; **should** / **recommend(ed)**; and **may** / **optional**.
    Taken together, data and/or processes that fulfill all the ‘required’ standards can be considered “TDC formatted”.
    Data that also fulfill all the recommended and optional standards represent *best practices*.

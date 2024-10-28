@@ -7,7 +7,7 @@ Introduction
 ============
 
 **Comma-separated value** (CSV) is a generic text file format.
-It is standardized by `IETF RFC 4180 <https://datatracker.ietf.org/doc/html/rfc4180>`_; see also `Wikipedia <https://en.wikipedia.org/wiki/Comma-separated_values>`_ for more information.
+It is standardized by IETF :rfc:`4180`; see also `Wikipedia <https://en.wikipedia.org/wiki/Comma-separated_values>`_ for more information.
 
 - The CSV standard only describes **records** (‘rows’ or ‘lines’) and **fields** (‘columns’).
   It does not describe *what these mean or signify*.
