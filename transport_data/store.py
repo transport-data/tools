@@ -137,7 +137,7 @@ class UnionStore(dsss.store.UnionStore):
 @click.group("store")
 @click.pass_context
 def main(context) -> None:
-    """Manipulate local data storage."""
+    """Manipulate local SDMX (meta)data."""
 
 
 @main.command()
@@ -154,14 +154,14 @@ def clone(context):
 
 
 @main.command("list")
-@click.argument("maintainer_id", metavar="MAINTAINER")
+@click.option("--maintainer", "maintainer_id")
 @click.pass_context
 def list_cmd(context, maintainer_id):
-    """List store contents for MAINTAINER."""
+    """List contents of the store."""
     from transport_data import STORE
 
-    for urn in STORE.list(maintainer=maintainer_id):
-        print(urn)
+    for urn in sorted(STORE.list(maintainer=maintainer_id)):
+        print(sdmx.urn.shorten(urn))
 
 
 @main.command()
@@ -172,6 +172,8 @@ def show(context, partial_urn):
 
     The URN should be partial, starting with the object class, for instance
     "Codelist=AGENCY:ID(1.2.3)".
+
+    .. todo:: Use :class:`.Report` instances where possible.
     """
     from transport_data import STORE
 

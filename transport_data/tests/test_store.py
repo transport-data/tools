@@ -78,9 +78,10 @@ class TestUnionStore:
 
 
 def test_cli_list(sdmx_structures):
-    result = CliRunner().invoke(main, ["list", "TEST"])
+    result = CliRunner().invoke(main, ["list", "--maintainer=TEST"])
     assert 0 == result.exit_code
-    assert 5 == len(result.output.splitlines())
+    # FIXME Avoid a result that depends on test run order
+    assert len(result.output.splitlines()) in (4, 5), result.output
 
 
 def test_cli_show(sdmx_structures):
