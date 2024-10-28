@@ -2,13 +2,14 @@ HOWTOs
 ******
 
 This section contains practical **how-to guides**, instructions, and tutorials.
-These are intended to illustrate and demonstrate how to work with TDC-compliant data and metadata, and develop code and other tools process such (meta)data.
+These are intended to illustrate and demonstrate how to work with TDC-compliant data and metadata, and develop code and other tools that process such (meta)data.
 
+Put another way, a HOWTO shows *just one possible, suggested, or recommended* way to comply with the standards.
 In contrast, the :doc:`/standards` are *prescriptive*.
-Put another way, a HOWTO shows *just one possible or suggested* way to comply with the standards.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   data-csv
-   metadata
+   Edit data structures <cli-edit>
+   Format data <data-csv>
+   Record and update metadata <metadata>
