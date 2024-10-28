@@ -37,6 +37,7 @@ for name in MODULES_WITH_CLI:
 
 
 @main.command()
+@click.argument("structure_urn", metavar="URN")
 @click.argument(
     "path", metavar="FILE", type=click.Path(exists=True, dir_okay=False, path_type=Path)
 )
@@ -44,21 +45,53 @@ for name in MODULES_WITH_CLI:
 @click.option("-v", "--verbose", count=True, help="Increase verbosity.")
 @click.option("--structure", help="Value for STRUCTURE field.")
 @click.option("--structure-id", "structure_id", help="Value for STRUCTURE_ID field.")
-@click.option("--action", help="Value for ACTION field.")
-def check(path: Path, sheets, verbose, **adapt):  # noqa: C901
-    """Check that FILE can be read as SDMX-CSV."""
+@click.option("--action", default="I", help="Value for ACTION field.")
+def check(structure_urn: str, path: Path, sheets, verbose, **options):  # noqa: C901
+    """Check that FILE can be read as SDMX-CSV.
+
+    URN is the shortened SDMX URN of a data flow or data structure definition that
+    describes the data in FILE, for example "Dataflow=PROVIDER:EXAMPLE(1.2.3)" (the
+    version is not required). This artefact must already be present in the local store.
+
+    FILE may have a ".csv" or ".xlsx" suffix. In the latter case, it is converted to a
+    temporary set of CSV files. If --sheets are given, only these worksheets are
+    converted and checked.
+
+    If not given, --structure and --structure-id are inferred from URN.
+    """
+    from traceback import format_exception
+
     import sdmx
     import sdmx.urn
+    from sdmx.model import common
 
-    from transport_data.testing import ember_dfd
+    from transport_data import STORE
     from transport_data.util.sdmx import read_csv
 
-    # Sequence of (label, path) for CSV files to be processed
+    # Handle `structure_urn`: retrieve a data structure that describes the data
+    structure = STORE.get(structure_urn)
+    if isinstance(structure, common.BaseDataflow):
+        # Also retrieve the data structure definition
+        STORE.resolve(structure, "structure")
+        assert len(structure.structure.dimensions)
+
+    # Construct keyword arguments for CSVAdapter
+    # TODO Check if this works for full SDMX-CSV
+    adapt = {
+        "structure": options.pop("structure")
+        or type(structure).__name__.lower().replace("definition", ""),
+        "structure_id": options.pop("structure_id")
+        or sdmx.urn.shorten(structure.urn).split("=")[-1],
+        "action": options.pop("action"),
+    }
+
+    # Handle `path`; construct a sequence of (label, path) of CSV files to be processed
     label_path = []
 
     if path.suffix == ".csv":
         label_path.append((f"File: {path}", path))
     elif path.suffix == ".xlsx":
+        # Explode an Excel file into one or more CSV files in a temporary directory
         import pandas as pd
         from platformdirs import user_cache_path
 
@@ -83,10 +116,7 @@ def check(path: Path, sheets, verbose, **adapt):  # noqa: C901
     else:
         raise click.UsageError(f"Unsupported file extension: {path.suffix!r}")
 
-    # TEMPORARY Use a test utility function to get a DFD that describes the file(s)
-    structure = ember_dfd()
-    # TODO Look up a data structure to use in STORE
-
+    # Process `label_path`
     for label, p in label_path:
         print(f"\n{label}")
 
@@ -96,7 +126,7 @@ def check(path: Path, sheets, verbose, **adapt):  # noqa: C901
         except Exception as e:
             message = [f"read failed with\n{type(e).__name__}: {' '.join(e.args)}"]
 
-            if "line 1" in e.args[0]:
+            if len(e.args) and "line 1" in e.args[0]:
                 message.append(
                     "Hint: try giving --structure= or --structure-id argument(s) to "
                     "adapt to SDMX-CSV."
@@ -105,17 +135,21 @@ def check(path: Path, sheets, verbose, **adapt):  # noqa: C901
                 message.append(
                     "Hint: try giving --action argument to adapt to SDMX-CSV."
                 )
+            else:
+                message.append("\n".join(format_exception(e)))
 
             print("")
             raise click.ClickException("\n\n".join(message))
 
+        # Show the contents of the data message
         dfd_urn = sdmx.urn.shorten(sdmx.urn.make(dm.dataflow))
-        print(f"\n{len(dm.data)} data set(s) in data flow {dfd_urn!s}")
+        print(f"\n{len(dm.data)} data set(s) in: {dfd_urn!s}")
 
+        # Show information about each data set
         for i, ds in enumerate(dm.data):
             print(f"\nData set {i}: action={ds.action}")
 
-            # Show information about the contents, according to verbosity
+            # Show the data set contents or summary, according to verbosity
             if verbose == 0:
                 print(f"{len(ds)} observations")
             elif verbose == 1:

@@ -21,8 +21,8 @@ from transport_data.util.sdmx import read_csv
         ),
     ),
 )
-def test_read_csv(test_data_path, filename, adapt) -> None:
-    dfd = ember_dfd()
+def test_read_csv(test_data_path, tmp_store, filename, adapt) -> None:
+    dfd = ember_dfd(tmp_store)
 
     # CSV data are read without error
     dm = read_csv(test_data_path.joinpath(filename), dfd, adapt)
