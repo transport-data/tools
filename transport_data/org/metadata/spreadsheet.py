@@ -241,6 +241,7 @@ def read_worksheet(
     msd :
        Metadata structure definition.
     """
+    from transport_data import STORE
     from transport_data.org.metadata import _get
 
     # Mapping from names (not IDs) to MetadataAttributes
@@ -313,6 +314,10 @@ def read_worksheet(
         return None
 
     update_dimension_descriptor(dsd, cs_dims, *dimension_concepts)
+
+    # Store the DSD and DFD
+    STORE.set(dsd)
+    STORE.set(dfd)
 
     return mdr
 
