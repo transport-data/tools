@@ -197,7 +197,7 @@ def parse_dimension(value: str) -> List[v21.Concept]:
 
     # Convert to a list of Concept objects
     return [
-        v21.Concept(id=id_, name=id_, description=description)
+        v21.Concept(id=id_.strip(), name=id_, description=description)
         for id_, description in parts
     ]
 
@@ -308,7 +308,7 @@ def read_worksheet(
             # TODO Use EnumeratedAttributeValue, once code lists are available
             #      corresponding to dimensions
             ra = v21.OtherNonEnumeratedAttributeValue(
-                value=str(ra_value), value_for=mda
+                value=str(ra_value).strip(), value_for=mda
             )
 
             # Attend the reported attribute to the report
