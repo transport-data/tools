@@ -2,6 +2,7 @@ import re
 
 import pytest
 
+from transport_data.cli.interactive import Editor
 from transport_data.testing import ember_dfd
 
 
@@ -61,3 +62,72 @@ Data set 0: action=ActionType.information
 """,
         result.output,
     )
+
+
+# ‘Script’ of CLI input to produce a data structure definition
+SCRIPT = [
+    # Maintainer ID: accept the default (TDCI)
+    "",
+    # DSD ID
+    "CLI_TEST",
+    # Version
+    "1.0.0",
+    # Dimension
+    "FOO",
+    "BAR",
+    "BAZ",
+    "",
+    # Measure
+    "OBS_VALUE",
+    "",
+    # Attribute
+    "UNIT_MEASURE",
+    "OBS_STATUS",
+    "",
+    # Save
+    "y",
+]
+
+
+def run_script(lines: list[str]) -> None:
+    """Create a contained instance of :class:`.Editor` and feed it `lines`."""
+    from prompt_toolkit.application import create_app_session
+    from prompt_toolkit.input import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+
+    # Create an input pipe
+    with create_pipe_input() as pipe_input:
+        # Feed the script into the pipe
+        for line in lines:
+            pipe_input.send_text(line + "\r")
+
+        # Create an app session; run the app within the session
+        with create_app_session(input=pipe_input, output=DummyOutput()):
+            Editor().run()
+
+
+def test_edit(tmp_store) -> None:
+    from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
+    from prompt_toolkit.keys import Keys
+
+    # CLI runs and accepts the input without error
+    run_script([REVERSE_ANSI_SEQUENCES[Keys.ControlC]])
+    # Nothing was saved because ControlC was given
+    with pytest.raises(KeyError):
+        tmp_store.get("DataStructureDefinition=TDCI:CLI_TEST(1.0.0)")
+
+    # CLI runs and accepts the input without error
+    run_script(SCRIPT[:-1] + [""])
+    # Nothing was saved, because "y" was not given at the final, "Save" view
+    with pytest.raises(KeyError):
+        tmp_store.get("DataStructureDefinition=TDCI:CLI_TEST(1.0.0)")
+
+    # CLI runs and accepts the input without error
+    run_script(SCRIPT)
+
+    # A DSD is generated in the tmp_store
+    dsd = tmp_store.get("DataStructureDefinition=TDCI:CLI_TEST(1.0.0)")
+    # It has contents according to the CLI inputs
+    assert 3 == len(dsd.dimensions)
+    assert 1 == len(dsd.measures)
+    assert 2 == len(dsd.attributes)
