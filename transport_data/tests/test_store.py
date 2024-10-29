@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING
 
 import pytest
-import sdmx.model.v21
-import sdmx.model.v21 as m
 from click.testing import CliRunner
-from sdmx.model import common
+from sdmx.model import common, v21
 
 from transport_data.config import Config
 from transport_data.org import get_agencyscheme
@@ -37,7 +35,9 @@ class TestBaseStore:
         assert tuple() == s.list_versions(common.Codelist, maintainer="TEST", id="FOO")
 
     def test_assign_version(self, sdmx_structures, s: "dsss.store.Store") -> None:
-        cl = m.Codelist(id="FRUIT", maintainer=m.Agency(id="TEST"))
+        cl: "common.Codelist" = common.Codelist(
+            id="FRUIT", maintainer=common.Agency(id="TEST")
+        )
 
         s.assign_version(cl, major=1)
 
@@ -57,18 +57,33 @@ class TestUnionStore:
 
     @pytest.mark.usefixtures("sdmx_structures", "tdci_agencyscheme")
     @pytest.mark.parametrize(
-        "urn",
+        "urn, cls",
         (
-            "urn:sdmx:org.sdmx.infomodel.base.AgencyScheme=TDCI:TDCI",
-            "urn:sdmx:org.sdmx.infomodel.base.AgencyScheme=TDCI:TDCI(0.0.1)",
-            "AgencyScheme=TDCI:TDCI(0.0.1)",
-            "AgencyScheme=TDCI:TDCI",
+            (
+                "urn:sdmx:org.sdmx.infomodel.base.AgencyScheme=TDCI:TDCI",
+                common.AgencyScheme,
+            ),
+            (
+                "urn:sdmx:org.sdmx.infomodel.base.AgencyScheme=TDCI:TDCI(0.0.1)",
+                common.AgencyScheme,
+            ),
+            ("AgencyScheme=TDCI:TDCI(0.0.1)", common.AgencyScheme),
+            ("AgencyScheme=TDCI:TDCI", common.AgencyScheme),
+            # DSD can be retrieved with normalized or non-normalized ID
+            pytest.param(
+                "DataStructure=TEST:MASS(1.0.0)",
+                v21.DataStructureDefinition,
+                marks=pytest.mark.xfail(  # TODO Remove when fixed upstream
+                    raises=UnboundLocalError, reason="Limitation in sdmx1 v2.19.1"
+                ),
+            ),
+            ("DataStructureDefinition=TEST:MASS(1.0.0)", v21.DataStructureDefinition),
         ),
     )
-    def test_get(self, tmp_store, urn) -> None:
+    def test_get(self, tmp_store, urn, cls) -> None:
         """Objects can be retrieved by partial URN."""
         result = tmp_store.get(urn)
-        assert isinstance(result, sdmx.model.v21.AgencyScheme)
+        assert isinstance(result, cls)
 
     def test_list(self, tmp_store) -> None:
         result = sorted(tmp_store.list(maintainer="TEST"))

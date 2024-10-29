@@ -72,7 +72,7 @@ class UnionStore(dsss.store.UnionStore):
           artefact is returned.
         """
         try:
-            full_urn = sdmx.urn.expand(key)
+            full_urn = sdmx.urn.normalize(sdmx.urn.expand(key))
             return super().get(full_urn)
         except KeyError:
             match = sdmx.urn.match(full_urn)
