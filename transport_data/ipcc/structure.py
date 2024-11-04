@@ -21,6 +21,14 @@ def get_agencies():
     return (a,)
 
 
+@hookimpl
+def provides():
+    return (
+        "Codelist=TDCI:CL_IPCC_2006_V2_T3.1.1",
+        "ConceptScheme=TDCI:CS_IPCC_2006_V2_CH3",
+    )
+
+
 def gen_cl_T311(**kwargs) -> "sdmx.model.Common.Codelist":
     """Generate a code list from the GNGGI, Volume 2, Table 3.1.1.
 

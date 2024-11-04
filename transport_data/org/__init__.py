@@ -49,6 +49,11 @@ def get_agencies() -> "sdmx.model.v21.Agency":
     return a1, a2
 
 
+@hookimpl
+def provides():
+    return ("AgencyScheme=TDCI:TDCI",)
+
+
 def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.AgencyScheme":
     """Generate an AgencyScheme including some TDCI data providers."""
     as_ = m.AgencyScheme(

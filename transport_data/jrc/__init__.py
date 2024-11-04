@@ -51,6 +51,11 @@ Maintainers of the IDEES data set: https://data.jrc.ec.europa.eu/dataset/jrc-101
     return (a,)
 
 
+@hookimpl
+def provides():
+    return ("ConceptScheme=TDCI:CS_JRC_MEASURE",)
+
+
 BASE_URL = (
     "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/JRC-IDEES/JRC-IDEES-2015_v1/"
 )

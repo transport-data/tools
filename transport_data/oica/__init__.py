@@ -343,6 +343,14 @@ def get_agencies():
     return (a,)
 
 
+@hookimpl
+def provides():
+    return (
+        "Codelist=TDCI:CL_OICA_GEO",
+        "ConceptScheme=TDCI:CS_OICA_CONCEPTS",
+    )
+
+
 def get_cl_geo() -> "sdmx.model.common.Codelist":
     """Retrieve or create the ``Codelist=TDCI:OICA_GEO``."""
     import sdmx.urn

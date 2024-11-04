@@ -245,6 +245,14 @@ def get_agencies():
     return (a,)
 
 
+@hookimpl
+def provides():
+    return (
+        "Codelist=TDCI:CL_ATO_ECONOMY",
+        "ConceptScheme=TDCI:CS_ATO_MEASURE",
+    )
+
+
 def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
     """Prepare an empty data set and associated structures."""
     # Measure identifier and description
