@@ -59,6 +59,7 @@ They handle tasks including:
    iamc
    ipcc
    iso
+   itdp
    jrc
    oica
    org
@@ -70,6 +71,7 @@ They handle tasks including:
 - :mod:`.iamc`: :doc:`iamc`
 - :mod:`.ipcc`: :doc:`ipcc`
 - :mod:`.iso`: :doc:`iso`
+- :mod:`.itdp`: :doc:`itdp`
 - :mod:`.jrc`: :doc:`jrc`
 - :mod:`.oica`: :doc:`oica`
 - :mod:`.org`: :doc:`org`
