@@ -24,4 +24,5 @@ register_internal(
     "jrc",
     "oica",
     "org",
+    "other",
 )
