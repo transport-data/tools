@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Union
 import sdmx.model.v21 as m
 
 from transport_data import STORE as registry
-from transport_data.util.pluggy import hookimpl, pm, register_internal
+from transport_data.util.pluggy import hookimpl, pm
 
 if TYPE_CHECKING:
     import sdmx.model.v21
@@ -60,10 +60,6 @@ def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.Agency
         # MaintainableArtefact
         maintainer=None,
     )
-
-    # Use plugin hooks to collect Agency objects from within transport_data or other
-    # registered code
-    register_internal()
 
     for agency in chain(*pm.hook.get_agencies()):
         as_.append(agency)
