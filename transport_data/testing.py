@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, cast
 
@@ -14,6 +15,9 @@ if TYPE_CHECKING:
     import dsss.store
 
     from transport_data.util.sdmx import MAKeywords
+
+#: :any:`True` if tests are being run on GitHub Actions.
+GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
 
 
 class CliRunner(click.testing.CliRunner):
