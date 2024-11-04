@@ -39,7 +39,14 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = ["Sphinx", "sphinx-autorun", "sphinx-book-theme"]
-tests = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"]
+google = ["google-api-python-client", "google-auth-httplib2", "google-auth-oauthlib"]
+tests = [
+  "pytest",
+  "pytest-cov",
+  "pytest-rerunfailures",
+  "pytest-xdist",
+  "transport-data[google]",
+]
 
 [project.urls]
 homepage = "https://transport-data.org"
@@ -58,7 +65,13 @@ exclude_also = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["pooch", "pycountry.*"]
+module = [
+  "google_auth_oauthlib.*",
+  "google.*",
+  "googleapiclient.*",
+  "pooch",
+  "pycountry.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
