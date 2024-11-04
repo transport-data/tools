@@ -22,7 +22,9 @@ LOCALIZABLE = {
 #: Mapping from country name forms appearing in data to values recognized by
 #: :meth:`pycountry.countries.lookup`.
 NAME_MAP = {
+    "mainland china": "CN",
     "russia": "RU",  # "Russian Federation"
+    "taiwan, china": "TW",
     "turkey": "TR",  # "Türkiye"
 }
 
