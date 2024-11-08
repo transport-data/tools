@@ -43,6 +43,8 @@ class UnionStore(dsss.store.UnionStore):
                 ),
             ),
         )
+        # FIXME Include in the above call, once dsss.store.UnionStore supports
+        self.maintainer_store.update(ISO="registry")
 
     # Overrides of methods of dsss.store.UnionStore or its parents
 
