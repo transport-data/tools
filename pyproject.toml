@@ -57,7 +57,7 @@ exclude_also = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["pooch", "pycountry"]
+module = ["pooch", "pycountry.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
