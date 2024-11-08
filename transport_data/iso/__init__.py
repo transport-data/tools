@@ -1,16 +1,17 @@
 """International Organization for Standardization (ISO)."""
 
 import logging
-from functools import lru_cache
-from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Mapping
+from functools import partial
+from typing import TYPE_CHECKING, Mapping
 
 from sdmx.model import common
 
 from transport_data.util.pluggy import hookimpl
+from transport_data.util.pycountry import LOCALIZABLE, get_database, load_translations
 
 if TYPE_CHECKING:
     import gettext
+
 
 log = logging.getLogger(__name__)
 
@@ -26,61 +27,97 @@ def get_agencies():
     return (a,)
 
 
-def get_cl_iso_3166_1(
-    id_field: Literal["alpha_2", "alpha_3", "numeric"] = "alpha_2",
-) -> common.Codelist:
-    """Generate a :class:`~sdmx.model.common.Codelist` with entries from ISO 3166-1.
+def generate_all() -> None:
+    """Generate codelists for all the databases in :data:`.pycountry.DATABASE_INFO`."""
+    from transport_data.util.pycountry import DATABASE_INFO
+
+    for info in DATABASE_INFO:
+        generate_codelists(standard_number=info.root_key)
+
+
+def generate_codelists(standard_number: str) -> None:
+    """Generate 1 or more :class:`.Codelist` with entries from ISO `standard_number`.
 
     Codes have:
 
     - IDs according to `id_field`.
     - An :attr:`~sdmx.model.common.IdentifiableArtefact.name` attribute localized to all
       the languages present in the upstream database.
+    - Annotations for all other fields in the upstream database.
 
-    Parameter
-    ---------
-    id_field :
-        Field from the database to use for the IDs of generated Codes.
+    Parameters
+    ----------
+    standard_number :
+        ISO standard number, e.g. "3166-2" for ISO 3166-2.
     """
     from importlib.metadata import version
 
     import sdmx.urn
-    from pycountry import countries as db
 
     from transport_data import STORE
 
-    # Create an empty codelist
-    cl: common.Codelist = common.Codelist(
-        id=f"{db.root_key}_{id_field}",
-        maintainer=get_agencies()[0],
-        version=version("pycountry"),
-    )
+    db, info = get_database(standard_number)
 
-    # Load localizations of this code list
-    translations = load_translations(f"iso{db.root_key}")
+    # Load localizations for this standard number
+    tr = partial(localize_all, translations=load_translations(f"iso{db.root_key}"))
+
+    # Create 1 or more empty code lists: 1 for each possible id_field
+    kw = dict(maintainer=get_agencies()[0], version=version("pycountry"))
+    cl: dict[str, common.Codelist] = {
+        f: common.Codelist(id=f"{db.root_key}_{f}", **kw) for f in info.id_fields
+    }
 
     # Convert all entries in the database to SDMX Codes
-    for data in db:
-        # Collect localizations of the country name
-        name = localize_all(data.name, translations)
-        # TODO Collect localizations of other fields; add as annotations
-        # TODO Annotate with other non-localized fields
+    for record in db:
+        # - Iterate over all fields in the record.
+        # - For localizable fields, collect localizations of the field's value.
+        # - Convert to Annotation objects. Not all of these will be used for each Code.
+        anno = {
+            f: common.Annotation(id=f, text=tr(v) if f in LOCALIZABLE else {"zxx": v})
+            for f, v in record._fields.items()
+            if v is not None
+        }
 
-        # Create a Code
-        c = common.Code(id=getattr(data, id_field), name=name)
-        # Append to the code list
-        cl.append(c)
+        # Add one code to cl["alpha_2"] with an alpha_2 ID, one to cl["alpha_3"] with an
+        # alpha_3 ID, etc.
+        for id_field in info.id_fields:
+            try:
+                id_ = anno[id_field].text.localized_default()
+            except KeyError:
+                log.info(f"No {id_field!r} field → omit:\n{record}")
+                continue
 
-        # Generate its URN
-        c.urn = sdmx.urn.make(c)
+            # Create a code
+            c = common.Code(
+                id=id_,
+                name=anno["name"].text,
+                annotations=[v for f, v in anno.items() if f not in {"name", id_field}],
+            )
+
+            # Append to the respective code list
+            try:
+                cl[id_field].append(c)
+            except ValueError:
+                log.info(
+                    f"ID {id_!r} duplicates existing entry {cl[id_field][id_]!r} → omit"
+                    f"\n{record}"
+                )
+                continue
+
+            # Generate its URN
+            c.urn = sdmx.urn.make(c)
 
     # Write to local store
-    STORE.set(cl)
+    for codelist in cl.values():
+        STORE.set(codelist)
 
-    return cl
 
-
-def localize_all(value: str, translations, *, default_locale="en") -> dict[str, str]:
+def localize_all(
+    value: str,
+    translations: Mapping[str, "gettext.NullTranslations"],
+    *,
+    default_locale="en",
+) -> dict[str, str]:
     """Localize `value` in all languages available in `translations`."""
     # Put the default locale first
     result = {default_locale: value}
@@ -89,22 +126,5 @@ def localize_all(value: str, translations, *, default_locale="en") -> dict[str, 
         localized = tr.gettext(value)
         if localized != value:
             result[lang] = localized
-
-    return result
-
-
-@lru_cache
-def load_translations(domain: str) -> Mapping[str, "gettext.NullTranslations"]:
-    """Load all available :mod:`pycountry` translations for `domain`."""
-    from gettext import translation
-
-    from pycountry import LOCALES_DIR
-
-    result = {}
-    for lang in map(lambda d: d.name, Path(LOCALES_DIR).iterdir()):
-        try:
-            result[lang] = translation(domain, LOCALES_DIR, languages=[lang])
-        except FileNotFoundError:
-            pass
 
     return result
