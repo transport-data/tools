@@ -15,7 +15,7 @@ def main():
 
 
 @main.command
-def refresh():
+def refresh():  # pragma: no cover
     """Regenerate the ISO code lists."""
     from transport_data.iso import generate_all
 
