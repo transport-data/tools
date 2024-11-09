@@ -43,6 +43,8 @@ class UnionStore(dsss.store.UnionStore):
                 ),
             ),
         )
+        # FIXME Include in the above call, once dsss.store.UnionStore supports
+        self.maintainer_store.update(ISO="registry")
 
     # Overrides of methods of dsss.store.UnionStore or its parents
 
@@ -89,9 +91,44 @@ class UnionStore(dsss.store.UnionStore):
         obj = self.store["local"].get(full_urn)
         self.store["registry"].set(obj)
 
+    # FIXME Restore this original once the upstream issue is resolved
+    # def clone(self):
+    #     """Clone the underlying :class:`.Registry`."""
+    #     self.store["registry"].clone()
+
     def clone(self):
-        """Clone the underlying :class:`.Registry`."""
-        self.store["registry"].clone()
+        """Clone the underlying :class:`.Registry`.
+
+        Temporary version to work around `khaeru/dsss#19
+        <https://github.com/khaeru/dsss/issues/19>`_. This is identical to
+        :meth:`dsss.store.GitStore.clone`, except only certain paths are checked out.
+        """
+        import git
+
+        s = self.store["registry"]
+
+        # Ensure there is a remote for the origin
+        try:
+            s.repo.delete_remote("origin")
+        except git.exc.GitCommandError:
+            pass
+
+        origin = s.repo.create_remote("origin", s.remote_url)
+
+        # Fetch the remote
+        branch_name = "main"
+        origin.fetch(f"refs/heads/{branch_name}")
+        b = origin.refs[branch_name]
+
+        # Check out the branch
+        try:
+            head = s.repo.heads[branch_name]
+        except IndexError:
+            head = s.repo.create_head(branch_name, b)
+
+        head.set_tracking_branch(b)
+        # Omits ISO
+        s.repo.git.checkout("main", "--", "ADB", "ESTAT", "IAMC", "TDCI")
 
 
 # Command-line interface

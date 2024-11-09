@@ -19,6 +19,7 @@ MODULES_WITH_CLI = [
     "config",
     "estat",
     "iamc.cli",
+    "iso.cli",
     "jrc.cli",
     "oica.cli",
     "org.cli",

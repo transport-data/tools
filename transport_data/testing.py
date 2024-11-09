@@ -104,9 +104,7 @@ def tmp_store(tmp_config) -> Generator[UnionStore, None, None]:
     result = UnionStore(tmp_config)
 
     # Initialize an empty Git repo
-    registry = cast("dsss.store.GitStore", result.store["registry"])
-    registry.path.mkdir(exist_ok=True)
-    registry.clone()
+    cast("dsss.store.GitStore", result.store["registry"]).path.mkdir(exist_ok=True)
 
     with pytest.MonkeyPatch().context() as mp:
         mp.setattr(transport_data, "STORE", result)
