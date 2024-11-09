@@ -6,6 +6,7 @@ repos:
     additional_dependencies:
     - click
     - dsss
+    - GitPython
     - lxml-stubs
     - pandas-stubs
     - platformdirs
