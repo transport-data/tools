@@ -259,7 +259,10 @@ class MetadataSet1ODT(Report):
             ref_area=self.ref_area,
             matched=grouped[True],
             no_match=grouped[False],
+            show_no_match=False,
         )
+        # with open("debug.rst", "w") as f: # DEBUG
+        #     f.write(rst_source)
         # print(rst_source)  # DEBUG
 
         # Convert reStructuredText → OpenDocumentText
