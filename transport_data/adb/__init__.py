@@ -1,8 +1,9 @@
 """Asian Development Bank (ADB) provider."""
 
-from itertools import chain
-from typing import Any, Callable, Tuple
-from urllib.parse import quote
+from collections import defaultdict
+from itertools import chain, product
+from typing import Callable, Iterable, Tuple
+from urllib.parse import quote, urlparse
 
 import pandas as pd
 import sdmx.model.v21 as m
@@ -66,7 +67,7 @@ POOCH = Pooch(
 )
 
 
-def convert(part):
+def convert(part: str):
     from tqdm import tqdm
 
     from transport_data import STORE
@@ -75,7 +76,7 @@ def convert(part):
     ef = pd.ExcelFile(path, engine="openpyxl")
 
     # Maximum length of a sheet name, for formatting the description
-    L = max(map(len, ef.sheet_names))
+    L = max(map(lambda v: len(str(v)), ef.sheet_names))
 
     for sheet_name in (progress := tqdm(ef.sheet_names)):
         if sheet_name == "TOC":
@@ -83,7 +84,7 @@ def convert(part):
             continue
         progress.set_description(f"Process sheet {sheet_name!r:>{L}}")
 
-        df, annos = read_sheet(ef, sheet_name)
+        df, annos = read_sheet(ef, str(sheet_name))
         ds = convert_sheet(df, annos)
 
         # Write the DSD and DFD
@@ -129,18 +130,35 @@ def convert_sheet(df: pd.DataFrame, aa: m.AnnotableArtefact):
     return ds
 
 
-def dataset_to_metadata_report(
+ATTRIBUTES: set[str] = set()
+
+
+def _is_url(value: str) -> bool:
+    """Return :any:`True` if `value` contains a URL."""
+    return urlparse(value).path != value
+
+
+def dataset_to_metadata_reports(
     ds: "v21.DataSet", msd: "v21.MetadataStructureDefinition"
-) -> "v21.MetadataReport":
-    """Convert the attributes of ATO `ds` to a MetadataReport."""
+) -> Iterable["v21.MetadataReport"]:
+    """Convert the attributes of ATO `ds` to 1 or more :class:`.MetadataReport`.
+
+    The metadata reports conform to the TDC metadata structure (
+    :func:`.org.metadata.get_msd`).
+
+    If `ds` contains per-series values for attributes named “Source”, “Source
+    (2024-11)”, or similar, then additional metadata reports are generated, one for each
+    series (=GEO, or ‘economy’) and each distinct upstream source indicated by these
+    attribute values.
+    """
     import sdmx.urn
     from pycountry import countries
 
     from transport_data import STORE
+    from transport_data.org.metadata import make_ra, make_tok
 
     # Retrieve the DSD and DFD
-    assert ds.structured_by
-    assert ds.structured_by.urn
+    assert ds.structured_by and ds.structured_by.urn
     urn_dsd = sdmx.urn.normalize(ds.structured_by.urn)
     dsd = STORE.get(urn_dsd)
     dfd = STORE.get(urn_dsd.replace("DataStructure", "Dataflow"))
@@ -148,21 +166,13 @@ def dataset_to_metadata_report(
     # separately
     dfd.structure = dsd
 
-    # Create objects to associate the metadata report with the data flow definition
-    iot = v21.IdentifiableObjectTarget()
-    tok = v21.TargetObjectKey(
-        key_values={"DATAFLOW": v21.TargetIdentifiableObject(value_for=iot, obj=dfd)}
-    )
+    # - Create a TargetObjectKey to associate the metadata report with the data flow
+    #   definition
+    # - Create the report itself
+    mdr = v21.MetadataReport(attaches_to=make_tok(dfd))
 
-    # Create the report itself
-    mdr = v21.MetadataReport()
-    mdr.attaches_to = tok
-
-    def _make_ra(mda_id: str, value: Any) -> v21.OtherNonEnumeratedAttributeValue:
-        mda = msd.report_structure["ALL"].get(mda_id)
-        return v21.OtherNonEnumeratedAttributeValue(value=str(value), value_for=mda)
-
-    mdr.metadata.append(_make_ra("DATAFLOW", f"ATO:{dfd.id}"))
+    # Add the "DATAFLOW" metadata attribute, containing the same information
+    mdr.metadata.append(make_ra("DATAFLOW", f"ATO:{dfd.id}"))
 
     # Map:
     # - from ATO IDs for attributes attached to data sets
@@ -172,57 +182,78 @@ def dataset_to_metadata_report(
         ("UNITS", "UNIT_MEASURE"),
         ("WEBSITE", "URL"),
     ):
-        # Attend the reported attribute to the report
+        # Retrieve the (data) attribute value
         value = str(ds.attrib[attribute_id].value)
-        if mda_id == "DATA_PROVIDER":
-            # Make explicit how ATO has handled the upstream data
-            if value.startswith("ATO analysis"):
-                value = value.replace(
-                    "ATO analysis", "Asian Transport Outlook (ATO) analysis"
-                )
-            elif value.startswith("Estimated"):
-                value = value.replace(
-                    "Estimated", "Asian Transport Outlook (ATO); estimated"
-                )
-            elif value.startswith("Calculated"):
-                value = "Asian Transport Outlook (ATO) calculation"
-            else:
-                value += "—republished by ATO"
-        mdr.metadata.append(_make_ra(mda_id, value))
-
-    cs_measure = STORE.get("ConceptScheme=ADB:MEASURE(0.1.0)")
+        # Convert to a reported (metadata) attribute; append to the report
+        value = format_data_provider(value) if mda_id == "DATA_PROVIDER" else value
+        mdr.metadata.append(make_ra(mda_id, value))
 
     # Retrieve the MEASURE from CS_MEASURE
+    cs_measure = STORE.get("ConceptScheme=ADB:MEASURE(0.1.0)")
     measure_concept = cs_measure[dsd.id]
     # Construct a metadata attribute
-    mdr.metadata.append(_make_ra("MEASURE", measure_concept.name))
+    mdr.metadata.append(make_ra("MEASURE", measure_concept.name))
 
     # Assemble description
-    description = (
-        f"Original (ATO) description of {dsd.id!r}:\n{measure_concept.description}"
-    )
+    description_lines = [
+        f"Original (ATO) description of {dsd.id!r}:",
+        str(measure_concept.description),
+    ]
 
-    mdr.metadata.append(
-        _make_ra("COMMENT", "Metadata generated by transport_data.tools.")
-    )
+    ra_comment = make_ra("COMMENT", "Metadata generated by transport_data.tools.")
+    mdr.metadata.append(ra_comment)
 
-    # Identify GEO/REF_AREA for which the data set contains data
-    geo_all = set()
+    geo_all = set()  # All GEO/REF_AREA for which the data set contains data
+    sources = defaultdict(set)  # Mapping from GEO → "Source…" attribute values
+
     for observation in ds.obs:
+        # Identify GEO/REF_AREA for which the data set contains data
         # Key value for the 'ECONOMY' dimension of `observation`
         geo_alpha_3 = observation.key["ECONOMY"].value
         # Convert from ISO 3166-1 alpha-3 (used by ATO) to alpha-2 (SDMX convention)
-        geo_all.add(countries.lookup(geo_alpha_3).alpha_2)
+        geo_alpha_2 = countries.lookup(geo_alpha_3).alpha_2
+        geo_all.add(geo_alpha_2)
+
+        # Iterate over source attributes
+        for av in observation.attached_attribute.values():
+            ATTRIBUTES.add(av.value_for.id)  # DEBUG Track all attributes
+
+            if not av.value_for.id.startswith("Source"):
+                continue
+            sources[geo_alpha_2].add(av.value)
 
     # Append a sorted list of GEO to the description
-    description += "\n\nThe data contain non-null values for GEO:\n" + " ".join(
-        sorted(geo_all)
+    description_lines.extend(
+        ["", "The data contain non-null values for GEO:"] + sorted(geo_all)
     )
 
     # Finalise description
-    mdr.metadata.append(_make_ra("DATA_DESCR", description))
+    mdr.metadata.append(make_ra("DATA_DESCR", "\n".join(description_lines)))
 
-    return mdr
+    # List of 1 or more metadata reports to return
+    result = [mdr]
+
+    # Generate additional metadata reports for upstream data
+    for geo, source in chain(*[product([g], sorted(s)) for g, s in sources.items()]):
+        dfd_geo = v21.DataflowDefinition(id=f"{geo}_{hash(dfd.id + source)}")
+        mdr_geo = v21.MetadataReport(
+            attaches_to=make_tok(dfd_geo), metadata=[ra_comment]
+        )
+
+        # Store the source attribute value as either the URL or DATA_PROVIDER
+        # reported metadata attribute, depending on whether it is a URL
+        mda_id = "URL" if _is_url(source) else "DATA_PROVIDER"
+        mdr_geo.metadata.append(make_ra(mda_id, source))
+
+        desc = (
+            f"Upstream source(s) for 'ATO:{dfd.id}' (“{measure_concept.name}”) "
+            f"data for GEO={geo!r}."
+        )
+        mdr_geo.metadata.append(make_ra("DATA_DESCR", desc))
+
+        result.append(mdr_geo)
+
+    return result
 
 
 def fetch(*parts, dry_run: bool = False):
@@ -232,6 +263,21 @@ def fetch(*parts, dry_run: bool = False):
         return
 
     return list(chain(*[POOCH.fetch(p) for p in parts]))
+
+
+def format_data_provider(value: str) -> str:
+    """Format the ATO “Source” data attribute as TDC ``DATA_PROVIDER`` metadata.
+
+    This makes more explicit how the ATO has handled upstream data.
+    """
+    if value.startswith("ATO analysis"):
+        return value.replace("ATO analysis", "Asian Transport Outlook (ATO) analysis")
+    elif value.startswith("Estimated"):
+        return value.replace("Estimated", "Asian Transport Outlook (ATO); estimated")
+    elif value.startswith("Calculated"):
+        return "Asian Transport Outlook (ATO) calculation"
+    else:
+        return value + "—republished by ATO"
 
 
 @hookimpl
@@ -322,11 +368,11 @@ def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
 
         # Attributes
         attrs = {}
-        for a in filter(lambda a: a.related_to is _PMR, dsd.attributes):
+        for a in filter(lambda a: isinstance(a.related_to, _PMR), dsd.attributes):
             # Only store an AttributeValue if there is some text
             value = row[a.id]
             if not pd.isna(value):
-                attrs[a.id] = m.AttributeValue(value_for=a, value=value)
+                attrs[a.id] = m.AttributeValue(value_for=a, value=str(value))
 
         return m.Observation(
             dimension=key, attached_attribute=attrs, value_for=pm, value=row[pm.id]
@@ -360,6 +406,8 @@ def read_sheet(
     - Some sheets have additional columns with non-numeric labels like "Remarks",
       "Source (2022-04)", etc.; these give annotations applying to the observations on
       the same row (i.e. for a single "Economy Code" and 1 or more time periods).
+
+    .. note:: Sheets in the ``POL`` category have a different format.
     """
     # Read metadata section
     meta_df = ef.parse(
@@ -425,6 +473,7 @@ def read_sheet(
         N = list(reversed(data_col_mask)).index(True)
     except ValueError:
         N = 0
+
     # Label(s) of any remarks columns
     remark_cols = df.columns.tolist()[-N:] if N else []
     # Store a list of these as another annotation
