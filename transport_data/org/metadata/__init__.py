@@ -4,7 +4,7 @@ import itertools
 import logging
 import re
 from collections import defaultdict
-from functools import lru_cache
+from functools import lru_cache, partial
 from itertools import count
 from typing import Any, Callable, Hashable, Iterable, Optional, cast
 
@@ -301,25 +301,76 @@ def unique_dfd_id(mdr: "v21.MetadataReport", existing: set[str]) -> str:
 def merge_ato(mds: "v21.MetadataSet") -> None:
     """Extend `mds` with metadata reports for ADB ATO data flows."""
     from transport_data import STORE
-    from transport_data.adb import dataset_to_metadata_report
+    from transport_data.adb import dataset_to_metadata_reports
 
     assert mds.structured_by
 
-    N = len(mds.report)
+    N = len(mds.report)  # Initial number of reports
+    all_dfd_ids = set(map(dfd_id, mds.report))  # Existing IDs of DFDs
 
-    # Iterate over ADB data sets
-    for key in STORE.list(v21.DataSet, maintainer="ADB"):
-        # Retrieve the data set
-        ds: v21.DataSet = STORE.get(key)
+    # Silence warnings from SDMX
+    logging.getLogger("sdmx").setLevel(logging.ERROR)
 
-        # Convert the attributes of `ds` into a metadata report
+    # Mapping from upstream URLs to metadata reports
+    reports = defaultdict(list)
+
+    # Iterate over existing data sets
+    for ds in map(
+        STORE.get,
+        filter(
+            lambda k: True,  # All results
+            # lambda k: "-VEP-" in k,  # DEBUG Filter for a subset of data sets
+            STORE.list(v21.DataSet, maintainer="ADB"),
+        ),
+    ):
         try:
-            mdr = dataset_to_metadata_report(ds, mds.structured_by)
-        except KeyError as e:
-            log.info(f"Not in local store: {e.args[0]}")
+            # Convert the attributes of `ds` into 1+ metadata report(s)
+            for mdr in dataset_to_metadata_reports(ds, mds.structured_by):
+                # Split URLs on multiple lines to a list
+                for url in (_get(mdr, "URL") or "").split("\n"):
+                    # Store a reference to each report in a collection for each URL
+                    reports[url].append(mdr)
+        except KeyError:
+            # log.debug(f"Not in local store: {e.args[0]}")
             continue
 
-        # Add to the mds
-        mds.report.append(mdr)
+    # Reports to attend to `mds` last
+    sort_last = []
+
+    # Iterate over URLs and lists of reports
+    for url, report_group in reports.items():
+        # Single report associated with this URL, or multiple reports but not with an
+        # ID prefix like "CA_" that indicates a country-specific generated report
+        if 1 == len(report_group) or not dfd_id(report_group[0])[2] == "_":
+            mds.report.extend(report_group)  # Store directly
+            continue
+
+        # Identify the first report in the group
+        mdr = report_group[0]
+
+        # Identify the DATA_DESCR reported attribute
+        for mda in mdr.metadata:
+            if mda.value_for is not None and mda.value_for.id == "DATA_DESCR":
+                break
+
+        # Extend DATA_DESCR of `mdr` with values from other reports in `report_group`
+        for other_value in filter(
+            None, map(partial(_get, mda_id="DATA_DESCR"), report_group[1:])
+        ):
+            assert isinstance(mda, v21.OtherNonEnumeratedAttributeValue)
+            mda.value = (mda.value or "") + "\n\n" + other_value
+
+        # Replace the ID of `mdr` with a new, unique DFD ID including the country code
+        assert mdr.attaches_to is not None
+        cast(
+            "v21.TargetIdentifiableObject", mdr.attaches_to.key_values["DATAFLOW"]
+        ).obj.id = unique_dfd_id(mdr, all_dfd_ids)
+
+        sort_last.append(mdr)
+
+    mds.report.extend(sort_last)
 
     log.info(f"Appended {len(mds.report) - N} metadata reports for ATO data flows")
+
+    # Restore log level
+    logging.getLogger("sdmx").setLevel(logging.WARNING)
