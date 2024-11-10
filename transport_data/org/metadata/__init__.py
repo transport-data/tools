@@ -82,6 +82,11 @@ template, this MAY include:
   quality.
 """,
     ),
+    "METHOD": (
+        "Methodology",
+        """Any information about methods used by the data provider to collect, process,
+or prepare the data.""",
+    ),
     "COMMENT": (
         "Comment",
         """Any other information about the metadata values, for instance discrepancies or
