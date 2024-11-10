@@ -6,14 +6,14 @@ from transport_data.adb import convert
 @pytest.mark.parametrize(
     "part",
     (
-        pytest.param("ACC", marks=pytest.mark.xfail(reason="Incomplete")),
+        "ACC",
         "APH",
         "CLC",
         "INF",
-        pytest.param("MIS", marks=pytest.mark.xfail(reason="Incomplete")),
-        pytest.param("POL", marks=pytest.mark.xfail(reason="Incomplete")),
-        pytest.param("RSA", marks=pytest.mark.xfail(reason="Incomplete")),
-        pytest.param("SEC", marks=pytest.mark.xfail(reason="Incomplete")),
+        "MIS",
+        pytest.param("POL", marks=pytest.mark.xfail(reason="File format differs")),
+        "RSA",
+        "SEC",
         "TAS",
     ),
 )
