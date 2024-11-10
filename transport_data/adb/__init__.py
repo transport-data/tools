@@ -67,16 +67,21 @@ POOCH = Pooch(
 
 
 def convert(part):
+    from tqdm import tqdm
+
     from transport_data import STORE
 
     path = POOCH.fetch(part)
     ef = pd.ExcelFile(path, engine="openpyxl")
 
-    for sheet_name in ef.sheet_names:
+    # Maximum length of a sheet name, for formatting the description
+    L = max(map(len, ef.sheet_names))
+
+    for sheet_name in (progress := tqdm(ef.sheet_names)):
         if sheet_name == "TOC":
             # Skip the TOC
             continue
-        print(f"Process data flow {sheet_name!r}")
+        progress.set_description(f"Process sheet {sheet_name!r:>{L}}")
 
         df, annos = read_sheet(ef, sheet_name)
         ds = convert_sheet(df, annos)

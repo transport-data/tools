@@ -17,6 +17,7 @@ repos:
     - types-docutils
     - types-openpyxl
     - types-requests
+    - types-tqdm
     args: []
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.6.9

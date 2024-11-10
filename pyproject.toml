@@ -35,6 +35,7 @@ dependencies = [
   "pycountry",
   "requests",
   "sdmx1 >= 2.9",
+  "tqdm",
 ]
 
 [project.optional-dependencies]
