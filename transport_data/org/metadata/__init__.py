@@ -5,7 +5,8 @@ import logging
 import re
 from collections import defaultdict
 from functools import lru_cache
-from typing import Callable, Hashable, Iterable, Optional, cast
+from itertools import count
+from typing import Any, Callable, Hashable, Iterable, Optional, cast
 
 from pycountry import countries
 from sdmx.model import common, v21
@@ -185,6 +186,7 @@ def get_cs_common() -> "common.ConceptScheme":
     return cs
 
 
+@lru_cache
 def get_msd() -> "v21.MetadataStructureDefinition":
     """Generate and return the TDC metadata structure definition."""
     from transport_data import STORE
@@ -237,6 +239,20 @@ RENAME = {
 }
 
 
+def make_ra(mda_id: str, value: Any) -> "v21.OtherNonEnumeratedAttributeValue":
+    """Generate a ReportedAttribute for `mda_id` with the given `value`."""
+    mda = get_msd().report_structure["ALL"].get(mda_id)
+    return v21.OtherNonEnumeratedAttributeValue(value=str(value), value_for=mda)
+
+
+def make_tok(dfd: "common.BaseDataflow") -> "v21.TargetObjectKey":
+    """Generate a :class:`.TargetObjectKey` that refers to `dfd`."""
+    iot = v21.IdentifiableObjectTarget()
+    return v21.TargetObjectKey(
+        key_values={"DATAFLOW": v21.TargetIdentifiableObject(value_for=iot, obj=dfd)}
+    )
+
+
 def map_values_to_ids(mds: "v21.MetadataSet", mda_id: str) -> dict[str, set[str]]:
     """Return a mapping from unique reported attribute values to data flow IDs."""
     result = defaultdict(set)
@@ -269,6 +285,17 @@ def map_dims_to_ids(mds: "v21.MetadataSet") -> dict[str, set[str]]:
             result[key].add(dfd.id)
 
     return result
+
+
+def unique_dfd_id(mdr: "v21.MetadataReport", existing: set[str]) -> str:
+    """Generate a unique DSD ID for `mdr`."""
+    template = f"{dfd_id(mdr)[:2]}{{:03d}}"
+    for i in count():
+        candidate = template.format(i)
+        if candidate not in existing:
+            existing.add(candidate)
+            break
+    return candidate
 
 
 def merge_ato(mds: "v21.MetadataSet") -> None:
