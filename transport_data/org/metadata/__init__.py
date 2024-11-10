@@ -5,7 +5,7 @@ import logging
 import re
 from collections import defaultdict
 from functools import lru_cache
-from typing import Callable, Hashable, Iterable, Optional
+from typing import Callable, Hashable, Iterable, Optional, cast
 
 from pycountry import countries
 from sdmx.model import common, v21
@@ -132,6 +132,14 @@ def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
             return True
 
     return False
+
+
+def dfd_id(mdr: "v21.MetadataReport") -> str:
+    """Return the ID of the dataflow targeted by `mdr`."""
+    assert mdr.attaches_to is not None
+    return cast(
+        "v21.TargetIdentifiableObject", mdr.attaches_to.key_values["DATAFLOW"]
+    ).obj.id
 
 
 @lru_cache

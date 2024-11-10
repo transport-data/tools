@@ -8,7 +8,8 @@ def get_env():
     """Return a Jinja2 environment for rendering templates."""
     from jinja2 import Environment, PackageLoader, select_autoescape
 
-    from transport_data.util import uline
+    from transport_data import util
+    from transport_data.org import metadata
 
     # Create a Jinja environment
     env = Environment(
@@ -20,9 +21,6 @@ def get_env():
     )
 
     # Update filters
-    def _dfd_id(mdr):
-        return mdr.attaches_to.key_values["DATAFLOW"].obj.id
-
     def _get_reported_attribute(mdr, id_):
         for ra in mdr.metadata:
             if ra.value_for.id == id_:
@@ -39,9 +37,10 @@ def get_env():
         except KeyError:
             return "—"
 
-    env.filters["dfd_id"] = _dfd_id
+    env.filters["dfd_id"] = metadata.dfd_id
+    env.filters["domain"] = util.url_hostname
     env.filters["format_desc"] = _format_desc
-    env.filters["rst_heading"] = uline
+    env.filters["rst_heading"] = util.uline
 
     return env, dict(
         get_reported_attribute=_get_reported_attribute,
