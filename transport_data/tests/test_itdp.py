@@ -1,26 +1,28 @@
 from functools import partial
+from shutil import copyfile
 from typing import TYPE_CHECKING
 
 import pytest
 import sdmx
 from sdmx.model import v21
 
-from transport_data import testing
+from transport_data import Config, testing
 from transport_data.itdp.rtdb import convert, fetch
 
 if TYPE_CHECKING:
     import pathlib
 
 
-@pytest.fixture
-def cached_rtdb_data(tmp_config):
-    try:
-        return fetch()
-    except FileNotFoundError:
-        if testing.GITHUB_ACTIONS:
-            pytest.skip(reason="No Google Cloud API credentials on GitHub Actions")
-        else:
-            raise
+@pytest.fixture(scope="session")
+def rtdb_test_data(test_data_path, tmp_config: Config) -> "pathlib.Path":
+    """Copy of the RTDB snapshot in the test cache directory."""
+    source = test_data_path.joinpath("itdp", "rtdb.xlsx")
+    dest = tmp_config.cache_path.joinpath("itdp", "rtdb.xlsx")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+
+    copyfile(source, dest)
+
+    return dest
 
 
 COUNTRIES = [
@@ -34,8 +36,8 @@ COUNTRIES = [
 ]
 
 
-def test_convert(caplog, cached_rtdb_data: "pathlib.Path") -> None:
-    ds1 = convert(cached_rtdb_data)
+def test_convert(caplog, rtdb_test_data: "pathlib.Path") -> None:
+    ds1 = convert(rtdb_test_data)
 
     def _filter_geo(value: str, obs: "v21.Observation") -> bool:
         assert obs.dimension
@@ -52,3 +54,12 @@ def test_convert(caplog, cached_rtdb_data: "pathlib.Path") -> None:
             df = df.query("value > 0")
 
         assert N == len(df)
+
+
+@pytest.mark.xfail(
+    condition=testing.GITHUB_ACTIONS,
+    reason="No Google Cloud API credentials on GitHub Actions",
+    raises=RuntimeError,
+)
+def test_fetch():
+    fetch()
