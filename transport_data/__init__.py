@@ -19,7 +19,7 @@ STORE = UnionStore(CONFIG)
 register_internal(
     "adb",
     "iamc",
-    "ipcc.structure",
+    "ipcc",
     "iso",
     "itdp",
     "jrc",
