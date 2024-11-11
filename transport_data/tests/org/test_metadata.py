@@ -44,8 +44,13 @@ def test_merge_ato(example_metadata) -> None:
     merge_ato(mds)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def example_metadata(test_data_path):
+    """Example output from :func:`.read_workbook`.
+
+    The fixture is function scoped, which allows that test code using the fixture
+    alter the contents of the metadata set.
+    """
     return read_workbook(test_data_path.joinpath("metadata-input.xlsx"))
 
 
