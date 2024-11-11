@@ -94,7 +94,10 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
     "path_in", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path)
 )
 def _tuewas_all(path_in):
-    """Generate all outputs for TUEWAS."""
+    """Generate all outputs for TUEWAS.
+
+    PATH_IN is the path to the .xlsx file containing collected metadata.
+    """
     from zipfile import ZipFile
 
     from transport_data.util.libreoffice import HAS_LIBREOFFICE
