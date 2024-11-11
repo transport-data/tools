@@ -1,3 +1,4 @@
+import logging
 from functools import partial
 from pathlib import Path
 
@@ -5,6 +6,8 @@ import pandas as pd
 from sdmx.model import common, v21
 
 from transport_data.util.google import get_service
+
+log = logging.getLogger(__name__)
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = [
@@ -86,6 +89,9 @@ def read_worksheet_rtr(ef: "pd.ExcelFile", sheet_name="Country RTR") -> "v21.Dat
     )
 
 
+FETCH_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
 def fetch() -> Path:
     """Fetch the RTDB file.
 
@@ -99,26 +105,37 @@ def fetch() -> Path:
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_path = cache_dir.joinpath("rtdp.xlsx")
 
-    # Call the Drive API
-    drive = get_service("drive", "v3", scopes=SCOPES).files()
-    result = drive.get(fileId=FILE_ID, fields="modifiedTime").execute()
-
-    # Last modified time of the remote file
-    mtime_remote = datetime.fromisoformat(result["modifiedTime"])
+    # Local modified time
     tz = datetime.now(timezone.utc).astimezone().tzinfo
+    try:
+        mtime_cache = datetime.fromtimestamp(cache_path.stat().st_mtime, tz=tz)
+    except FileNotFoundError:
+        mtime_cache = datetime.fromtimestamp(0, tz=tz)
 
-    if (
-        not cache_path.exists()
-        or datetime.fromtimestamp(cache_path.stat().st_mtime, tz=tz) < mtime_remote
-    ):
-        # Export the file to .xlsx
-        request = drive.export(
-            fileId=FILE_ID,
-            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+    # Call the Drive API
+    try:
+        drive = get_service("drive", "v3", scopes=SCOPES).files()
+        result = drive.get(fileId=FILE_ID, fields="modifiedTime").execute()
 
-        # Write to the cache path
-        with open(cache_path, "wb") as f:
-            f.write(request.execute())
+        # Last modified time of the remote file
+        mtime_remote = datetime.fromisoformat(result["modifiedTime"])
+    except RuntimeError as e:
+        if cache_path.exists():
+            # Continue with returning cache_path, even though it may be stale
+            log.warning(
+                f"Could not check remote file modification time; {cache_path} may be "
+                "stale"
+            )
+            log.debug(e)
+        else:
+            raise RuntimeError("Could not fetch remote file") from e
+    else:
+        if not cache_path.exists() or mtime_cache < mtime_remote:
+            # Export the file to .xlsx
+            request = drive.export(fileId=FILE_ID, mimeType=FETCH_MIME_TYPE)
+
+            # Write to the cache path
+            with open(cache_path, "wb") as f:
+                f.write(request.execute())
 
     return cache_path
