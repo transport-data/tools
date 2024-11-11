@@ -20,6 +20,7 @@ register_internal(
     "adb",
     "iamc",
     "ipcc.structure",
+    "iso",
     "itdp",
     "jrc",
     "oica",
