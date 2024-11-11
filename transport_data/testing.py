@@ -120,6 +120,7 @@ def tmp_config(tmp_path_factory) -> Generator[Config, None, None]:
 
     base = tmp_path_factory.mktemp("transport-data")
     result = Config(
+        cache_path=base.joinpath("cache"),
         config_path=base.joinpath("config.json"),
         data_path=base.joinpath("data"),
         # Default value in .config.Config.data_path → clone from another local directory
