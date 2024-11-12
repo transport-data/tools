@@ -69,8 +69,19 @@ def check(structure_urn: str, path: Path, sheets, verbose, **options):  # noqa: 
     from transport_data import STORE
     from transport_data.util.sdmx import read_csv
 
+    # Pieces of any error message
+    message = []
+
     # Handle `structure_urn`: retrieve a data structure that describes the data
-    structure = STORE.get(structure_urn)
+    try:
+        structure = STORE.get(structure_urn)
+    except Exception:
+        message.append(f"Structure {structure_urn!r} could not be loaded")
+        structure = structure_cls = structure_id = None
+    else:
+        structure_cls = type(structure).__name__.lower().replace("definition", "")
+        structure_id = sdmx.urn.shorten(structure.urn).split("=")[-1]
+
     if isinstance(structure, common.BaseDataflow):
         # Also retrieve the data structure definition
         STORE.resolve(structure, "structure")
@@ -79,10 +90,8 @@ def check(structure_urn: str, path: Path, sheets, verbose, **options):  # noqa: 
     # Construct keyword arguments for CSVAdapter
     # TODO Check if this works for full SDMX-CSV
     adapt = {
-        "structure": options.pop("structure")
-        or type(structure).__name__.lower().replace("definition", ""),
-        "structure_id": options.pop("structure_id")
-        or sdmx.urn.shorten(structure.urn).split("=")[-1],
+        "structure": options.pop("structure") or structure_cls,
+        "structure_id": options.pop("structure_id") or structure_id,
         "action": options.pop("action"),
     }
 
@@ -125,18 +134,16 @@ def check(structure_urn: str, path: Path, sheets, verbose, **options):  # noqa: 
         try:
             dm = read_csv(p, structure, adapt)
         except Exception as e:
-            message = [f"read failed with\n{type(e).__name__}: {' '.join(e.args)}"]
+            message.append(f"read failed with\n{type(e).__name__}: {' '.join(e.args)}")
 
             if len(e.args) and "line 1" in e.args[0]:
                 message.append(
                     "Hint: try giving --structure= or --structure-id argument(s) to "
                     "adapt to SDMX-CSV."
                 )
-            elif isinstance(e, KeyError):
-                message.append(
-                    "Hint: try giving --action argument to adapt to SDMX-CSV."
-                )
-            else:
+            elif structure is None:
+                pass
+            else:  # pragma: no cover
                 message.append("\n".join(format_exception(e)))
 
             print("")
