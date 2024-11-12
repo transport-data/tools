@@ -5,6 +5,22 @@ Next release
 ============
 
 - Add :mod:`.iso` (:doc:`iso`) module (:pull:`29`).
+- Add :mod:`.itdp` (:doc:`itdp`) module (:pull:`28`).
+- Add tools for SDMX-CSV and CSV data input (:pull:`29`).
+
+  - :func:`.util.sdmx.read_csv` and :class:`.CSVAdapter` to read SDMX-CSV and to adapt non-standard CSV to SDMX-CSV, respectively.
+  - :program:`tdc check` CLI to confirm that data can be read in this way.
+  - New HOWTO :doc:`howto/data-csv` to explain usage of these features.
+
+- Add interactive :program:`tdc edit` command-line interface for authoring SDMX data structures (:pull:`28`).
+
+  - New HOWTO :doc:`HOWTO <howto/cli-edit>` to explain usage of these features.
+- Add ``METHOD`` to the TDC metadata structure (:pull:`28`) via :data:`.org.metadata.CONCEPTS`.
+- Improve processing of :doc:`adb` ATO metadata (:pull:`28`).
+
+  - Convert attributes from ATO data sets to TDC metadata reports.
+  - Extract per-series data sources for sheets where the overall source attribute is “Country Official Statistics”.
+
 - Use :mod:`dsss.store` classes for SDMX artefact storage (:pull:`27`).
 
   - :class:`transport_data.store.UnionStore` is now a lightweight subclass of :class:`dsss.store.UnionStore`.

@@ -19,7 +19,7 @@ These standards:
    `file an issue <https://github.com/transport-data/tools/issues>`_, or
    `open a pull request <https://github.com/transport-data/tools/pulls>`_ for review.
 
-…use key words from `RFC 2119 <https://www.rfc-editor.org/rfc/rfc2119.html>`_ to indicate *requirement levels*.
+…use key words from :rfc:`2119` to indicate *requirement levels*.
    These include words in boldface like **must** / **required**; **should** / **recommend(ed)**; and **may** / **optional**.
    Taken together, data and/or processes that fulfill all the ‘required’ standards can be considered “TDC formatted”.
    Data that also fulfill all the recommended and optional standards represent *best practices*.
@@ -166,11 +166,17 @@ TDC formatted data **should** use the IDs; but if not **must** include a ``tdc-c
 
 .. [2] These IDs follow the practice of major data providers and the SDMX Global Registry.
 
+
+.. _std-data-file-format:
+
 Data
 ====
 
-TDC formatted data **must** be provided together with structure information and metadata, as described above.
-In other words, an SDMX data message alone, without accompanying SDMX structure message(s) that give the structure of the data, is *not* TDC formatted.
+TDC formatted data:
+
+- **must** be in an SDMX file format: SDMX-ML (XML), SDMX-CSV, or SDMX-JSON.
+- **must** be provided together with, or clearly identify, structural metadata as described above.
+  In other words, an SDMX data message alone, without accompanying SDMX structure message(s) that give the structure of the data, is *not* TDC formatted.
 
 Processes
 =========

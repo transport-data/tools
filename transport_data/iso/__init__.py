@@ -84,7 +84,7 @@ def generate_codelists(standard_number: str) -> None:
             try:
                 id_ = anno[id_field].text.localized_default()
             except KeyError:
-                log.info(f"No {id_field!r} field → omit:\n{record}")
+                # log.debug(f"No {id_field!r} field → omit:\n{record}")
                 continue
 
             # Create a code

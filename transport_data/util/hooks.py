@@ -17,3 +17,9 @@ def get_agencies() -> Iterable["sdmx.model.v21.Agency"]:
     An implementation **must** return an iterable of 0 or more Agency instances.
     """
     raise NotImplementedError
+
+
+@hookspec
+def provides() -> Iterable[str]:
+    """Return the URNs of SDMX artefacts available from a module."""
+    raise NotImplementedError

@@ -9,9 +9,13 @@
 {% if not mda %}{% continue %}{% endif %}
 
 *{{ mda.concept_identity.name }}*: {% if metadata_concept == "DATA_PROVIDER" %}
-**{{ ra_value }}**
+{% if ra_value %}**{{ ra_value }}**{% else %}*(empty)*{% endif %}
+
 {% elif metadata_concept == "URL" %}
-`(link) <{{ ra_value }}>`__
+{% for url in ra_value.split("\n") %}
+`{{ url | domain }} <{{ url }}>`__{% if not loop.last %} — {% endif %}
+{% endfor %}
+
 {% elif metadata_concept == "DATA_DESCR" %}
 
 
@@ -25,11 +29,13 @@
 {% endmacro %}
 
 {% macro summarize_dataflow(dfd) %}
+{% if dfd.structure.dimensions | length %}
 …with dimensions:
 
 {% for dim in dfd.structure.dimensions %}
 {{ loop.index }}. **{{ dim.id }}**: {{ dim | format_desc }}
 {% endfor %}
+{% endif %}
 {% endmacro %}
 
 {% filter rst_heading("*") %}{{ ref_area }} metadata and data{% endfilter %}
@@ -59,8 +65,11 @@ This file contains a summary of metadata and data for {{ ref_area }} collected t
 
 
 **{{ no_match | length }}** other data flows:
+{% if show_no_match %}
 {% for mdr in no_match %}`{{ mdr | dfd_id }}`_{{ ", " if not loop.last }}{% endfor %}
-
+{% else %}
+(not shown)
+{% endif %}
 
 {% filter rst_heading("=") %}Data flows containing data on {{ ref_area }}{% endfilter %}
 
@@ -75,9 +84,13 @@ These data flows are explicitly marked as containing data pertaining to the coun
 Other data flows
 ================
 
+{% if show_no_match %}
 These data flows are not *explicitly* identified as containing data on the country.
 This doesn't completely rule out that they *may* contain such data, but this is less likely and would require further investigation and inspection.
 
 {% for mdr in no_match %}
 {{ summarize_metadatareport(mdr) }}
 {% endfor %}
+{% else %}
+(not shown)
+{% endif %}

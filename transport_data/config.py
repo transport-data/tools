@@ -4,12 +4,17 @@ from pathlib import Path
 from typing import Optional
 
 import click
-from platformdirs import user_config_path, user_data_path
+from platformdirs import user_cache_path, user_config_path, user_data_path
 
 
 @dataclass
 class Config:
     """Common configuration."""
+
+    #: Path for local cache.
+    cache_path: Path = field(
+        default_factory=lambda: user_cache_path("transport-data", ensure_exists=True)
+    )
 
     #: Path to the configuration file read, if any.
     config_path: Optional[Path] = None
@@ -60,7 +65,8 @@ class Config:
         # Convert dataclass instance to dict; omit the path to the file itself
         data = asdict(self)
         data.pop("config_path")
-        data["data_path"] = str(data["data_path"])
+        for name in "cache_path", "data_path":
+            data[name] = str(data[name])
 
         # Write to config.json
         cp.write_text(json.dumps(data, indent=2))

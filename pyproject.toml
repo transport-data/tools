@@ -31,14 +31,23 @@ dependencies = [
   "platformdirs",
   "pluggy",
   "pooch",
+  "prompt-toolkit",
   "pycountry",
   "requests",
   "sdmx1 >= 2.9",
+  "tqdm",
 ]
 
 [project.optional-dependencies]
 docs = ["Sphinx", "sphinx-autorun", "sphinx-book-theme"]
-tests = ["pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"]
+google = ["google-api-python-client", "google-auth-httplib2", "google-auth-oauthlib"]
+tests = [
+  "pytest",
+  "pytest-cov",
+  "pytest-rerunfailures",
+  "pytest-xdist",
+  "transport-data[google]",
+]
 
 [project.urls]
 homepage = "https://transport-data.org"
@@ -57,7 +66,13 @@ exclude_also = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["pooch", "pycountry.*"]
+module = [
+  "google_auth_oauthlib.*",
+  "google.*",
+  "googleapiclient.*",
+  "pooch",
+  "pycountry.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -71,5 +86,8 @@ usefixtures = "tmp_store"
 select = ["C9", "E", "F", "I", "W"]
 ignore = ["E501", "W191"]
 mccabe.max-complexity = 10
+
+[tool.setuptools.packages]
+find = {}
 
 [tool.setuptools_scm]

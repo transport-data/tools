@@ -3,8 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from transport_data.org.metadata import contains_data_for, groupby, report
+from transport_data.org.metadata import contains_data_for, groupby, merge_ato, report
 from transport_data.org.metadata.spreadsheet import make_workbook, read_workbook
+from transport_data.tests.test_adb import ato_converted_data  # noqa: F401
 
 #: Number of metadata reports in the test specimen for which contains_data_for() returns
 #: :any:`True`.
@@ -36,8 +37,20 @@ def test_make_workbook_cli(tmp_path, tdc_cli) -> None:
     assert exp.exists()
 
 
-@pytest.fixture(scope="module")
+@pytest.mark.usefixtures("ato_converted_data")
+def test_merge_ato(example_metadata) -> None:
+    mds, cs = example_metadata
+
+    merge_ato(mds)
+
+
+@pytest.fixture(scope="function")
 def example_metadata(test_data_path):
+    """Example output from :func:`.read_workbook`.
+
+    The fixture is function scoped, which allows that test code using the fixture
+    alter the contents of the metadata set.
+    """
     return read_workbook(test_data_path.joinpath("metadata-input.xlsx"))
 
 

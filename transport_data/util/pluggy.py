@@ -13,14 +13,7 @@ pm = pluggy.PluginManager("transport_data")
 pm.add_hookspecs(hooks)
 
 
-def register_internal():
-    """Register hook implementations from all modules that contain them.
-
-    .. todo:: Automatically do this for all top-level submodules of transport_data.
-    """
-
-    for id_ in ("adb", "iamc", "ipcc.structure", "jrc", "oica", "org"):
-        try:
-            pm.register(import_module(f"transport_data.{id_}"))
-        except ValueError:
-            pass
+def register_internal(*submodules: str) -> None:
+    """Register hook implementations from `submodules` of :mod:`transport_data`."""
+    for submodule in submodules:
+        pm.register(import_module(f"transport_data.{submodule}"))

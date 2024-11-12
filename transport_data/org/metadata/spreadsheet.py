@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from openpyxl import Workbook
     from openpyxl.worksheet.worksheet import Worksheet
 
+    from transport_data.util.sdmx import MAKeywords
+
 log = logging.getLogger(__name__)
 
 
@@ -195,7 +197,7 @@ def parse_dimension(value: str) -> List[v21.Concept]:
 
     # Convert to a list of Concept objects
     return [
-        v21.Concept(id=id_, name=id_, description=description)
+        v21.Concept(id=id_.strip(), name=id_, description=description)
         for id_, description in parts
     ]
 
@@ -241,6 +243,7 @@ def read_worksheet(
     msd :
        Metadata structure definition.
     """
+    from transport_data import STORE
     from transport_data.org.metadata import _get
 
     # Mapping from names (not IDs) to MetadataAttributes
@@ -252,8 +255,13 @@ def read_worksheet(
     # Create the target of the report: a data flow definition
     # TODO Expand this DFD and its associated data structure definition
     df_id_from_title = ws.title
-    dfd = v21.DataflowDefinition(id=ws.title, maintainer=msd.maintainer)
-    dsd = v21.DataStructureDefinition(id=ws.title, maintainer=msd.maintainer)
+    ma_args: "MAKeywords" = dict(
+        id=ws.title, maintainer=msd.maintainer, version="1.0.0"
+    )
+    dfd = v21.DataflowDefinition(**ma_args)
+    dsd = v21.DataStructureDefinition(**ma_args)
+    dsd.measures.getdefault(id="OBS_VALUE")
+    dsd.attributes.getdefault(id="COMMENT")
     dfd.structure = dsd
 
     # Create objects to associate the metadata report with the data flow definition
@@ -300,7 +308,7 @@ def read_worksheet(
             # TODO Use EnumeratedAttributeValue, once code lists are available
             #      corresponding to dimensions
             ra = v21.OtherNonEnumeratedAttributeValue(
-                value=str(ra_value), value_for=mda
+                value=str(ra_value).strip(), value_for=mda
             )
 
             # Attend the reported attribute to the report
@@ -313,6 +321,10 @@ def read_worksheet(
         return None
 
     update_dimension_descriptor(dsd, cs_dims, *dimension_concepts)
+
+    # Store the DSD and DFD
+    STORE.set(dsd)
+    STORE.set(dfd)
 
     return mdr
 

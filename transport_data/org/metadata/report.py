@@ -21,9 +21,11 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 from transport_data.report import Report
-from transport_data.util import uline
+from transport_data.util import libreoffice, uline
 
 if TYPE_CHECKING:
+    import pathlib
+
     from sdmx.model import v21
 
 
@@ -118,10 +120,15 @@ class MetadataReport0Plain(Report):
         )
         for dim in dsd.dimensions:
             line = f"    - {dim.id}:"
-            if desc := str(dim.get_annotation(id="tdc-description").text):
-                line += f" {desc!s}"
-            else:
+            try:
+                anno_description = dim.get_annotation(id="tdc-description")
+                if desc := str(anno_description.text):
+                    line += f" {desc!s}"
+                else:
+                    raise KeyError
+            except KeyError:
                 line += " (no info)"
+
             try:
                 original_id = dim.get_annotation(id="tdc-original-id").text
                 line += f" ('{original_id!s}' in input file)"
@@ -168,6 +175,11 @@ class MetadataSet0ODT(Report):
         rst_source = self.render_jinja_template(mda=mda, dim_id=dim_id)
         # print(rst_source)  # DEBUG
         return self.rst2odt(rst_source)
+
+    def write_file(self, path: "pathlib.Path", **kwargs) -> None:
+        """:meth:`render` the report and write to `path`."""
+        super().write_file(path, **kwargs)
+        libreoffice.to_pdf(path)
 
 
 @dataclass
@@ -247,11 +259,19 @@ class MetadataSet1ODT(Report):
             ref_area=self.ref_area,
             matched=grouped[True],
             no_match=grouped[False],
+            show_no_match=False,
         )
+        # with open("debug.rst", "w") as f: # DEBUG
+        #     f.write(rst_source)
         # print(rst_source)  # DEBUG
 
         # Convert reStructuredText → OpenDocumentText
         return self.rst2odt(rst_source)
+
+    def write_file(self, path: "pathlib.Path", **kwargs) -> None:
+        """:meth:`render` the report and write to `path`."""
+        super().write_file(path, **kwargs)
+        libreoffice.to_pdf(path)
 
 
 @dataclass

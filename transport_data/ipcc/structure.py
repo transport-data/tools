@@ -2,23 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from transport_data.util.pluggy import hookimpl
-
 if TYPE_CHECKING:
     import sdmx.model.common
-
-
-@hookimpl
-def get_agencies():
-    """Return the IPCC :class:`.Agency`."""
-    from sdmx.model import v21
-
-    a = v21.Agency(
-        id="IPCC",
-        name="Intergovernmental Panel on Climate Change",
-        description="https://www.ipcc.ch/",
-    )
-    return (a,)
 
 
 def gen_cl_T311(**kwargs) -> "sdmx.model.Common.Codelist":

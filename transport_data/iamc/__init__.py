@@ -26,6 +26,11 @@ def get_agencies():
     return (a,)
 
 
+@hookimpl
+def provides():
+    return ("ConceptScheme=TDCI:CS_IAMC",)
+
+
 def common_structures():
     """Return common metadata for IAMC-like data and structures.
 

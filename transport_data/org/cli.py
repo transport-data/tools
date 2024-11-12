@@ -94,28 +94,45 @@ def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_a
     "path_in", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path)
 )
 def _tuewas_all(path_in):
-    """Generate all outputs for TUEWAS."""
+    """Generate all outputs for TUEWAS.
+
+    PATH_IN is the path to the .xlsx file containing collected metadata.
+    """
     from zipfile import ZipFile
 
-    from .metadata import report
+    from transport_data.util.libreoffice import HAS_LIBREOFFICE
+
+    from .metadata import merge_ato, report
     from .metadata.spreadsheet import read_workbook
 
     ref_areas = "CN ID IN PH TH VN".split()
 
+    # Read collected metadata for the project
     mds, _ = read_workbook(path_in.resolve())
+
+    # Merge metadata available through ATO
+    merge_ato(mds)
 
     dir_out = pathlib.Path.cwd().joinpath("output")
     path_out = []
 
+    def _maybe_pdf():
+        if HAS_LIBREOFFICE:
+            # Also mark the auto-converted PDF to be added to the ZIP archive
+            path_out.append(path_out[-1].with_suffix(".pdf"))
+            print(f"Wrote {path_out[-2:]}")
+        else:
+            print(f"Wrote {path_out[-1]}")
+
     for ref_area in ref_areas:
         path_out.append(dir_out.joinpath(ref_area, "Summary.odt"))
         path_out[-1].parent.mkdir(parents=True, exist_ok=True)
-        report.MetadataSet1ODT(mds, ref_area=ref_areas[0]).write_file(path_out[-1])
-        print(f"Wrote {path_out[-1]}")
+        report.MetadataSet1ODT(mds, ref_area=ref_area).write_file(path_out[-1])
+        _maybe_pdf()
 
     path_out.append(dir_out.joinpath("Metadata summary.odt"))
     report.MetadataSet0ODT(mds).write_file(path_out[-1])
-    print(f"Wrote {path_out[-1]}")
+    _maybe_pdf()
 
     path_out.append(dir_out.joinpath("Metadata summary table.html"))
     report.MetadataSet2HTML(mds, ref_area=ref_areas).write_file(

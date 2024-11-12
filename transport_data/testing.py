@@ -1,10 +1,11 @@
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, cast
 
 import click.testing
 import pytest
 import sdmx.message
-import sdmx.model.v21 as m
+from sdmx.model import common, v21
 
 import transport_data
 from transport_data.config import Config
@@ -13,44 +14,83 @@ from transport_data.store import UnionStore
 if TYPE_CHECKING:
     import dsss.store
 
+    from transport_data.util.sdmx import MAKeywords
+
+#: :any:`True` if tests are being run on GitHub Actions.
+GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
+
+
+class CliRunner(click.testing.CliRunner):
+    def invoke(self, *args, **kwargs):
+        import transport_data.cli
+
+        return super().invoke(transport_data.cli.main, *args, **kwargs)
+
+
+def ember_dfd(store: "dsss.store.Store") -> "v21.Dataflow":
+    """Construct a Dataflow used in testing :func:`.read_csv` and related code.
+
+    .. todo:: Instead ensure these artefacts are available from :data:`.STORE`.
+    """
+
+    # Construct a DSD corresponding to the data
+    ma_kw: "MAKeywords" = dict(
+        id="EMBER_001", version="1.0.0", maintainer=common.Agency(id="TDCI")
+    )
+    dsd = v21.DataStructureDefinition(**ma_kw)
+    dsd.dimensions.append(v21.Dimension(id="COUNTRY"))
+    dsd.dimensions.append(v21.Dimension(id="YEAR"))
+    dsd.measures.append(v21.PrimaryMeasure(id="OBS_VALUE"))
+    dsd.attributes.append(common.DataAttribute(id="COMMENT"))
+
+    # Construct a DFD
+    dfd = v21.DataflowDefinition(**ma_kw, structure=dsd)
+
+    store.set(dfd)
+    store.set(dsd)
+
+    return dfd
+
 
 @pytest.fixture(scope="session")
 def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     """SDMX structures for use in tests."""
     sm = sdmx.message.StructureMessage()
 
-    ma_attrib = dict(maintainer=m.Agency(id="TEST"), version="1.0.0")
+    ma_attrib: "MAKeywords" = dict(maintainer=common.Agency(id="TEST"), version="1.0.0")
 
-    cs = m.ConceptScheme(id="TEST", **ma_attrib)
-    cs.append(m.Concept(id="MASS", name="Mass of fruit"))
-    cs.append(m.Concept(id="PICKED", name="Number of fruits picked"))
-    cs.append(m.Concept(id="COLOUR", name="Colour of fruit"))
-    cs.append(m.Concept(id="FRUIT", name="Type of fruit"))
+    cs = common.ConceptScheme(id="TEST", **ma_attrib)  # type: ignore [misc]
+    cs.append(common.Concept(id="MASS", name="Mass of fruit"))
+    cs.append(common.Concept(id="PICKED", name="Number of fruits picked"))
+    cs.append(common.Concept(id="COLOUR", name="Colour of fruit"))
+    cs.append(common.Concept(id="FRUIT", name="Type of fruit"))
 
-    cl = m.Codelist(id="COLOUR", **ma_attrib)
-    cl.extend([m.Code(id=c, name=c.title()) for c in "GREEN ORANGE RED YELLOW".split()])
-    cl.append(m.Code(id="_T", name="Total"))
+    cl: "common.Codelist" = common.Codelist(id="COLOUR", **ma_attrib)  # type: ignore [misc]
+    cl.extend(
+        [common.Code(id=c, name=c.title()) for c in "GREEN ORANGE RED YELLOW".split()]
+    )
+    cl.append(common.Code(id="_T", name="Total"))
     sm.add(cl)
 
-    cl = m.Codelist(id="FRUIT", **ma_attrib)
+    cl = common.Codelist(id="FRUIT", **ma_attrib)  # type: ignore [misc]
     cl.extend(
-        [m.Code(id=c, name=c.title()) for c in "APPLE BANANA GRAPE LEMON".split()]
+        [common.Code(id=c, name=c.title()) for c in "APPLE BANANA GRAPE LEMON".split()]
     )
-    cl.append(m.Code(id="_T", name="Total"))
+    cl.append(common.Code(id="_T", name="Total"))
     sm.add(cl)
 
     for id_, dims in (
         ("MASS", ("COLOUR", "FRUIT")),
         ("PICKED", ("FRUIT", "COLOUR")),
     ):
-        dsd = m.DataStructureDefinition(id=id_, **ma_attrib)
+        dsd = v21.DataStructureDefinition(id=id_, **ma_attrib)  # type: ignore [misc]
         dsd.urn = sdmx.urn.make(dsd)
-        dsd.measures.append(m.PrimaryMeasure(id=id_, concept_identity=cs[id_]))
+        dsd.measures.append(v21.PrimaryMeasure(id=id_, concept_identity=cs[id_]))
         dsd.dimensions.extend(
-            m.Dimension(
+            common.Dimension(
                 id=d,
                 concept_identity=cs[d],
-                local_representation=m.Representation(enumerated=sm.codelist[d]),
+                local_representation=common.Representation(enumerated=sm.codelist[d]),
             )
             for d in dims
         )
@@ -59,13 +99,6 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
     tmp_store.update_from(sm)
 
     return sm
-
-
-class CliRunner(click.testing.CliRunner):
-    def invoke(self, *args, **kwargs):
-        import transport_data.cli
-
-        return super().invoke(transport_data.cli.main, *args, **kwargs)
 
 
 @pytest.fixture
@@ -87,6 +120,7 @@ def tmp_config(tmp_path_factory) -> Generator[Config, None, None]:
 
     base = tmp_path_factory.mktemp("transport-data")
     result = Config(
+        cache_path=base.joinpath("cache"),
         config_path=base.joinpath("config.json"),
         data_path=base.joinpath("data"),
         # Default value in .config.Config.data_path → clone from another local directory
