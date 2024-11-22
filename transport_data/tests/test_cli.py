@@ -99,9 +99,11 @@ def test_check2(tdc_cli, tmp_path):
 
 
 # ‘Script’ of CLI input to produce a data structure definition
-SCRIPT = [
+SCRIPT0 = [
+    # Class: 1 = DataStructureDefinition
+    "1",
     # Maintainer ID: accept the default (TDCI)
-    "",
+    "TDCI",
     # DSD ID
     "CLI_TEST",
     # Version
@@ -118,6 +120,22 @@ SCRIPT = [
     "UNIT_MEASURE",
     "OBS_STATUS",
     "",
+    # Save
+    "y",
+]
+
+# ‘Script’ of CLI input to produce a data flow definition
+SCRIPT1 = [
+    # Class: 1 = DataStructureDefinition
+    "0",
+    # Maintainer ID: accept the default (TDCI)
+    "TDCI",
+    # DSD ID
+    "CLI_TEST",
+    # Version
+    "1.0.0",
+    # Structure URN
+    "DataStructureDefinition=TDCI:CLI_TEST(1.0.0)",
     # Save
     "y",
 ]
@@ -140,7 +158,7 @@ def run_script(lines: list[str]) -> None:
             Editor().run()
 
 
-def test_edit(tmp_store) -> None:
+def test_edit0(tmp_store) -> None:
     from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
     from prompt_toolkit.keys import Keys
 
@@ -151,13 +169,13 @@ def test_edit(tmp_store) -> None:
         tmp_store.get("DataStructureDefinition=TDCI:CLI_TEST(1.0.0)")
 
     # CLI runs and accepts the input without error
-    run_script(SCRIPT[:-1] + [""])
+    run_script(SCRIPT0[:-1] + [""])
     # Nothing was saved, because "y" was not given at the final, "Save" view
     with pytest.raises(KeyError):
         tmp_store.get("DataStructureDefinition=TDCI:CLI_TEST(1.0.0)")
 
     # CLI runs and accepts the input without error
-    run_script(SCRIPT)
+    run_script(SCRIPT0)
 
     # A DSD is generated in the tmp_store
     dsd = tmp_store.get("DataStructureDefinition=TDCI:CLI_TEST(1.0.0)")
@@ -165,3 +183,11 @@ def test_edit(tmp_store) -> None:
     assert 3 == len(dsd.dimensions)
     assert 1 == len(dsd.measures)
     assert 2 == len(dsd.attributes)
+
+
+def test_edit1(tmp_store) -> None:
+    # CLI runs and accepts the input without error
+    run_script(SCRIPT1)
+
+    # A DFD is generated in the tmp_store
+    tmp_store.get("Dataflow=TDCI:CLI_TEST(1.0.0)")

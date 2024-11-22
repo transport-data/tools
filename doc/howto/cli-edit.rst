@@ -13,8 +13,8 @@ This format is both machine- and human-readable, but it is not very user-friendl
 These can then be used with other, TDC-compliant (meta)data.
 For example, one can define a data structure definition, and then use it to read an SDMX-CSV file that is :doc:`formatted accordingly </howto/data-csv>`.
 
-Create a data structure definition (DSD)
-========================================
+Create a new SDMX artefact
+==========================
 
 This is currently the only feature provided by :program:`tdc edit`.
 
@@ -31,7 +31,16 @@ This is currently the only feature provided by :program:`tdc edit`.
      If you make a mistake in editing, exit and start again from this step.
      (It is not currently supported to ‘undo’ or go back to previous steps.)
 
-3. Enter information about the DSD.
+From this point, follow the steps in **one** of the subsections below.
+
+Create a data structure definition (DSD)
+----------------------------------------
+
+3. Choose to create a new DSD.
+
+   Type :kbd:`1`, followed by :kbd:`Enter`.
+
+4. Enter information about the DSD.
 
    Like every ‘maintainable’ artefact, a DSD has the following attributes.
    These allow to distinguish the DSD from others, and for a responsible person (you!) to *maintain* it by publishing different versions.
@@ -55,13 +64,13 @@ This is currently the only feature provided by :program:`tdc edit`.
 
    :mod:`.transport_data` supports using *shortened URNs*, for example ``Dataflow=TDCI:EXAMPLE(1.0.0)`` (specific version) or ``Dataflow=TDCI:EXAMPLE`` (implicitly the latest version).
 
-4. Add 1 or more DSD **dimensions**.
+5. Add 1 or more DSD **dimensions**.
 
    Type the ID of each dimension, followed by :kbd:`Enter`.
 
    After the last dimension, type :kbd:`Enter` (with no text) to finish the entry of dimensions.
 
-5. Add the DSD **measure**.
+6. Add the DSD **measure**.
 
    The ‘measure’ is answers the question “What is measured by each observation value?”
    A broader SDMX convention is to use the ID ``OBS_VALUE`` and store elsewhere (in metadata) a reference to a concept (vehicle sales; energy consumption; etc.) that describes the actual measure.
@@ -70,7 +79,7 @@ This is currently the only feature provided by :program:`tdc edit`.
 
    Type :kbd:`Enter` again to finish the entry of measures. [1]_
 
-6. Add 0 or more DSD **attributes**.
+7. Add 0 or more DSD **attributes**.
 
    An attribute stores information *about* observations, other than their *value*.
    For example, information that an observation's value is estimated is stored as an attribute.
@@ -87,7 +96,7 @@ This is currently the only feature provided by :program:`tdc edit`.
 
    After the last attribute, type :kbd:`Enter` (with no text) to finish the entry of attributes.
 
-6. Save the created DSD.
+8. Save the created DSD.
 
    Type :kbd:`y` followed by :kbd:`Enter`.
    The created SDMX artefact is saved to the local store.
@@ -100,6 +109,24 @@ This is currently the only feature provided by :program:`tdc edit`.
        # Show a particular artefact
        tdc store show "Dataflow=TDCI:EXAMPLE(1.2.3)"
 
+Create a data flow definition (DFD)
+-----------------------------------
+
+3. Choose to create a new DFD.
+
+   Type :kbd:`0`, followed by :kbd:`Enter`.
+
+4. Enter information about the DFD.
+   This is the same as step (4) in the DSD section, above.
+
+5. Enter the URN for the DSD that gives the structure of data sets in this data flow.
+
+   For example, type ``DataStructureDefinition=TDCI:EXAMPLE(1.0.0)``, followed by :kbd:`Enter`.
+
+   The referenced URN **must** already be present in your local store of SDMX artefacts.
+
+6. Save the created DFD.
+   This is the same as step (4) in the DSD section, above.
 
 .. [1] SDMX (from version 3.0.0) supports data structures in which each observation has two or more values for different measure concepts.
    This feature is not widely used, and not yet supported by :mod:`transport_data`.
