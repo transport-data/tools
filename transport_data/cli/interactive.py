@@ -39,11 +39,8 @@ class Editor(prompt_toolkit.Application):
 
         super().__init__(key_bindings=kb, layout=layout, full_screen=True)
 
-        # Object to be constructed
-        self.ma = v21.DataStructureDefinition()
-
         # Start with the first View
-        self.go_to(MA_Maintainer)
+        self.go_to(MA_Class)
 
     @staticmethod
     def _exit(event):
@@ -92,6 +89,38 @@ class View(ABC):
         """
 
 
+class MA_Class(View):
+    choices = (
+        v21.DataflowDefinition,
+        v21.DataStructureDefinition,
+    )
+
+    prompt = "Enter a number from the above list:"
+
+    def get_text(self, app):
+        lines = [
+            "Creating a new maintainable artefact.",
+            "",
+            "Choose a class from among:",
+            "",
+        ]
+        for i, cls in enumerate(self.choices):
+            lines.append(f"{i:2}. {cls.__name__}")
+        return "\n".join(lines)
+
+    def accept(self, buff, app):
+        try:
+            ma_class = self.choices[int(app.input_field.text)]
+            app.ma = ma_class()  # Create the object to be constructed
+        except (  # pragma: no cover  # TODO Extend tests to cover this error
+            ValueError,  # Non-integer input
+            IndexError,  # A value that is not in the enumeration of `choices`
+        ):
+            app.go_to(MA_Class)
+        else:
+            app.go_to(MA_Maintainer)
+
+
 class MA_Maintainer(View):
     prompt = "Enter the maintainer ID:"
     default = "TDCI"
@@ -126,7 +155,32 @@ class MA_Version(View):
         app.ma.version = app.input_field.text
         if isinstance(app.ma, common.BaseDataStructureDefinition):
             app.go_to(DSDAddDimension)
+        elif isinstance(app.ma, common.BaseDataflow):
+            app.go_to(DFDStructureURN)
         else:  # pragma: no cover
+            app.go_to(Save)
+
+
+class DFDStructureURN(View):
+    prompt = "Enter the URN:"
+
+    def get_text(self, app):
+        lines = [
+            f"Creating a new data flow definition: {app.ma!r}",
+            "",
+            "Enter the full or partial URN for the data structure definition (DSD).",
+        ]
+        return "\n".join(lines)
+
+    def accept(self, buff, app):
+        from transport_data import STORE
+
+        try:
+            dsd = STORE.get(app.input_field.text)
+        except KeyError:  # pragma: no cover  # TODO Extend tests to cover this error
+            app.go_to(DFDStructureURN)
+        else:
+            app.ma.structure = dsd
             app.go_to(Save)
 
 
