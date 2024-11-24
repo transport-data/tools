@@ -65,6 +65,9 @@ exclude_also = [
   "raise NotImplementedError",
 ]
 
+[tool.mypy]
+exclude = ["build/"]
+
 [[tool.mypy.overrides]]
 module = [
   "google_auth_oauthlib.*",
