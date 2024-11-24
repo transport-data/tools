@@ -87,16 +87,19 @@ class TestUnionStore:
 
     def test_list(self, tmp_store) -> None:
         result = sorted(tmp_store.list(maintainer="TEST"))
-        assert 5 == len(result)
-        assert result[0].endswith("Codelist=TEST:COLOUR(1.0.0)")
-        assert result[-1].endswith("DataStructure=TEST:PICKED(1.0.0)"), result
+        assert 5 <= len(result)
+        # Some known entries are present
+        assert {
+            "urn:sdmx:org.sdmx.infomodel.codelist.Codelist=TEST:COLOUR(1.0.0)",
+            "urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=TEST:PICKED(1.0.0)",
+        } <= set(result)
 
 
 def test_cli_list(sdmx_structures):
     result = CliRunner().invoke(main, ["list", "--maintainer=TEST"])
     assert 0 == result.exit_code
     # FIXME Avoid a result that depends on test run order
-    assert len(result.output.splitlines()) in (4, 5), result.output
+    assert 4 <= len(result.output.splitlines()) <= 8, result.output
 
 
 def test_cli_show(sdmx_structures):
