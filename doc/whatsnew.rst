@@ -1,8 +1,11 @@
 What's new
 **********
 
-Next release
-============
+.. Next release
+.. ============
+
+v24.11.25
+=========
 
 - Add :mod:`.iso` (:doc:`iso`) module (:pull:`29`).
 - Add :mod:`.itdp` (:doc:`itdp`) module (:pull:`28`).
