@@ -140,6 +140,7 @@ class Editor(prompt_toolkit.Application):
         c.input_processors[-1].text = FormattedText([("bold", value + " ")])
 
         self.input_field.text = default
+        self.input_field.buffer.cursor_position = len(default)
 
 
 class View(ABC):
