@@ -24,6 +24,7 @@ v24.11.25
   - Convert attributes from ATO data sets to TDC metadata reports.
   - Extract per-series data sources for sheets where the overall source attribute is “Country Official Statistics”.
 
+- :mod:`transport_data` supports Python 3.13 (:pull:`32`).
 - Use :mod:`dsss.store` classes for SDMX artefact storage (:pull:`27`).
 
   - :class:`transport_data.store.UnionStore` is now a lightweight subclass of :class:`dsss.store.UnionStore`.
