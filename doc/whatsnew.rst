@@ -12,7 +12,7 @@ Next release
   - :program:`tdc check` CLI to confirm that data can be read in this way.
   - New HOWTO :doc:`howto/data-csv` to explain usage of these features.
 
-- Add interactive :program:`tdc edit` command-line interface for authoring SDMX data structures (:pull:`28`).
+- Add interactive :program:`tdc edit` command-line interface for authoring SDMX data structures (:pull:`28`, :pull:`31`).
 
   - New HOWTO :doc:`HOWTO <howto/cli-edit>` to explain usage of these features.
 - Add ``METHOD`` to the TDC metadata structure (:pull:`28`) via :data:`.org.metadata.CONCEPTS`.

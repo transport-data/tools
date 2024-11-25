@@ -45,6 +45,7 @@ tests = [
   "pytest",
   "pytest-cov",
   "pytest-rerunfailures",
+  "pytest-timeout",
   "pytest-xdist",
   "transport-data[google]",
 ]
@@ -64,6 +65,9 @@ exclude_also = [
   '\.\.\.',
   "raise NotImplementedError",
 ]
+
+[tool.mypy]
+exclude = ["build/"]
 
 [[tool.mypy.overrides]]
 module = [

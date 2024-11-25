@@ -42,7 +42,7 @@ def fetch_cmd(part, all_, go):
 @main.command("convert")
 @click.argument("part", nargs=-1)
 @click.option("--all", "all_", is_flag=True, help="Convert all parts.")
-def convert_cmd(part, all_):
+def convert_cmd(part, all_):  # pragma: no cover
     """Convert to SDMX data and structures."""
     if not len(part):
         if not all_:
@@ -52,4 +52,8 @@ def convert_cmd(part, all_):
         part = list(FILES.keys())
 
     for p in part:
+        if p == "POL":
+            print(f"Skip PART = {p}; not currently supported")
+            continue
+
         convert(p)
