@@ -45,6 +45,7 @@ tests = [
   "pytest",
   "pytest-cov",
   "pytest-rerunfailures",
+  "pytest-timeout",
   "pytest-xdist",
   "transport-data[google]",
 ]
