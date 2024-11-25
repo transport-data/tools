@@ -148,6 +148,7 @@ SCRIPT_2 = [
 ]
 
 
+@pytest.mark.timeout(1)
 def test_edit2(tmp_store) -> None:
     # CLI runs and accepts the input without error
     run_script(SCRIPT_2)
@@ -173,6 +174,7 @@ SCRIPT_4 = [
 ]
 
 
+@pytest.mark.timeout(1)
 @pytest.mark.usefixtures("sdmx_structures")
 def test_edit4(tmp_store) -> None:
     # CLI runs and accepts the input without error
@@ -202,6 +204,7 @@ SCRIPT_5 = [
 ]
 
 
+@pytest.mark.timeout(1)
 def test_edit5(tmp_store) -> None:
     # CLI runs and accepts the input without error
     run_script([REVERSE_ANSI_SEQUENCES[Keys.ControlC]])
