@@ -38,23 +38,23 @@ FILES = {
     # "ATO National Database Masterlist of Indicators",
     "ACC": (
         "ATO Workbook (ACCESS & CONNECTIVITY (ACC)).xlsx",
-        "sha256:edd027a7f74bbdf82145f17acd6ecd8bd1fdd92d2e5e2be4bbcaaff09879e3de",
+        "sha256:21c3b7e662d932f5cc61c22489acb3cf0e8a70200abc2372c7fe212602903fd7",
     ),
     "APH": (
         "ATO Workbook (AIR POLLUTION & HEALTH (APH)).xlsx",
-        "sha256:548cfcf1f376dad747a3f1cebf7139767ba5bae5ee66aabd598f40a9e9890d20",
+        "sha256:b06c102a1184ed83d77673146599e11c2b6c81d784ebcee6b46f4d43713e899a",
     ),
     "CLC": (
         "ATO Workbook (CLIMATE CHANGE (CLC)).xlsx",
-        "sha256:aba2f02d684fe83c781378ae62ce4b1d548dd6737fe29768c86c620ed8efd65d",
+        "sha256:7fe2d4bb656508bf3194406d25ed04c1ac403daaaf1ada74847a2c330efcfb2a",
     ),
     "INF": (
         "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
-        "sha256:ea36a9303286b3d1ff5848b01402f8661d968771aa8b980db0aea73a00a9d0dd",
+        "sha256:30b9d05330838809ff0d53b2e61ade935eccdb4b73c0509fd1fc49b405699ac3",
     ),
     "MIS": (
         "ATO Workbook (MISCELLANEOUS (MIS)).xlsx",
-        "sha256:f17315b40434009966580bc3023c222d254b87a1b0c5eaf05a6a42c113b5393b",
+        "sha256:2ef3cdc5e6363cdca1f671bbf12bf0463fe8a4210cb49b3d32ebd2440c6fe6df",
     ),
     "POL": (
         "ATO Workbook (TRANSPORT POLICY (POL)).xlsx",
@@ -62,15 +62,15 @@ FILES = {
     ),
     "RSA": (
         "ATO Workbook (ROAD SAFETY (RSA)).xlsx",
-        "sha256:eda9e8700e5f22b02b50d37dddbc7e082706252f4e9f215a610268d8e94e8669",
+        "sha256:a4285d129c2739c8660a07a5d1c9902ec21c3cd4d13a2a9dfe9d49daca2c0dd5",
     ),
     "SEC": (
         "ATO Workbook (SOCIO-ECONOMIC (SEC)).xlsx",
-        "sha256:a7a527355a3c90b66455ea126cfd10e99f818a161d20c115a45c0ed0d379c13a",
+        "sha256:b5d2ee5d07b5554ef262436ef898afd976fbb4956bd7cb850829cb7391d207c0",
     ),
     "TAS": (
         "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
-        "sha256:b6dd6e5feeb7a54d009ba752acbf8007613a52610b6daeb1170214d69f9a3444",
+        "sha256:628d4e9774f84d30d80706e982e4ddf7187d77f8676e69765c307701da1caf77",
     ),
 }
 
