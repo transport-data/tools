@@ -26,4 +26,5 @@ register_internal(
     "oica",
     "org",
     "other",
+    "sum4all",
 )
