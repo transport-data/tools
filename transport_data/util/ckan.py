@@ -1,12 +1,28 @@
-from dataclasses import dataclass, field
+"""Utilities for interacting with CKAN instances via their Action API.
+
+The :mod:`ckanapi` package (`PyPI <https://pypi.org/project/ckanapi/>`_,
+`GitHub <https://github.com/ckan/ckanapi>`_), maintained by the CKAN organization,
+provides Pythonic access to the “CKAN Action API” (
+`documentation <https://docs.ckan.org/en/latest/api/index.html>`_), which itself exposes
+nearly all of the functionality available through the CKAN web interface and the TDC
+front-end.
+
+The :class:`~.ckan.Client` class is a wrapper around the :class:`ckanapi.RemoteCKAN`
+class that provides conveniences used by other code in :mod:`transport_data`.
+"""
+
+from functools import partialmethod
 from importlib.metadata import version
 from itertools import count
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, TypeVar, Union
 from warnings import filterwarnings
 
 if TYPE_CHECKING:
+    import pathlib
+
     from ckanapi import RemoteCKAN
 
+# Work around https://github.com/ckan/ckanapi/pull/218 in ckanapi <= 4.8
 filterwarnings(
     "ignore", "pkg_resources is deprecated", DeprecationWarning, "ckanapi.version"
 )
@@ -14,39 +30,124 @@ filterwarnings(
     "ignore", ".*pkg_resources.declare_namespace", DeprecationWarning, "pkg_resources"
 )
 
+T = TypeVar("T", bound="ModelProxy")
 
-@dataclass
-class Package:
-    """Simple proxy for the JSON :attr:`data` about a CKAN 'package'.
 
-    This mirrors, in a much reduced form, `ckan.model.Package
-    <https://github.com/ckan/ckan/blob/master/ckan/model/package.py>`_. A separate class
-    is used to avoid a dependency on CKAN itself and its heavier dependencies.
+class ModelProxy:
+    """Simple proxy for a CKAN object/model.
+
+    :mod:`ckan` itself is a Python package, but is fairly ‘heavy’—a large package with
+    many dependencies. ModelProxy allows to interact with the different classes of
+    CKAN objects based on the JSON data returned by the CKAN Action API, without a
+    dependency on :class:`ckan` itself.
     """
 
-    name: str
+    name: Optional[str] = None
     id: Optional[str] = None
 
-    data: dict = field(default_factory=dict)
+    _collections: dict[str, str] = dict()
+
+    def __init__(self, data: Optional[dict] = None, **kwargs) -> None:
+        self.__dict__.update(data or {})
+        self.__dict__.update(kwargs)
+
+    def __len__(self) -> int:
+        return len(self.__dict__)
+
+    def __repr__(self) -> str:
+        return (
+            f"<CKAN {type(self).__name__} "
+            + (repr(self.name) if self.name else "(no name)")
+            + f" with {len(self.__dict__) - 1} fields>"
+        )
+
+    @classmethod
+    def from_file(cls: type[T], path: "pathlib.Path") -> T:
+        """Construct a new instance from a file `path`."""
+        import json
+
+        with open(path) as f:
+            return cls(json.load(f))
+
+    def asdict(self) -> dict:
+        """Return the original dictionary of object data."""
+        return self.__dict__.copy()
+
+    def get_item(self, name: str, index: Optional[int] = None):
+        """Get a member of a collection."""
+        data = self.__dict__[name][index]
+        cls = get_class(name)
+        assert cls
+        return cls(data)
 
     def update(self, data: dict) -> None:
-        # Update the full data
-        self.data = data
+        """Update part or all of the object data."""
+        # Check some items
+        if self.name and data.get("name", self.name) != self.name:
+            raise ValueError(f"Cannot update with {data['name']!r} != {self.name=!r}")
+        elif self.id and data.get("id", self.id) != self.id:
+            raise ValueError(f"Cannot update with {data['id']!r} != {self.id=!r}")
+        self.__dict__.update(data)
 
-        # Check and unpack some items
-        assert data["name"] == self.name
 
-        assert (self.id or data["id"]) == data["id"]
-        self.id = data["id"]
+def get_class(name: str) -> Optional[type[ModelProxy]]:
+    """Return a :class:`.ModelProxy` subclass given `name`."""
+    glb = globals()
+    for candidate in (
+        name.title(),
+        name.rstrip("s").title(),
+        {"member_role": "MemberRole"}.get(name.rstrip("s"), ""),
+    ):
+        try:
+            return glb[candidate]
+        except KeyError:
+            pass
+    return None
 
 
-@dataclass
-class Resource:
-    """Simple proxy for the JSON :attr:`data` about a CKAN 'resource'.
+class Group(ModelProxy):
+    """Proxy for `ckan.model.Group
+    <https://github.com/ckan/ckan/blob/master/ckan/model/group.py>`_.
+    """
 
-    This mirrors, in a much reduced form, `ckan.model.Resource
-    <https://github.com/ckan/ckan/blob/master/ckan/model/resource.py>`_. A separate
-    class is used to avoid a dependency on CKAN itself and its heavier dependencies.
+
+class Organization(Group):
+    """'Organization' is a synonym for 'Group'."""
+
+    # NB this is a subclass instead of `Organization = Group` so that type(…).__name__
+    #    gives 'organization'
+
+
+class MemberRole(ModelProxy):
+    """Proxy for the CKAN 'MemberRole' model.
+
+    .. todo:: Add a link to the proxied class.
+    """
+
+
+class License(ModelProxy):
+    """Proxy for `ckan.model.License
+    <https://github.com/ckan/ckan/blob/master/ckan/model/license.py>`_.
+    """
+
+
+class Package(ModelProxy):
+    """Proxy for `ckan.model.Package
+    <https://github.com/ckan/ckan/blob/master/ckan/model/package.py>`_.
+    """
+
+
+class Resource(ModelProxy):
+    """Proxy for `ckan.model.Resource
+    <https://github.com/ckan/ckan/blob/master/ckan/model/resource.py>`_.
+    """
+
+
+class Tag(ModelProxy):
+    """Proxy for the CKAN 'Tag' model.
+
+    The source code for the proxied class is `here
+    <>`_.
     """
 
 
@@ -57,7 +158,10 @@ class Client:
 
     - Iterating over calls with rate limits.
     - Caching results, including combined results from multiple calls.
-    - Converting return values to instances of :class:`Package` and :class:`Resource`.
+    - Converting return values to instances of :class:`ModelProxy` subclasses.
+
+    .. todo::
+       - Handle API keys via :mod:`transport_data.config`.
     """
 
     _api: "RemoteCKAN"
@@ -73,63 +177,98 @@ class Client:
         )
 
         self._api = RemoteCKAN(address, user_agent=user_agent)
-
         self._cache = dict(package=dict())
 
     def __getattr__(self, name: str):
         return getattr(self._api.action, name)
 
-    def package_list(
-        self, limit: Optional[int] = None, max: Optional[int] = None
-    ) -> list[Package]:
-        """Call the 'package_list' API endpoint.
+    def list_action(
+        self, kind: str, limit: Optional[int] = None, max: Optional[int] = None
+    ) -> list:
+        """Call the ``{kind}_list`` API endpoint.
 
         Parameters
         ----------
+        kind
+            String identifying the kind of CKAN object to fetch.
         limit
             Number of results to fetch in a single query.
         max
             Maximum number of results to fetch.
         """
+        cls = get_class(kind)
+        assert cls
+
         limit = limit or 100
-        c = self._cache["package_list"] = list()
+
+        c = self._cache[f"{kind}_list"] = list()
+
         for i in count():
             result = self._api.call_action(
-                "package_list", data_dict={"limit": limit, "offset": i * limit}
+                f"{kind}_list", data_dict={"limit": limit, "offset": i * limit}
             )
             c.extend(result)
             if len(result) < limit or (max and max < (i + 1) * limit):
                 break
-        return [Package(v) for v in c]
+        return [(cls(name=v) if isinstance(v, str) else cls(v)) for v in c]
 
-    def tag_list(self):
-        """Call the 'tag_list' API endpoint."""
-        return self._api.call_action("tag_list")
+    # Use list_action() to invoke certain CKAN API endpoints
+    group_list = partialmethod(list_action, "group")
+    license_list = partialmethod(list_action, "license")
+    member_roles_list = partialmethod(list_action, "member_roles")
+    organization_list = partialmethod(list_action, "organization")
+    package_list = partialmethod(list_action, kind="package")
+    tag_list = partialmethod(list_action, kind="tag")
 
-    def package_show(self, package: Union[str, Package]) -> Package:
-        """Call the 'package_show' API endpoint.
+    def show_action(self, obj_or_id: Union[str, dict, T], _cls: type[T]) -> T:
+        """Call the ``{kind}_show`` API endpoint.
 
-        If `package` is an instance of :class:`.Package`, its :attr:`~Package.name` is
-        used for the query, and it is updated with the return value. If `package` is
-        :class:`str`, a new :class:`.Package` is returned.
+        If `obj_or_id` is an instance of :class:`.ModelProxy`, its
+        :attr:`~ModelProxy.name` or :attr:`~.ModelProxy.id` is used for the query, and
+        the same instance is updated with the response data and returned. If `obj_or_id`
+        is :class:`str` or :class:`dict` a new instance of a :class:`.ModelProxy`
+        subclass is returned.
 
         The return value is cached.
         """
-        data_dict: dict[str, str] = dict()
-        if isinstance(package, str):
-            data_dict.update(id=package)
-            result = Package(package)
+        if isinstance(obj_or_id, dict):
+            kw: dict[str, str] = obj_or_id
+            kw.update(id=kw.pop("name", kw.get("id", "")))
+            result: Optional[T] = _cls()
         else:
-            data_dict.update(id=package.name)
-            result = package
+            kw = dict()
 
-        response = self._api.call_action("package_show", data_dict)
+        if isinstance(obj_or_id, str):
+            # Query using the "id" keyword
+            kw.update(id=obj_or_id)
+            # Create a new result object according to the type of
+            result = None
+        elif isinstance(obj_or_id, _cls):
+            if obj_or_id.id:
+                kw.update(id=obj_or_id.id)
+            elif obj_or_id.name:
+                kw.update(id=obj_or_id.name)
+            result = obj_or_id
+
+        kind = _cls.__name__.lower()
+
+        response = self._api.call_action(f"{kind}_show", kw)
 
         # TODO Handle whatever exception is raised for an invalid `package`
-        result.update(response)
+        if result is None:
+            result = _cls(response)
+        else:
+            result.update(response)
 
         # Update cache by both UUID and name
         self._cache[result.id] = result
-        self._cache["package"][result.name] = result
+        self._cache.setdefault(kind, dict())
+        self._cache[kind][result.name] = result
 
         return result
+
+    # Use show_action() to invoke certain CKAN API endpoints
+    # TODO Extend to cover all "*_show" endpoints.
+    organization_show = partialmethod(show_action, _cls=Organization)
+    package_show = partialmethod(show_action, _cls=Package)
+    tag_show = partialmethod(show_action, _cls=Tag)

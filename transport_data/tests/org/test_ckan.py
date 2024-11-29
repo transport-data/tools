@@ -23,4 +23,4 @@ def test_main(instance, N_exp: int) -> None:
 
     assert p is result[0]  # Same object instance returned
 
-    assert "dataset" == p.data["type"]
+    assert "dataset" == p.type
