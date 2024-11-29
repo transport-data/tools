@@ -36,22 +36,49 @@ CS_MEASURE = m.ConceptScheme(
 #: Mapping from short codes for ATO data categories to file names.
 FILES = {
     # "ATO National Database Masterlist of Indicators",
-    "ACC": "ATO Workbook (ACCESS & CONNECTIVITY (ACC)).xlsx",
-    "APH": "ATO Workbook (AIR POLLUTION & HEALTH (APH)).xlsx",
-    "CLC": "ATO Workbook (CLIMATE CHANGE (CLC)).xlsx",
-    "INF": "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
-    "MIS": "ATO Workbook (MISCELLANEOUS (MIS)).xlsx",
-    "POL": "ATO Workbook (TRANSPORT POLICY (POL)).xlsx",
-    "RSA": "ATO Workbook (ROAD SAFETY (RSA)).xlsx",
-    "SEC": "ATO Workbook (SOCIO-ECONOMIC (SEC)).xlsx",
-    "TAS": "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
+    "ACC": (
+        "ATO Workbook (ACCESS & CONNECTIVITY (ACC)).xlsx",
+        "sha256:21c3b7e662d932f5cc61c22489acb3cf0e8a70200abc2372c7fe212602903fd7",
+    ),
+    "APH": (
+        "ATO Workbook (AIR POLLUTION & HEALTH (APH)).xlsx",
+        "sha256:b06c102a1184ed83d77673146599e11c2b6c81d784ebcee6b46f4d43713e899a",
+    ),
+    "CLC": (
+        "ATO Workbook (CLIMATE CHANGE (CLC)).xlsx",
+        "sha256:7fe2d4bb656508bf3194406d25ed04c1ac403daaaf1ada74847a2c330efcfb2a",
+    ),
+    "INF": (
+        "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
+        "sha256:30b9d05330838809ff0d53b2e61ade935eccdb4b73c0509fd1fc49b405699ac3",
+    ),
+    "MIS": (
+        "ATO Workbook (MISCELLANEOUS (MIS)).xlsx",
+        "sha256:2ef3cdc5e6363cdca1f671bbf12bf0463fe8a4210cb49b3d32ebd2440c6fe6df",
+    ),
+    "POL": (
+        "ATO Workbook (TRANSPORT POLICY (POL)).xlsx",
+        "sha256:fbf23b012590b631239654d255d23ccb70fa717b466be8343a5b0f1e8b4ce720",
+    ),
+    "RSA": (
+        "ATO Workbook (ROAD SAFETY (RSA)).xlsx",
+        "sha256:a4285d129c2739c8660a07a5d1c9902ec21c3cd4d13a2a9dfe9d49daca2c0dd5",
+    ),
+    "SEC": (
+        "ATO Workbook (SOCIO-ECONOMIC (SEC)).xlsx",
+        "sha256:b5d2ee5d07b5554ef262436ef898afd976fbb4956bd7cb850829cb7391d207c0",
+    ),
+    "TAS": (
+        "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
+        "sha256:628d4e9774f84d30d80706e982e4ddf7187d77f8676e69765c307701da1caf77",
+    ),
 }
 
 VERSION = "0.1.0"
 
 
 def expand(fname: str) -> str:
-    return FILES.get(fname, fname)
+    return FILES.get(fname, (fname, None))[0]
 
 
 def _make_url(fname: str) -> str:
@@ -61,7 +88,7 @@ def _make_url(fname: str) -> str:
 POOCH = Pooch(
     module=__name__,
     base_url=BASE_URL,
-    registry={expand(key): None for key in FILES.keys()},
+    registry={v[0]: v[1] for v in FILES.values()},
     urls={expand(key): _make_url(key) for key in FILES.keys()},
     expand=expand,
 )

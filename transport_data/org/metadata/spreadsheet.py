@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple, cast
 
 from sdmx.model import common, v21
 
@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     import pathlib
 
     from openpyxl import Workbook
+    from openpyxl.cell.cell import Cell
     from openpyxl.worksheet.worksheet import Worksheet
 
     from transport_data.util.sdmx import MAKeywords
@@ -57,7 +58,7 @@ To add information about additional data flows not included in existing sheets
 def _header(ws: "Worksheet", *columns: Tuple[str, int]) -> None:
     """Write header columns and format their style and width."""
     for column, (value, width) in enumerate(columns, start=1):
-        cell = ws.cell(row=1, column=column, value=value)
+        cell = cast("Cell", ws.cell(row=1, column=column, value=value))
         cell.style = "header"
         ws.column_dimensions[cell.column_letter].width = width
 

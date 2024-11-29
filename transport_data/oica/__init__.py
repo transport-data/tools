@@ -140,7 +140,7 @@ def convert_single_file(
         pattern = r"(PC|CV|TOTAL) WORLD VEHICLES IN USE +\(in thousand units\)"
         units = "kvehicle"
 
-    if match := re.fullmatch(pattern, df.iloc[0, 0]):
+    if match := re.fullmatch(pattern, str(df.iloc[0, 0])):
         # Codes are inconsistent across files; use shorter codes
         vehicle_type = {
             "ALL TYPES": "_T",
@@ -192,7 +192,7 @@ def convert_single_file(
     for m, group_df in df.groupby("MEASURE"):
         # Create structures for this measure
         # TODO Retrieve possibly-cached or -stored structures
-        dfd, dsd = get_structures(m)
+        dfd, dsd = get_structures(str(m))
 
         # Create a data set
         ds = DataSet(described_by=dfd, structured_by=dsd)
