@@ -1,0 +1,116 @@
+{
+  "author": null,
+  "author_email": null,
+  "contributors": [],
+  "creator_user_id": "50bb4200-615b-4921-a8da-58f9d53ad9d0",
+  "data_access": "publicly available",
+  "data_provider": "OICA",
+  "dimensioning": "vehicle production by country/region and type (passenger cars, LDV, heavy trucks, buses & coaches)",
+  "frequency": "as_needed",
+  "geographies": [],
+  "groups": [
+    {
+      "description": "",
+      "display_name": "Worldwide",
+      "id": "85cb14f3-72ca-47a7-b8f0-ad5fc78de45a",
+      "image_display_url": "",
+      "name": "worldwide",
+      "title": "Worldwide"
+    }
+  ],
+  "id": "8decd067-a38a-4834-a70c-40419b17fe9c",
+  "indicators": [
+    "Vehicle production"
+  ],
+  "is_archived": false,
+  "isopen": true,
+  "language": "en",
+  "license_id": "CC-BY-4.0",
+  "license_title": "Creative Commons Attribution 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "maintainer": null,
+  "maintainer_email": null,
+  "metadata_created": "2024-10-29T12:25:58.933848",
+  "metadata_modified": "2024-10-29T12:26:02.452514",
+  "modes": [
+    "cars",
+    "private-cars",
+    "truck",
+    "bus"
+  ],
+  "name": "2023-production-statistics",
+  "notes": "This OICA statistics web page contains world motor vehicle production statistics, obtained from national trade organizations, OICA members or correspondents.",
+  "num_resources": 1,
+  "num_tags": 0,
+  "organization": {
+    "approval_status": "approved",
+    "created": "2024-10-29T12:13:41.185874",
+    "description": "",
+    "id": "5eb6e69f-0b49-4c16-8cfa-3fdbba4492e7",
+    "image_url": "",
+    "is_organization": true,
+    "name": "oica",
+    "state": "active",
+    "title": "OICA",
+    "type": "organization"
+  },
+  "owner_org": "5eb6e69f-0b49-4c16-8cfa-3fdbba4492e7",
+  "private": false,
+  "regions": [
+    "worldwide"
+  ],
+  "relationships_as_object": [],
+  "relationships_as_subject": [],
+  "resources": [
+    {
+      "cache_last_updated": null,
+      "cache_url": null,
+      "created": "2024-10-29T12:26:02.463411",
+      "datastore_active": false,
+      "description": null,
+      "format": "",
+      "hash": "",
+      "id": "e28f2207-e153-451e-a9e2-234473c50897",
+      "last_modified": null,
+      "metadata_modified": "2024-10-29T12:26:02.458704",
+      "mimetype": null,
+      "mimetype_inner": null,
+      "name": "Passenger-Cars-2023",
+      "package_id": "8decd067-a38a-4834-a70c-40419b17fe9c",
+      "position": 0,
+      "resource_type": "data",
+      "size": null,
+      "state": "active",
+      "url": "https://www.oica.net/wp-content/uploads/Passenger-Cars-2023.xlsx",
+      "url_type": null
+    }
+  ],
+  "sectors": [
+    "road"
+  ],
+  "services": [
+    "passenger"
+  ],
+  "sources": [
+    {
+      "title": "Cooperation with Ward Auto (America)",
+      "url": "https://www.wardsauto.com/"
+    },
+    {
+      "title": "Asian Automotive Analysis Fourin (Asia)",
+      "url": "https://aaa.fourin.com/"
+    }
+  ],
+  "state": "active",
+  "tags": [],
+  "tdc_category": "public",
+  "temporal_coverage_end": "2023-01-01",
+  "temporal_coverage_start": "1999-01-01",
+  "title": "2023 production statistics",
+  "type": "dataset",
+  "units": [
+    "#"
+  ],
+  "url": "https://www.oica.net/production-statistics/",
+  "version": null
+}
