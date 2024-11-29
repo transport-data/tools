@@ -1,3 +1,5 @@
+""":class:`.ckan.Client` objects to access TDC instances."""
+
 from transport_data.util.ckan import Client
 
 #: Development instance of TDC CKAN. Accessible as of 2024-11-27.
