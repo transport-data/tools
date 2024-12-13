@@ -1,12 +1,16 @@
 """:class:`.ckan.Client` objects to access TDC instances."""
 
 import typing
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional
 
 from transport_data.util.ckan import Client, Package
+from transport_data.util.sdmx import fields_to_mda
 
 if TYPE_CHECKING:
+    import uuid
+
     from sdmx.model import v21
 
 #: Development instance of TDC CKAN. Accessible as of 2024-11-27.
@@ -19,59 +23,63 @@ PROD = Client("https://ckan.transport-data.org")
 STAGING = Client("https://ckan.tdc.staging.datopian.com")
 
 
-#: Concepts in the CKAN metadata for a :class:`Package`.
-CONCEPTS = {
-    # Special
-    "JSON": ("…", None),
-    # Corresponding to JSON fields
-    "author": ("", Optional[str]),
-    "author_email": ("", Optional[str]),
-    "contributors": ("", list),
-    "creator_user_id": ("", str),
-    "data_access": ("", str),
-    "data_provider": ("", str),
-    "dimensioning": ("", str),
-    "frequency": ("", str),
-    "geographies": ("", list),
-    "groups": ("", list),
-    "id": ("", str),
-    "indicators": ("", list),
-    "is_archived": ("", bool),
-    "isopen": ("", bool),
-    "language": ("", str),
-    "license_id": ("", str),
-    "license_title": ("", str),
-    "license_url": ("", str),
-    "maintainer": ("", Optional[str]),
-    "maintainer_email": ("", Optional[str]),
-    "metadata_created": ("", str),
-    "metadata_modified": ("", str),
-    "modes": ("", list),
-    "name": ("", str),
-    "notes": ("", str),
-    "num_resources": ("", int),
-    "num_tags": ("", int),
-    "organization": ("", list),
-    "owner_org": ("", str),  # UUID
-    "private": ("", bool),
-    "regions": ("", list),
-    "relationships_as_object": ("", list),
-    "relationships_as_subject": ("", list),
-    "resources": ("", list),
-    "sectors": ("", list),
-    "services": ("", list),
-    "sources": ("", list),
-    "state": ("", str),
-    "tags": ("", list),
-    "tdc_category": ("", str),
-    "temporal_coverage_end": ("", str),
-    "temporal_coverage_start": ("", str),
-    "title": ("", str),
-    "type": ("", str),
-    "units": ("", list),
-    "url": ("", str),
-    "version": ("", Optional[str]),
-}
+@dataclass
+class CKANMetadataReportStructure:
+    """Concepts in the CKAN metadata for a :class:`Package`."""
+
+    #: JSON data
+    #:
+    #: This is optional. If used, it contains the JSON content returned by the CKAN API.
+    #: This **must** be identical to the values appearing in the other fields.
+    JSON: dict
+
+    author: Optional[str]
+    author_email: Optional[str]
+    contributors: list
+    creator_user_id: "uuid.UUID"
+    data_access: str
+    data_provider: str
+    dimensioning: str
+    frequency: str
+    geographies: list
+    groups: list
+    id: "uuid.UUID"
+    indicators: list
+    is_archived: bool
+    isopen: bool
+    language: str
+    license_id: str
+    license_title: str
+    license_url: str
+    maintainer: Optional[str]
+    maintainer_email: Optional[str]
+    metadata_created: str
+    metadata_modified: str
+    modes: list
+    name: str
+    notes: str
+    num_resources: int
+    num_tags: int
+    organization: list
+    owner_org: "uuid.UUID"
+    private: bool
+    regions: list
+    relationships_as_object: list
+    relationships_as_subject: list
+    resources: list
+    sectors: list
+    services: list
+    sources: list
+    state: str
+    tags: list
+    tdc_category: str
+    temporal_coverage_end: str
+    temporal_coverage_start: str
+    title: str
+    type: str
+    units: list
+    url: str
+    version: Optional[str]
 
 
 @lru_cache
@@ -88,12 +96,10 @@ def get_msd() -> "v21.MetadataStructureDefinition":
     msd = v21.MetadataStructureDefinition(id="CKAN", version="1", maintainer=TDCI)
     rs = msd.report_structure["ALL"] = v21.ReportStructure(id="ALL")
 
-    for id_, (description, data_type) in CONCEPTS.items():
-        ci = cs.setdefault(id=id_, description=description)
-        type_anno = common.Annotation(id="data-type", text=repr(data_type))
-        rs.getdefault(id_, concept_identity=ci, annotations=[type_anno])
+    fields_to_mda(CKANMetadataReportStructure, rs, cs)
 
     STORE.set(msd)
+    STORE.set(cs)
 
     return msd
 
@@ -140,6 +146,7 @@ def mdr_to_ckan_package(mdr):
             "<class 'int'>": int,
             "<class 'list'>": list,
             "<class 'str'>": str,
+            "uuid.UUID": str,
         }.get(dt_anno, dt_anno)
 
         # Convert the string representation of the value to its Python/JSON data
