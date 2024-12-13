@@ -19,6 +19,12 @@ if TYPE_CHECKING:
 
     from transport_data.util.sdmx import MAKeywords
 
+#: List of CKAN UUIDs for objects used for testing.
+CKAN_UUID = {
+    "DEV org test": "538d7317-fa7b-4890-a945-ae4d30021f38",
+    "PROD org test": "8bc58a55-fd85-4667-b23e-a5dba18cdb9a",
+}
+
 #: :any:`True` if tests are being run on GitHub Actions.
 GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
 
