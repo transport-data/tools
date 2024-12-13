@@ -29,6 +29,7 @@ MODULES_WITH_CLI = [
     "org.ckan",
     "proto.cli",
     "store",
+    "testing.cli",
 ]
 
 
