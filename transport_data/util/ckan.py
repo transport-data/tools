@@ -51,6 +51,11 @@ class ModelProxy:
         self.__dict__.update(data or {})
         self.__dict__.update(kwargs)
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.__dict__ == other.__dict__
+
     def __len__(self) -> int:
         return len(self.__dict__)
 
