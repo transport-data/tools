@@ -14,7 +14,7 @@ class that provides conveniences used by other code in :mod:`transport_data`.
 from functools import partialmethod
 from importlib.metadata import version
 from itertools import count
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 from warnings import filterwarnings
 
 if TYPE_CHECKING:
@@ -45,11 +45,12 @@ class ModelProxy:
     name: str | None = None
     id: str | None = None
 
-    _collections: dict[str, str] = dict()
+    _collections: ClassVar[dict[str, tuple[type, str]]] = dict()
 
     def __init__(self, data: dict | None = None, **kwargs) -> None:
         self.__dict__.update(data or {})
         self.__dict__.update(kwargs)
+        self._process_collections()
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -88,6 +89,18 @@ class ModelProxy:
         assert cls
         return cls(data)
 
+    def _process_collections(self) -> None:
+        """Convert the :attr:`_collections` to the designated types."""
+        for name, (t_collection, cls_name) in self._collections.items():
+            cls = get_class(cls_name)
+            assert cls is not None
+
+            data = self.__dict__.get(name)
+            if data is None:
+                continue
+
+            self.__dict__[name] = [(cls(x) if isinstance(x, dict) else x) for x in data]
+
     def update(self, data: dict) -> None:
         """Update part or all of the object data."""
         # Check some items
@@ -96,6 +109,7 @@ class ModelProxy:
         elif self.id and data.get("id", self.id) != self.id:
             raise ValueError(f"Cannot update with {data['id']!r} != {self.id=!r}")
         self.__dict__.update(data)
+        self._process_collections()
 
 
 def get_class(name: str) -> type[ModelProxy] | None:
@@ -124,6 +138,15 @@ class Organization(Group):
 
     # NB this is a subclass instead of `Organization = Group` so that type(…).__name__
     #    gives 'organization'
+
+    _collections = {
+        "packages": (list, "Package"),
+    }
+
+    def __repr__(self) -> str:
+        lines = [super().__repr__()]
+        lines.extend(f"  {p!r}" for p in (self.get("packages") or []))
+        return "\n".join(lines)
 
 
 class MemberRole(ModelProxy):
