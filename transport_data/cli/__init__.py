@@ -26,6 +26,7 @@ MODULES_WITH_CLI = [
     "jrc.cli",
     "oica.cli",
     "org.cli",
+    "org.ckan",
     "proto.cli",
     "store",
 ]
