@@ -202,9 +202,12 @@ class Client:
 
     _api: "RemoteCKAN"
     _cache: dict
+    id: str
 
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: str, id: str) -> None:
         from ckanapi import RemoteCKAN
+
+        self.id = id
 
         # Construct a user-agent string
         kw: dict[str, str | None] = dict(
@@ -216,7 +219,9 @@ class Client:
         try:
             import keyring
 
-            kw.update(apikey=keyring.get_password("transport-data", "api-token-prod"))
+            kw.update(
+                apikey=keyring.get_password("transport-data", f"api-token-{self.id}")
+            )
         except ImportError:
             pass
 

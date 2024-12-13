@@ -16,13 +16,13 @@ if TYPE_CHECKING:
     from sdmx.model import v21
 
 #: Development instance of TDC CKAN. Accessible as of 2024-11-27.
-DEV = Client("https://ckan.tdc.dev.datopian.com")
+DEV = Client("https://ckan.tdc.dev.datopian.com", id="dev")
 
 #: Production instance of TDC CKAN. Accessible as of 2024-11-27.
-PROD = Client("https://ckan.transport-data.org")
+PROD = Client("https://ckan.transport-data.org", id="prod")
 
 #: Staging instance of TDC CKAN. Not accessible as of 2024-11-27; SSL certificate error.
-STAGING = Client("https://ckan.tdc.staging.datopian.com")
+STAGING = Client("https://ckan.tdc.staging.datopian.com", id="staging")
 
 
 @dataclass
