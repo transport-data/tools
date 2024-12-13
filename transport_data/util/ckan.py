@@ -78,6 +78,9 @@ class ModelProxy:
         """Return the original dictionary of object data."""
         return self.__dict__.copy()
 
+    def get(self, name: str):
+        return self.__dict__.get(name)
+
     def get_item(self, name: str, index: int | None = None):
         """Get a member of a collection."""
         data = self.__dict__[name][index]
