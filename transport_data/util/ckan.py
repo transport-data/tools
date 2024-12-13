@@ -188,7 +188,11 @@ class Client:
         return getattr(self._api.action, name)
 
     def list_action(
-        self, kind: str, limit: int | None = None, max: int | None = None
+        self,
+        kind: str,
+        limit: int | None = None,
+        max: int | None = None,
+        **kwargs,
     ) -> list:
         """Call the ``{kind}_list`` API endpoint.
 
@@ -208,10 +212,12 @@ class Client:
 
         c = self._cache[f"{kind}_list"] = list()
 
+        data_dict = {"limit": limit}
+        data_dict.update(kwargs)
+
         for i in count():
-            result = self._api.call_action(
-                f"{kind}_list", data_dict={"limit": limit, "offset": i * limit}
-            )
+            data_dict.update(offset=i * limit)
+            result = self._api.call_action(f"{kind}_list", data_dict=data_dict)
             c.extend(result)
             if len(result) < limit or (max and max < (i + 1) * limit):
                 break
@@ -225,7 +231,7 @@ class Client:
     package_list = partialmethod(list_action, kind="package")
     tag_list = partialmethod(list_action, kind="tag")
 
-    def show_action(self, obj_or_id: str | dict | T, _cls: type[T]) -> T:
+    def show_action(self, obj_or_id: str | dict | T, _cls: type[T], **kwargs) -> T:
         """Call the ``{kind}_show`` API endpoint.
 
         If `obj_or_id` is an instance of :class:`.ModelProxy`, its
@@ -237,13 +243,13 @@ class Client:
         The return value is cached.
         """
         if isinstance(obj_or_id, dict):
-            kw: dict[str, str] = obj_or_id
+            kw: dict[str, str | None] = obj_or_id
             kw.update(id=kw.pop("name", kw.get("id", "")))
             result: T | None = _cls()
         else:
             kw = dict()
 
-        if isinstance(obj_or_id, str):
+        if isinstance(obj_or_id, str) or obj_or_id is None:
             # Query using the "id" keyword
             kw.update(id=obj_or_id)
             # Create a new result object according to the type of
@@ -254,6 +260,8 @@ class Client:
             elif obj_or_id.name:
                 kw.update(id=obj_or_id.name)
             result = obj_or_id
+
+        kw.update(kwargs)
 
         kind = _cls.__name__.lower()
 
