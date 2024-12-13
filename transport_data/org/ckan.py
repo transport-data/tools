@@ -84,6 +84,21 @@ class CKANMetadataReportStructure:
     version: Optional[str]
 
 
+#: :class:`click.Option` for :program:`--instance/-i` that allows the user to select one
+#: of :data:`PROD` (default), :data:`DEV`, or :data:`STAGING`.
+#:
+#: A function using this option gets a `instance` keyword argument that is the
+#: appropriate :class:`.Client` instance. :attr:`.Client.id` can be inspected for the
+#: given or default option value.
+instance_option = click.Option(
+    ["--instance", "-i"],
+    type=click.Choice(["dev", "prod", "staging"]),
+    default="prod",
+    callback=lambda c, p, v: {"dev": DEV, "prod": PROD, "staging": STAGING}[v],
+    help="TDC CKAN instance to query.",
+)
+
+
 @lru_cache
 def get_msd() -> "v21.MetadataStructureDefinition":
     """Generate and return an MSD containing all of the CKAN fields."""
@@ -165,17 +180,11 @@ def mdr_to_ckan_package(mdr):
     return Package(data)
 
 
-@click.command("ckan")
-@click.option(
-    "--instance",
-    type=click.Choice(["dev", "prod", "staging"]),
-    default="prod",
-    help="TDC CKAN instance to query.",
-)
+@click.command("ckan", params=[instance_option])
 @click.option("--verbose", "-v", is_flag=True, help="Show more output.")
 @click.argument("action")
 @click.argument("args", nargs=-1)
-def main(instance, verbose, action, args):
+def main(instance: Client, verbose, action, args):
     """Interact with the TDC CKAN instance via its API.
 
     ACTION is the ID of one of endpoints of the CKAN Action API, for instance "tag_show"
@@ -190,7 +199,7 @@ def main(instance, verbose, action, args):
     For some endpoints, the output is formatted. For all others, the raw JSON response
     is shown.
     """
-    client: Client = {"dev": DEV, "prod": PROD, "staging": STAGING}[instance]
+    client = instance
 
     # Parse key=value args to dictionary
     data_dict = {key: value for key, _, value in map(lambda s: s.partition("="), args)}
