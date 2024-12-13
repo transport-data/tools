@@ -173,9 +173,6 @@ class Client:
     - Iterating over calls with rate limits.
     - Caching results, including combined results from multiple calls.
     - Converting return values to instances of :class:`ModelProxy` subclasses.
-
-    .. todo::
-       - Handle API keys via :mod:`transport_data.config`.
     """
 
     _api: "RemoteCKAN"
@@ -185,12 +182,20 @@ class Client:
         from ckanapi import RemoteCKAN
 
         # Construct a user-agent string
-        user_agent = (
-            f"transport_data/{version('transport_data')} "
+        kw: dict[str, str | None] = dict(
+            user_agent=f"transport_data/{version('transport_data')} "
             "(+https://docs.transport-data.org)"
         )
 
-        self._api = RemoteCKAN(address, user_agent=user_agent)
+        # Fetch the user's API token, if any
+        try:
+            import keyring
+
+            kw.update(apikey=keyring.get_password("transport-data", "api-token-prod"))
+        except ImportError:
+            pass
+
+        self._api = RemoteCKAN(address, **kw)
         self._cache = dict(package=dict())
 
     def __getattr__(self, name: str):

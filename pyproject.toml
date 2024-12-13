@@ -28,6 +28,7 @@ dependencies = [
   "docutils",
   "dsss[git-store] >= 1.3.0",
   "Jinja2",
+  "keyring",
   "openpyxl",
   "packaging",
   "pandas",
@@ -44,13 +45,14 @@ dependencies = [
 [project.optional-dependencies]
 docs = ["furo", "Sphinx", "sphinx-autorun"]
 google = ["google-api-python-client", "google-auth-httplib2", "google-auth-oauthlib"]
+keyring = ["keyring"]
 tests = [
   "pytest",
   "pytest-cov",
   "pytest-rerunfailures",
   "pytest-timeout",
   "pytest-xdist",
-  "transport-data[google]",
+  "transport-data[keyring,google]",
 ]
 
 [project.urls]
