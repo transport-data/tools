@@ -159,6 +159,12 @@ class Tag(ModelProxy):
     """
 
 
+class User(ModelProxy):
+    """Proxy for `ckan.model.User
+    <https://github.com/ckan/ckan/blob/master/ckan/model/user.py>`_.
+    """
+
+
 class Client:
     """Wrapper around :class:`ckanapi.RemoteCKAN`.
 
@@ -233,6 +239,7 @@ class Client:
     organization_list = partialmethod(list_action, "organization")
     package_list = partialmethod(list_action, kind="package")
     tag_list = partialmethod(list_action, kind="tag")
+    user_list = partialmethod(list_action, kind="user")
 
     def show_action(self, obj_or_id: str | dict | T, _cls: type[T], **kwargs) -> T:
         """Call the ``{kind}_show`` API endpoint.
