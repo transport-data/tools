@@ -1,8 +1,14 @@
 """Utilities for :mod:`sdmx`."""
 
 import io
+from dataclasses import fields
 from datetime import datetime
 from importlib.metadata import version
+from inspect import getsource
+from io import StringIO
+from textwrap import dedent
+from token import COMMENT, NAME
+from tokenize import generate_tokens
 from typing import TYPE_CHECKING, cast
 
 import pandas as pd
@@ -187,3 +193,63 @@ def read_csv(
         "sdmx.message.DataMessage",
         sdmx.read_sdmx(source, format="csv", structure=structure),
     )
+
+
+def fields_to_mda(
+    cls: type,
+    rs: "sdmx.model.v21.ReportStructure",
+    cs: "sdmx.model.common.ConceptScheme | None" = None,
+) -> None:
+    """Populate `rs` with MetadataAttributes corresponding to dataclass fields of `cls`.
+
+    Examples
+    --------
+    >>> @dataclass
+    ... class MDSExample:
+    ...     #: Foo
+    ...     #:
+    ...     #: Description of Foo.
+    ...     foo: str
+    ...
+    ...     bar: int
+    ...
+    ... fields_to_mda(MDSExample)
+
+    In this example, two metadata attributes will be added to `rs`:
+
+    1. With id="foo" and an annotation with id="data-type" and text="<class 'str'>".
+       The concept identity for the metadata attribute will also have id="foo",
+       name="Foo", and description="Description of Foo."
+    2. With id="bar" and an annotation with id="data-type" and text="<class 'int'>".
+    """
+    from sdmx.model import common
+
+    # Assemble info about the dataclass fields of `cls`
+    field_info = {f.name: (f, "") for f in fields(cls)}
+
+    # Tokenize the source code of `cls` and update `field_info` with the Sphinx-style
+    # comments that precede each of the fields
+    #
+    # Thanks to https://davidism.com/attribute-docstrings/ and
+    # https://stackoverflow.com/a/7457047
+    comments = []  # Accumulate comment tokens
+    for tok in generate_tokens(StringIO(dedent(getsource(cls))).readline):
+        if tok.type == COMMENT:
+            comments.append(tok.string.lstrip("#: "))  # Store
+        elif tok.type == NAME and tok.string in field_info and len(comments):
+            # Reached the definition of a field, and there are accumulated comments
+            field_info[tok.string] = (field_info[tok.string][0], "\n".join(comments))
+            comments = []  # Reset
+
+    cs = cs or common.ConceptScheme()
+
+    for id_, (f, docstring) in field_info.items():
+        # Split the docstring, if any, to a name and optional description
+        name, _, desc = docstring.partition("\n\n")
+
+        # Construct the ConceptIdentity and add to `cs`
+        ci = cs.setdefault(id=id_, name=name or None, description=desc or None)
+        # Construct the data type annotation
+        type_anno = common.Annotation(id="data-type", text={"zxx": repr(f.type)})
+        # Add the metadata attribute to the report structure
+        rs.getdefault(id=id_, concept_identity=ci, annotations=[type_anno])

@@ -1,8 +1,46 @@
+from dataclasses import dataclass
+
 import pytest
 import sdmx
+from sdmx.model import v21
 
 from transport_data.testing import ember_dfd
-from transport_data.util.sdmx import read_csv
+from transport_data.util.sdmx import fields_to_mda, read_csv
+
+
+def test_fields_to_mda() -> None:
+    mdsd = v21.MetadataStructureDefinition()
+    rs = mdsd.report_structure["ALL"] = v21.ReportStructure(id="ALL")
+
+    assert 0 == len(rs)
+
+    @dataclass
+    class MDSExample:
+        #: Foo
+        #:
+        #: Description of Foo.
+        foo: str
+
+        bar: int
+
+    fields_to_mda(MDSExample, rs)
+
+    # Report structure has 1 metadata attribute for each of the fields in MDSExample
+    assert 2 == len(rs)
+
+    # Metadata attributes have expected IDs
+    assert "foo" == rs.components[0].id == rs.components[0].concept_identity.id
+    assert "bar" == rs.components[1].id == rs.components[1].concept_identity.id
+
+    # Python type annotations are stored as 'data-type' SDMX annotations
+    assert "<class 'str'>" == rs.components[0].eval_annotation(id="data-type")
+    assert "<class 'int'>" == rs.components[1].eval_annotation(id="data-type")
+
+    # Python docstrings are stored as name and description on the ConceptIdentity
+    assert "Foo" == str(rs.components[0].concept_identity.name)
+    assert "Description of Foo." == str(rs.components[0].concept_identity.description)
+    assert 0 == len(rs.components[1].concept_identity.name.localizations)
+    assert 0 == len(rs.components[1].concept_identity.description.localizations)
 
 
 @pytest.mark.parametrize(
