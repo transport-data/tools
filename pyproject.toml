@@ -95,7 +95,10 @@ ignore_missing_imports = true
 addopts = """
   -m "not network"
   --cov=transport_data --cov-report="""
-markers = ["network: tests that perform network requests"]
+markers = [
+  "network: tests that perform network requests",
+  "ckan_dev: tests that access the TDC dev CKAN instance",
+]
 usefixtures = "tmp_store"
 
 [tool.ruff.lint]

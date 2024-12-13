@@ -8,6 +8,7 @@ from transport_data.org.ckan import (
     ckan_package_to_mdr,
     mdr_to_ckan_package,
 )
+from transport_data.testing import CKAN_UUID
 from transport_data.util.ckan import Package
 
 
@@ -55,6 +56,25 @@ def test_ckan_package_to_mdr(package: Package) -> None:
     assert "False" == _get(mdr, "is_archived")
     assert "True" == _get(mdr, "isopen")
     assert "None" == _get(mdr, "author")
+
+
+@pytest.mark.ckan_dev
+@pytest.mark.network
+def test_create() -> None:
+    """A test package can be created on the DEV instance."""
+    instance, owner_org = DEV, CKAN_UUID["DEV org test"]
+
+    p = Package(
+        # Minimal fields for creating a Package object
+        name="transport-data-tools-test",  # TODO Create a hashed random name
+        notes=".",
+        owner_org=owner_org,
+        tdc_category="public",
+    )
+
+    response = instance.package_create(**p.asdict())
+
+    assert response
 
 
 def test_mdr_to_ckan_package(package: Package) -> None:
