@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional
 
-from transport_data.util.ckan import Client, Package
+import click
+
+from transport_data.util.ckan import Client, ModelProxy, Package
 from transport_data.util.sdmx import fields_to_mda
 
 if TYPE_CHECKING:
@@ -161,3 +163,50 @@ def mdr_to_ckan_package(mdr):
             data[ra.value_for.id] = data_type(ra.value)
 
     return Package(data)
+
+
+@click.command("ckan")
+@click.option(
+    "--instance",
+    type=click.Choice(["dev", "prod", "staging"]),
+    default="prod",
+    help="TDC CKAN instance to query.",
+)
+@click.option("--verbose", "-v", is_flag=True, help="Show more output.")
+@click.argument("action")
+@click.argument("args", nargs=-1)
+def main(instance, verbose, action, args):
+    """Interact with the TDC CKAN instance via its API.
+
+    ACTION is the ID of one of endpoints of the CKAN Action API, for instance "tag_show"
+    or "package_list". ARGS are a space-separated list of key=value pairs, for instance
+    "sort=title limit=10".
+
+    See https://docs.ckan.org/en/latest/api/ for the list and further documentation, or
+    use the "help_show" endpoint, for example:
+
+        tdc ckan help_show name=package_search
+
+    For some endpoints, the output is formatted. For all others, the raw JSON response
+    is shown.
+    """
+    client: Client = {"dev": DEV, "prod": PROD, "staging": STAGING}[instance]
+
+    # Parse key=value args to dictionary
+    data_dict = {key: value for key, _, value in map(lambda s: s.partition("="), args)}
+
+    try:
+        result = getattr(client, action)(**data_dict)
+    except Exception as e:
+        print(repr(e))
+        return False
+
+    if action.endswith("_list"):
+        for i, obj in enumerate(result, start=1):
+            print(f"{i:3d}. {obj}")
+    elif isinstance(result, str):
+        print(result)
+    else:
+        print(repr(result))
+        if verbose and isinstance(result, ModelProxy):
+            print(result.asdict())
