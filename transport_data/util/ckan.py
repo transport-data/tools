@@ -64,7 +64,9 @@ class ModelProxy:
         return (
             f"<CKAN {type(self).__name__} "
             + (repr(self.name) if self.name else "(no name)")
-            + f" with {len(self.__dict__) - 1} fields>"
+            + f" | {len(self.__dict__) - 1} fields | id="
+            + self.__dict__.get("id", "(none)")
+            + ">"
         )
 
     @classmethod

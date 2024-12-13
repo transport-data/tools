@@ -57,7 +57,7 @@ class TestPackage:
 
     def test_init_name_only(self) -> None:
         p = Package(name="foo-bar")
-        assert "<CKAN Package 'foo-bar' with 0 fields>" == repr(p)
+        assert "<CKAN Package 'foo-bar' | 0 fields | id=(none)>" == repr(p)
 
     def test_len(self, obj) -> None:
         assert 47 == len(obj)
