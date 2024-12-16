@@ -122,7 +122,7 @@ class TestClient:
             param("organization_follower_list", {}, marks=_NotAuthorized),
             ("organization_list_for_user", {}),
             ("organization_list", {}),
-            ("organization_show", {"name": "transport-data-commons"}),
+            ("organization_show", {"name": "tdci"}),
             param("package_autocomplete", {}, marks=_Incomplete),
             param("package_collaborator_list_for_user", {}, marks=_Incomplete),
             param("package_collaborator_list", {}, marks=_Incomplete),
@@ -164,11 +164,11 @@ class TestClient:
     @pytest.mark.parametrize(
         "arg",
         (
-            "transport-data-commons",
+            "tdci",
             "94861715-012e-4467-8353-ab6d1a9c32f9",
-            {"name": "transport-data-commons"},
+            {"name": "tdci"},
             {"id": "94861715-012e-4467-8353-ab6d1a9c32f9"},
-            Organization(name="transport-data-commons"),
+            Organization(name="tdci"),
             Organization(id="94861715-012e-4467-8353-ab6d1a9c32f9"),
         ),
     )
