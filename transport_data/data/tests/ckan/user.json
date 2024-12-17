@@ -1,0 +1,18 @@
+{
+    "id": "f9197cfb-1929-48fd-9800-f740c25f423d",
+    "name": "ckan_admin",
+    "fullname": "",
+    "created": "2024-09-30T05:42:29.577423",
+    "about": "",
+    "last_active": "2024-12-13T12:11:48.767111",
+    "activity_streams_email_notifications": false,
+    "sysadmin": true,
+    "state": "active",
+    "image_url": "",
+    "display_name": "ckan_admin",
+    "email_hash": "0f4d61e17039d66bd8c5d9bd6e6a104f",
+    "number_created_packages": 415,
+    "apikey": null,
+    "email": "hosting@datopian.com",
+    "image_display_url": ""
+}
