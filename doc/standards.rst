@@ -1,10 +1,6 @@
 Data standards
 **************
 
-.. contents::
-   :local:
-   :depth: 2
-
 About
 =====
 
