@@ -49,21 +49,18 @@ In order to follow this HOWTO, you need the following:
 1. This Python package, :mod:`.transport_data` installed and usable on your system.
    See :ref:`install`.
 2. Some existing data.
-3. A stored **data flow definition** (DFD) for the data (2).
+3. A stored **data flow definition** (DFD) and associated **data structure definition** (DSD) for the data (2).
 
-   This DFD, and the associated **data structure definition** (DSD), must include:
+   See :doc:`/howto/cli-edit` for one way to create a DSD and DFD.
+   The DSD must include at minimum, all dimensions and the (primary) measure of the data, with the IDs to be used in section (B), step (1) below.
 
-   - …
-
-   .. note:: This HOWTO does not currently specify how to prepare a DSD and DFD.
-      This will be added in the future, to this HOWTO or a separate one.
 
 A. Choose a file format
 =======================
 
 :mod:`.transport_data` can handle the following formats:
 
-1. SDMX-CSV (:file:`.xlsx`).
+1. SDMX-CSV (:file:`.csv`).
 
    .. code-block::
 
