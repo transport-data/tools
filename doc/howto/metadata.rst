@@ -3,9 +3,6 @@ Record and update TDC-structured metadata
 
 This guide explains how to record and update **metadata** in a TDC-specific file format. [1]_
 
-.. contents::
-   :local:
-
 .. [1] The guide was developed as part of a project funded by :doc:`/giz` under the `TUEWAS Asia <https://tuewas-asia.org>`_ network.
 
 Introduction

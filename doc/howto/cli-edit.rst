@@ -1,9 +1,6 @@
 Edit data structures with the :program:`tdc` CLI
 ************************************************
 
-.. contents::
-   :local:
-
 Introduction
 ============
 
