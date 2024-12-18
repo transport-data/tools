@@ -55,15 +55,15 @@ In order to follow this HOWTO, you need the following:
 
    - …
 
-   .. note:: This HOWTO does not currently specify how to prepare a DSD and DFD.
-      This will be added in the future, to this HOWTO or a separate one.
+   See :doc:`/howto/cli-edit` for one way to create a DSD and DFD.
+
 
 A. Choose a file format
 =======================
 
 :mod:`.transport_data` can handle the following formats:
 
-1. SDMX-CSV (:file:`.xlsx`).
+1. SDMX-CSV (:file:`.csv`).
 
    .. code-block::
 
