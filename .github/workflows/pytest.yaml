@@ -40,24 +40,23 @@ jobs:
       with:
         lfs: true
 
-    - uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@v5
       with:
+        cache-dependency-glob: "**/pyproject.toml"
         python-version: ${{ matrix.python-version }}
 
-    - uses: astral-sh/setup-uv@v4
-      with:
-        enable-cache: true
-        cache-dependency-glob: "**/pyproject.toml"
-
     - name: Install the Python package and dependencies
-      run: uv pip install --system --upgrade .[tests]
+      run: uv pip install --upgrade .[tests]
 
     - name: Clone the transport-data/registry repo
-      run: coverage run -m transport_data store clone
+      run: |
+        uv run --no-sync \
+          coverage run -m transport_data store clone
 
     - name: Run test suite using pytest
       run: |
-        pytest transport_data \
+        uv run --no-sync \
+          pytest transport_data \
           --trace-config --color=yes -rA -vv --durations=20 \
           --cov-append --cov-report=term --cov-report=xml \
           --numprocesses auto
@@ -74,14 +73,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with: { python-version: 3.x }
-    - run: python -m pip install pre-commit && python -m pip freeze --local
+    - uses: astral-sh/setup-uv@v5
+      with:
+        cache-dependency-glob: |
+          **/pyproject.toml
+          **/.pre-commit-config.yaml
+        # TEMPORARY Use Python 3.12 to avoid https://github.com/python/mypy/issues/18216
+        python-version: "3.12"
     - uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
-        key: pre-commit|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
-    - name: Force recreation of pre-commit virtual environment for mypy
-      if: github.event_name == 'schedule'  # Comment this line to run on a PR
-      run: pre-commit clean
-    - run: pre-commit run --all-files --color=always --show-diff-on-failure
+        key: ${{ github.job }}|${{ hashFiles('.pre-commit-config.yaml') }}
+        lookup-only: ${{ github.event_name == 'schedule' }}
+        # lookup-only: true  # Uncomment to force cache recreation
+    - name: Run pre-commit
+      run: uvx pre-commit run --all-files --show-diff-on-failure --color=always
