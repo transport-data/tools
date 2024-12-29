@@ -2,6 +2,7 @@ import pytest
 from sdmx.model import v21
 
 from transport_data.adb import convert, dataset_to_metadata_reports
+from transport_data.testing import MARK
 
 
 @pytest.fixture(scope="session")
@@ -35,6 +36,7 @@ def ato_any_dataset(ato_converted_data) -> "v21.DataSet":
     return STORE.get(key)
 
 
+@MARK[0]
 def test_convert0(ato_converted_data):
     """Test that :func:`.adb.convert` works for certain parts."""
     # Nothing in particular: simply request the fixture that generates the parts
@@ -50,6 +52,7 @@ def test_convert1(part):
     convert(part)
 
 
+@MARK[0]
 @pytest.mark.usefixtures("ato_converted_data")
 def test_dataset_to_metadata_reports():
     from transport_data import STORE
