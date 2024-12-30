@@ -3,7 +3,7 @@
 import io
 from datetime import datetime
 from importlib.metadata import version
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 import pandas as pd
 
@@ -185,4 +185,7 @@ def read_csv(
     else:
         source = path
 
-    return sdmx.read_sdmx(source, format="csv", structure=structure)
+    return cast(
+        "sdmx.message.DataMessage",
+        sdmx.read_sdmx(source, format="csv", structure=structure),
+    )

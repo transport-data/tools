@@ -5,10 +5,6 @@ This module handles the `Asian Transport Outlook (ATO) <https://asiantransportou
 
 In particular, it converts data from the :ref:`ATO native Excel file format <ato-format>`—both the 2022-10-07 and 2024-05-20 formats—to SDMX and extracts metadata.
 
-.. contents::
-   :local:
-   :backlinks: none
-
 .. _ato-format:
 
 ATO National Database format

@@ -106,9 +106,15 @@ class ODTWriter(docutils.writers.odf_odt.Writer):
     # NB Lines excluded with "pragma: no cover" are not used in transport_data
 
     def __init__(self):
+        # These 2 statements are identical to the parent class' __init__, except using
+        # the ODFTranslator subclass defined in this module
         docutils.writers.Writer.__init__(self)
-        # Use the ODFTranslator subclass defined in this module
         self.translator_class = ODFTranslator
+
+        # Reconstruct default_stylesheet_path as an absolute (not relative) path
+        self.default_stylesheet_path = Path(
+            docutils.writers.odf_odt.__file__
+        ).parent.joinpath(self.default_stylesheet)
 
     def copy_from_stylesheet(self, outzipfile: "ZipFile") -> None:
         """Copy images, settings, etc from the stylesheet doc into target doc."""

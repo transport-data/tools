@@ -24,12 +24,13 @@ Design goals
 
   - Modules for different data providers have roughly similar semantics (such as function names), but these are not (for now) tightly enforced.
 - Code for handling a specific format is collected in a single module, e.g. :mod:`.iamc`, and reused from there.
-- Data is processed from various original formats to SDMX objects, but stored and manipulated as SDMX wherever possible.
+- Data is processed **from** various original formats **to** SDMX objects, then stored and manipulated as SDMX wherever possible.
+  This ensures that common utilities for manipulating SDMX-structured (meta)data can be applied regardless of the original provider or format(s).
 
   - SDMX :class:`~.sdmx.model.common.MaintainableArtefact` are exchanged between modules.
 - :mod:`transport_data` does not duplicate data, metadata, or structural information from data providers.
-  Wherever possible, these are processed from original sources.
-  :mod:`transport_data` only adds metadata where it is missing in these original sources.
+  Wherever possible, these are processed or retrieved from original sources, files, etc.
+  :mod:`transport_data` only adds metadata where it is missing from these original sources and has been obtained through independent work by TDCI participants.
 - As little as possible workflow/orchestration code is created.
   The individual functions/CLI commands in :mod:`transport_data` are kept generic, so they can eventually be incorporated as atomic workflow elements in a framework to be chosen later, or on the backend of the TDC web UI and other systems.
 

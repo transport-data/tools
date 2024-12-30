@@ -1,4 +1,6 @@
 import os
+import platform
+import zipfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, cast
 
@@ -18,6 +20,15 @@ if TYPE_CHECKING:
 
 #: :any:`True` if tests are being run on GitHub Actions.
 GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
+
+#: Marks to be reused throughout the test suite. Do not reuse keys in the mapping.
+MARK = {
+    0: pytest.mark.xfail(
+        condition=GITHUB_ACTIONS and platform.system() == "Windows",
+        raises=zipfile.BadZipFile,
+        reason="'Truncated file header' on GHA runner",
+    )
+}
 
 
 class CliRunner(click.testing.CliRunner):

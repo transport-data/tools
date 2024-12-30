@@ -6,6 +6,7 @@ Next release
 
 - Add :mod:`.util.ckan`, including a :class:`~.ckan.Client` for access to CKAN instances (including the TDC instances); proxy classes for CKAN objects including :class:`~.ckan.Package`, :class:`~.ckan.Resource`, and mode (:pull:`35`).
 - Add :data:`.org.ckan.PROD` and :data:`.org.ckan.DEV` instances of :class:`.ckan.Client` (:pull:`35`).
+- Improve documentation (:pull:`40`).
 
 v24.11.25
 =========

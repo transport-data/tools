@@ -41,7 +41,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-docs = ["Sphinx", "sphinx-autorun", "sphinx-book-theme"]
+docs = ["furo", "Sphinx", "sphinx-autorun"]
 google = ["google-api-python-client", "google-auth-httplib2", "google-auth-oauthlib"]
 tests = [
   "pytest",

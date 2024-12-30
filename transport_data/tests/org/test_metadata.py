@@ -5,6 +5,7 @@ import pytest
 
 from transport_data.org.metadata import contains_data_for, groupby, merge_ato, report
 from transport_data.org.metadata.spreadsheet import make_workbook, read_workbook
+from transport_data.testing import MARK
 from transport_data.tests.test_adb import ato_converted_data  # noqa: F401
 
 #: Number of metadata reports in the test specimen for which contains_data_for() returns
@@ -37,6 +38,7 @@ def test_make_workbook_cli(tmp_path, tdc_cli) -> None:
     assert exp.exists()
 
 
+@MARK[0]
 @pytest.mark.usefixtures("ato_converted_data")
 def test_merge_ato(example_metadata) -> None:
     mds, cs = example_metadata
