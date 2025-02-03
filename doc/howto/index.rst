@@ -13,3 +13,4 @@ In contrast, the :doc:`/standards` are *prescriptive*.
    Edit data structures <cli-edit>
    Format data <data-csv>
    Record and update metadata <metadata>
+   Create records via the portal <portal>
