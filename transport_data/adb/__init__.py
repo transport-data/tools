@@ -531,8 +531,8 @@ def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
         try:
             CL_ECONOMY.append(c)
         except ValueError:
-            assert CL_ECONOMY[c.id].compare(
-                c
-            ), f"Existing {CL_ECONOMY[c.id]} does not match {c}"
+            assert CL_ECONOMY[c.id].compare(c), (
+                f"Existing {CL_ECONOMY[c.id]} does not match {c}"
+            )
 
     return df.rename(columns={"Economy Code": "ECONOMY"}).drop(columns=["Economy Name"])
