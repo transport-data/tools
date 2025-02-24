@@ -7,14 +7,14 @@ The :mod:`transport_data` code is:
   This means its features are not stable and may change at any time.
   For example, portions of the code may be migrated to other repositories and packages without advance notice or deprecation.
 - **Unofficial.**
-  The TDCI *handles* data from data providers such as :mod:`.adb`, :mod:`.jrc`, and others.
+  The TDCI *handles* data from data providers such as :mod:`.ato`, :mod:`.jrc`, and others.
   However, the derived data products—in particular, SDMX-formatted data and structures—produced by :mod:`transport_data` are strictly unofficial and, unless explicitly stated, have not been checked or validated by the original providers.
 
 Design goals
 ============
 
 - The code is simple, modular, and flat.
-- There is one module per data provider (e.g. :mod:`.adb`, :mod:`.estat`, :mod:`.jrc`).
+- There is one module per data provider (e.g. :mod:`.ato`, :mod:`.estat`, :mod:`.jrc`).
 
   - This makes possible the process that:
 

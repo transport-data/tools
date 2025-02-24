@@ -1,9 +1,9 @@
-Asian Development Bank
-**********************
+Asian Transport Observatory
+****************************
 
-This module handles the `Asian Transport Outlook (ATO) <https://asiantransportoutlook.com>`_ source maintained by the Asian Development Bank (ADB, initially) and Asian Infrastructure Investment Bank (AIIB, more recently), specifically the `ATO National Database <https://asiantransportoutlook.com/snd/>`_.
+This module handles data provided by the `Asian Transport Observatory (ATO) <https://asiantransportobservatory.org>`_, an organization supported by, but distinct from the Asian Development Bank (ADB, initially) and Asian Infrastructure Investment Bank (AIIB, more recently).
 
-In particular, it converts data from the :ref:`ATO native Excel file format <ato-format>`—both the 2022-10-07 and 2024-05-20 formats—to SDMX and extracts metadata.
+In particular it handles the `Asian Transport Outlook (also ‘ATO’) National Database <https://asiantransportobservatory.org/snd/>`_, and supports converting data from the :ref:`ATO native Excel file format <ato-format>`—including slight variations used in 2022-10-07, 2024-05-20, 2024-11-14, and 2025-02-17 data releases—to SDMX and extracts metadata.
 
 .. _ato-format:
 
@@ -32,4 +32,9 @@ There is an `ATO National Database User Guide <https://asiantransportoutlook.com
   - 2022-10-07
   - 2024-05-20.
 
-.. include:: _api/transport_data.adb.rst
+.. include:: _api/transport_data.ato.rst
+
+Changes
+=======
+
+- 2025-02-24 (:pull:`47`, :issue:`46`): Rename module from :py:`transport_data.adb` to :py:`transport_data.ato` to reflect the current identity of the data provider.

@@ -1,8 +1,8 @@
-"""CLI for :mod:`.adb`.
+"""CLI for :mod:`.ato`.
 
 .. runblock:: console
 
-   $ tdc adb --help
+   $ tdc ato --help
 
 .. runblock:: console
 
@@ -10,7 +10,7 @@
 
 .. runblock:: console
 
-   $ tdc adb convert --help
+   $ tdc ato convert --help
 """
 
 import click
@@ -18,9 +18,9 @@ import click
 from . import FILES, convert, fetch
 
 
-@click.group("adb")
+@click.group("ato")
 def main():
-    """Asian Development Bank (ADB) provider."""
+    """Asian Transport Observatory (ATO) provider."""
 
 
 @main.command("fetch")

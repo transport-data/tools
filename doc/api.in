@@ -4,7 +4,7 @@
    :toctree: _api
    :recursive:
 
-   adb
+   ato
    cli
    config
    estat

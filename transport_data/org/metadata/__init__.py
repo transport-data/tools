@@ -304,9 +304,9 @@ def unique_dfd_id(mdr: "v21.MetadataReport", existing: set[str]) -> str:
 
 
 def merge_ato(mds: "v21.MetadataSet") -> None:
-    """Extend `mds` with metadata reports for ADB ATO data flows."""
+    """Extend `mds` with metadata reports for ATO/ATO data flows."""
     from transport_data import STORE
-    from transport_data.adb import dataset_to_metadata_reports
+    from transport_data.ato import dataset_to_metadata_reports
 
     assert mds.structured_by
 
@@ -325,7 +325,7 @@ def merge_ato(mds: "v21.MetadataSet") -> None:
         filter(
             lambda k: True,  # All results
             # lambda k: "-VEP-" in k,  # DEBUG Filter for a subset of data sets
-            STORE.list(v21.DataSet, maintainer="ADB"),
+            STORE.list(v21.DataSet, maintainer="ATO"),
         ),
     ):
         try:

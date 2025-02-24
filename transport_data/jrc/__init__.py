@@ -465,14 +465,14 @@ def convert(geo):
 
 
 def prepare(measure_concept, dims):
-    # TODO merge with the similar function in .adb.__init__
+    # TODO merge with the similar function in .ato.__init__
 
     measure_id = measure_concept.id
     c = measure_concept
     aa = measure_concept
 
     # Data structure definition with an ID matching the measure
-    # NB here we set ADB as the maintainer. Precisely, ADB establishes the data
+    # NB here we set JRC as the maintainer. Precisely, JRC establishes the data
     #    structure, but TDCI is maintaining the SDMX representation of it.
     dsd = m.DataStructureDefinition(
         id=measure_id, maintainer=get_agencies()[0], version="0.0.0"

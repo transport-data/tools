@@ -12,8 +12,8 @@ from transport_data.testing import ember_dfd
     "command",
     (
         ("--help",),
-        ("adb", "--help"),
-        ("adb", "fetch", "--all"),
+        ("ato", "--help"),
+        ("ato", "fetch", "--all"),
         ("check", "--help"),
         ("config", "--help"),
         ("estat", "--help"),

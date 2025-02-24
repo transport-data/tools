@@ -17,7 +17,7 @@ STORE = UnionStore(CONFIG)
 
 # Register plugin hooks
 register_internal(
-    "adb",
+    "ato",
     "iamc",
     "ipcc",
     "iso",

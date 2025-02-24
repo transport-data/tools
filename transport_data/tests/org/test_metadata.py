@@ -6,7 +6,7 @@ import pytest
 from transport_data.org.metadata import contains_data_for, groupby, merge_ato, report
 from transport_data.org.metadata.spreadsheet import make_workbook, read_workbook
 from transport_data.testing import MARK
-from transport_data.tests.test_adb import ato_converted_data  # noqa: F401
+from transport_data.tests.test_ato import ato_converted_data  # noqa: F401
 
 #: Number of metadata reports in the test specimen for which contains_data_for() returns
 #: :any:`True`.

@@ -46,7 +46,7 @@ Each subcommand has its own :program:`--help` and page in this documentation::
     --help  Show this message and exit.
 
   Commands:
-    adb       CLI for :mod:`.adb`.
+    ato       CLI for :mod:`.ato`.
     config    Manipulate configuration.
     estat     Eurostat (ESTAT) provider.
     iamc      Demonstrate IAMC structure generation.
