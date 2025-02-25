@@ -55,8 +55,8 @@ jobs:
 
     - name: Run test suite using pytest
       run: |
-        uv run --no-sync \
-          pytest transport_data \
+        pytest transport_data \
+          -m "not ckan_dev" \
           --trace-config --color=yes -rA -vv --durations=20 \
           --cov-append --cov-report=term --cov-report=xml \
           --numprocesses auto

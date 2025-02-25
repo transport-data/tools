@@ -3,7 +3,13 @@ from pathlib import Path
 
 import pytest
 
-from transport_data.org.metadata import contains_data_for, groupby, merge_ato, report
+from transport_data.org.metadata import (
+    contains_data_for,
+    get_msd,
+    groupby,
+    merge_ato,
+    report,
+)
 from transport_data.org.metadata.spreadsheet import make_workbook, read_workbook
 from transport_data.testing import MARK
 from transport_data.tests.test_ato import ato_converted_data  # noqa: F401
@@ -19,6 +25,25 @@ COUNTRIES = [
     ("TH", 17),
     ("VN", 18),
 ]
+
+
+def test_get_msd():
+    msd = get_msd()
+
+    # MSD contains a report structure with id "ALL"
+    rs = msd.report_structure["ALL"]
+
+    # Report structure has a certain number of metadata attributes
+    assert 9 == len(rs)
+
+    # Metadata attributes have expected ID, annotation, and association to concepts with
+    # expected properties
+    mda = rs.get("DATA_DESCR")
+    assert "<class 'str'>" == mda.eval_annotation(id="data-type")
+    c = mda.concept_identity
+    assert "DATA_DESCR" == c.id
+    assert "Data description" == str(c.name)
+    assert str(c.description).startswith("Any information about the data flow that ")
 
 
 def test_make_workbook(tmp_path) -> None:
