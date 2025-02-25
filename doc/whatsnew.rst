@@ -1,8 +1,11 @@
 What's new
 **********
 
-.. Next release
-.. ============
+Next release
+============
+
+- Rename :py:`.adb` to :mod:`.ato` (:pull:`47`).
+- Update known hash for one file provided by :mod:`.ato` (:issue:`46`, :pull:`47`).
 
 v24.12.29
 =========

@@ -12,7 +12,7 @@ import click
 @click.command("proto")
 def main():  # pragma: no cover
     """TDC prototype debugging."""
-    # from transport_data import adb
+    # from transport_data import ato
     from transport_data import jrc
 
     # # commented: this fetches *all* data, and should not be done too often
@@ -24,7 +24,7 @@ def main():  # pragma: no cover
 
     print(jrc.read("AT"))
 
-    # # commented: uncomment this statement to fetch ADB ATO data files
-    # adb.get()
+    # # commented: uncomment this statement to fetch ATO ATO data files
+    # ato.get()
 
-    # adb.convert_all()
+    # ato.convert_all()

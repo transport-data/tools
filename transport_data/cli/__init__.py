@@ -16,7 +16,7 @@ def main():
 #: List of (sub)modules that define CLI (sub)commands. Each should contain a
 #: @click.command() named "main".
 MODULES_WITH_CLI = [
-    "adb.cli",
+    "ato.cli",
     "config",
     "cli.interactive",
     "estat",

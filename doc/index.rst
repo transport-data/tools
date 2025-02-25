@@ -53,7 +53,7 @@ They handle tasks including:
    :caption: Data and metadata
    :hidden:
 
-   adb
+   ato
    estat
    giz
    iamc
@@ -65,7 +65,7 @@ They handle tasks including:
    org
    proto
 
-- :mod:`.adb`: :doc:`adb`
+- :mod:`.ato`: :doc:`ato`
 - :mod:`.estat`: :doc:`estat`
 - :doc:`giz`
 - :mod:`.iamc`: :doc:`iamc`

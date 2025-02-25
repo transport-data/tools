@@ -1,7 +1,7 @@
 import pytest
 from sdmx.model import v21
 
-from transport_data.adb import convert, dataset_to_metadata_reports
+from transport_data.ato import convert, dataset_to_metadata_reports
 from transport_data.testing import MARK
 
 
@@ -21,24 +21,24 @@ def ato_converted_data(tmp_store):
     # dest_dir = tmp_store.store["local"].path
 
     # def predicate(p: Path) -> bool:
-    #     return "ADB:" in p.name
+    #     return "ATO:" in p.name
 
     # for p in filter(predicate, source_dir.iterdir()):
     #     copyfile(p, dest_dir.joinpath(p.name))
 
 
 @pytest.fixture
-def ato_any_dataset(ato_converted_data) -> "v21.DataSet":
+def ato_any_dataset(ato_converted_data) -> "v21.DataSet":  # pragma: no cover
     """One (any) ATO data set."""
     from transport_data import STORE
 
-    key = STORE.list(v21.DataSet, maintainer="ADB")[0]
+    key = STORE.list(v21.DataSet, maintainer="ATO")[0]
     return STORE.get(key)
 
 
 @MARK[0]
 def test_convert0(ato_converted_data):
-    """Test that :func:`.adb.convert` works for certain parts."""
+    """Test that :func:`.ato.convert` works for certain parts."""
     # Nothing in particular: simply request the fixture that generates the parts
     # TODO Add assertions about the numbers of data structures and sets converted
 
@@ -60,7 +60,7 @@ def test_dataset_to_metadata_reports():
 
     # Retrieve one particular converted data set
     datasets = filter(
-        lambda k: "TAS-VEP-001" in k, STORE.list(v21.DataSet, maintainer="ADB")
+        lambda k: "TAS-VEP-001" in k, STORE.list(v21.DataSet, maintainer="ATO")
     )
     ds = STORE.get(next(datasets))
 
