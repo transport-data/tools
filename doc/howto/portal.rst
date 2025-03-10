@@ -110,7 +110,7 @@ TDC category
    …
 
 Units
-   Enter the units of measurement.
+   Enter the units of measurement for instance kg.
 
 Language
    …
