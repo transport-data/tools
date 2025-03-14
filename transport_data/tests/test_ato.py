@@ -9,7 +9,17 @@ from transport_data.testing import MARK
 def ato_converted_data(tmp_store):
     """Converted ATO data and structures in the test data directory."""
     # 'Proper' method: repeat the conversion in the test data directory
-    for part in ("ACC", "APH", "CLC", "INF", "MIS", "RSA", "SEC", "TAS"):
+    for part in (
+        # Temporarily disabled; see https://github.com/transport-data/tools/issues/48
+        # "ACC",
+        "APH",
+        "CLC",
+        "INF",
+        "MIS",
+        "RSA",
+        "SEC",
+        "TAS",
+    ):
         convert(part)
 
     # # 'Fast' method: mirror the files from the user's directory
