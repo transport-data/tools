@@ -8,7 +8,6 @@ This module handles data from the JRC IDEES 2015 source.
 - Extract
 - Parse the native spreadsheet layout.
 - Convert to SDMX.
-
 """
 
 import re
@@ -56,6 +55,7 @@ def provides():
     return ("ConceptScheme=TDCI:CS_JRC_MEASURE",)
 
 
+#: Base URL for :data:`POOCH`.
 BASE_URL = (
     "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/JRC-IDEES/JRC-IDEES-2015_v1/"
 )
@@ -109,9 +109,11 @@ MEMBERS = [
 
 
 def expand(fname: str) -> str:
+    """Callback to expand `fname` into a complete file name for :data:`POOCH`."""
     return f"JRC-IDEES-2015_All_xlsx_{fname}.zip"
 
 
+#: Pooch to fetch data from the JRC website at :data:`BASE_URL`.
 POOCH = Pooch(
     module=__name__,
     base_url=BASE_URL,
