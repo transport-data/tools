@@ -1,8 +1,11 @@
 """Asian Transport Observatory (ATO) provider."""
 
+import logging
 from collections import defaultdict
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from itertools import chain, product
-from typing import Callable, Iterable, Tuple
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import quote, urlparse
 
 import pandas as pd
@@ -12,6 +15,11 @@ from sdmx.model import v21
 from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 BASE_URL = "https://asiantransportobservatory.org/exportdl?orig=1"
 
@@ -77,14 +85,43 @@ FILES = {
 VERSION = "0.1.0"
 
 
+@dataclass
+class Config:
+    """Common configuration for :func:`fetch`, :func:`convert` and others."""
+
+    #: If :any:`True`, fetch from the Zenodo mirror at :data:`POOCH_ZENODO`. Otherwise,
+    #: fetch from :data:`POOCH`.
+    from_zenodo: bool = False
+
+    #: If :any:`True`, do not fetch anything; only confirm that the files to be fetched
+    #: are available.
+    dry_run: bool = False
+
+
 def expand(fname: str) -> str:
+    """Callback to expand `fname` into a complete file name for :data:`POOCH`."""
     return FILES.get(fname, (fname, None))[0]
+
+
+def expand_zenodo(fname: str) -> str:
+    """Callback to expand `fname` into a complete file name for :data:`POOCH_ZENODO`."""
+    POOCH_ZENODO._ensure_doi_registry()
+
+    # Identify all files with names containing "(fname)"
+    matches = set(k for k in POOCH_ZENODO.registry if f"({fname})" in k)
+
+    try:
+        # Most recent file sorted by date
+        return sorted(matches)[-1]
+    except IndexError:
+        raise KeyError(fname)
 
 
 def _make_url(fname: str) -> str:
     return f"{BASE_URL}&filename={quote(expand(fname))}"
 
 
+#: Pooch to fetch data from the ATO website.
 POOCH = Pooch(
     module=__name__,
     base_url=BASE_URL,
@@ -93,14 +130,24 @@ POOCH = Pooch(
     expand=expand,
 )
 
+#: Pooch to fetch data from the Zenodo mirror: https://doi.org/10.5281/zenodo.14913730
+POOCH_ZENODO = Pooch(
+    module=f"{__name__}-zenodo",
+    base_url="doi:10.5281/zenodo.14913730/",
+    expand=expand_zenodo,
+)
 
-def convert(part: str):
+
+def convert(part: str, config: Optional[Config] = None, **kwargs) -> None:
+    """Convert `part` of the ATO National Database to SDMX-ML and store."""
     from tqdm import tqdm
 
     from transport_data import STORE
 
-    path = POOCH.fetch(part)
-    ef = pd.ExcelFile(path, engine="openpyxl")
+    # Ensure the source file is available locally
+    paths = fetch(part, config=config, **kwargs)
+    assert 1 == len(paths), paths
+    ef = pd.ExcelFile(paths[0], engine="openpyxl")
 
     # Maximum length of a sheet name, for formatting the description
     L = max(map(lambda v: len(str(v)), ef.sheet_names))
@@ -283,13 +330,31 @@ def dataset_to_metadata_reports(
     return result
 
 
-def fetch(*parts, dry_run: bool = False):
-    if dry_run:
-        for p in parts:
-            print(f"Valid url for GEO={p}: {POOCH.is_available(p)}")
-        return
+def fetch(*parts: str, config: Optional[Config] = None, **kwargs) -> list["Path"]:
+    """Fetch source data files for one or more parts of the ATO National Database.
 
-    return list(chain(*[POOCH.fetch(p) for p in parts]))
+    Parameters
+    ----------
+    parts
+        If no positional args are given, all of the keys from :data:`FILES` are used.
+    """
+    if not parts:
+        parts = tuple(sorted(FILES))
+
+    config = config or Config(**kwargs)
+
+    pooch = POOCH_ZENODO if config.from_zenodo else POOCH
+
+    result = []
+
+    if config.dry_run:
+        for p in parts:
+            log.info(f"Valid url for ATO part {p!r}: {pooch.is_available(p)}")
+            result.append(pooch.path_for(p))
+    else:
+        result.extend(pooch.fetch(p) for p in parts)
+
+    return result
 
 
 def format_data_provider(value: str) -> str:
@@ -334,7 +399,7 @@ def provides():
     )
 
 
-def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
+def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, Callable]:
     """Prepare an empty data set and associated structures."""
     # Measure identifier and description
     measure_id = (
@@ -413,7 +478,7 @@ def prepare(aa: m.AnnotableArtefact) -> Tuple[m.DataSet, Callable]:
 
 def read_sheet(
     ef: pd.ExcelFile, sheet_name: str
-) -> Tuple[pd.DataFrame, m.AnnotableArtefact]:
+) -> tuple[pd.DataFrame, m.AnnotableArtefact]:
     """Read a single sheet.
 
     This function handles the particular layout of sheets in files like those listed in

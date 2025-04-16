@@ -134,7 +134,7 @@ def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
 
     for ra in mdr.metadata:
         assert hasattr(ra, "value")
-        if ra.value_for.id == "DATA_DESCR" and pat.search(ra.value):
+        if ra.value_for.id == "DATA_DESCR" and pat.search(str(ra.value)):
             return True
 
     return False
@@ -231,7 +231,7 @@ def _get(mdr: "v21.MetadataReport", mda_id: str) -> Optional[str]:
     for mda in mdr.metadata:
         if mda.value_for is not None and mda.value_for.id == mda_id:
             assert hasattr(mda, "value")  # Exclude ReportedAttribute without value attr
-            return mda.value
+            return str(mda.value) if mda.value else None
     # No match
     return None
 
