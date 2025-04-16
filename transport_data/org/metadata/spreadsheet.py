@@ -339,8 +339,8 @@ def update_dimension_descriptor(
         c = getdefault(cs_dims, dc)
 
         # Construct annotations
-        anno = [common.Annotation(id="tdc-description", text=dc.description)]
+        anno = [v21.Annotation(id="tdc-description", text=dc.description)]
         if c.id != dc.id:
-            anno.append(common.Annotation(id="tdc-original-id", text=dc.id))
+            anno.append(v21.Annotation(id="tdc-original-id", text=dc.id))
 
         dsd.dimensions.getdefault(id=c.id, concept_identity=c, annotations=anno)
