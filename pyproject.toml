@@ -77,7 +77,7 @@ module = [
   "google_auth_oauthlib.*",
   "google.*",
   "googleapiclient.*",
-  "pooch",
+  "pooch.*",
   "pycountry.*",
 ]
 ignore_missing_imports = true
