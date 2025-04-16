@@ -451,7 +451,9 @@ def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, Callable]:
         structured_by=dsd,
         annotations=[aa.get_annotation(id="remark-cols")],
     )
-    anno_generated(ds)
+    # FIXME Disabled for https://github.com/transport-data/tools/pull/50; sdmx1 v2.22.0
+    #       errors trying to read the generated DataMessage
+    # anno_generated(ds)
 
     # Convert temporary annotation values to attributes attached to the data set
     for a in filter(lambda a: a.id != "remark-cols", aa.annotations):
