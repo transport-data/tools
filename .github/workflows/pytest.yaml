@@ -49,14 +49,11 @@ jobs:
       run: uv pip install --upgrade .[tests]
 
     - name: Clone the transport-data/registry repo
-      run: |
-        uv run --no-sync \
-          coverage run -m transport_data store clone
+      run: coverage run -m transport_data store clone
 
     - name: Run test suite using pytest
       run: |
-        uv run --no-sync \
-          pytest transport_data \
+        pytest transport_data \
           --trace-config --color=yes -rA -vv --durations=20 \
           --cov-append --cov-report=term --cov-report=xml \
           --numprocesses auto
