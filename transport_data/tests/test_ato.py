@@ -1,7 +1,7 @@
 import pytest
 from sdmx.model import v21
 
-from transport_data.ato import convert, dataset_to_metadata_reports
+from transport_data.ato import convert, dataset_to_metadata_reports, fetch
 from transport_data.testing import MARK
 
 
@@ -20,7 +20,7 @@ def ato_converted_data(tmp_store):
         "SEC",
         "TAS",
     ):
-        convert(part)
+        convert(part, from_zenodo=True)
 
     # # 'Fast' method: mirror the files from the user's directory
     # from shutil import copyfile
@@ -59,7 +59,15 @@ def test_convert0(ato_converted_data):
 )
 def test_convert1(part):
     """Test other `part`s that need particular marks."""
-    convert(part)
+    convert(part, from_zenodo=True)
+
+
+@pytest.mark.parametrize("from_zenodo", (False, True))
+def test_fetch(from_zenodo):
+    result = fetch(from_zenodo=from_zenodo, dry_run=True)
+
+    # Expected number of file names available
+    assert 9 == len(result)
 
 
 @MARK[0]
