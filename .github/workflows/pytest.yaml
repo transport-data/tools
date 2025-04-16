@@ -75,13 +75,15 @@ jobs:
         cache-dependency-glob: |
           **/pyproject.toml
           **/.pre-commit-config.yaml
-        # TEMPORARY Use Python 3.12 to avoid https://github.com/python/mypy/issues/18216
-        python-version: "3.12"
+        python-version: "3.13"
     - uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
         key: ${{ github.job }}|${{ hashFiles('.pre-commit-config.yaml') }}
+        # Use 'true' here to force cache recreation
         lookup-only: ${{ github.event_name == 'schedule' }}
-        # lookup-only: true  # Uncomment to force cache recreation
     - name: Run pre-commit
-      run: uvx pre-commit run --all-files --show-diff-on-failure --color=always
+      run: |
+        uvx --with=pre-commit-uv \
+          pre-commit run \
+          --all-files --color=always --show-diff-on-failure --verbose
