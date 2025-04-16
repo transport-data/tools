@@ -162,16 +162,16 @@ def get_cs_common() -> "common.ConceptScheme":
 
     cs.setdefault(
         id="CONFIDENTIALITY",
-        annotations=[common.Annotation(id="tdc-aka", text=repr(["CONFIDIENTALITY"]))],
+        annotations=[v21.Annotation(id="tdc-aka", text=repr(["CONFIDIENTALITY"]))],
     )
     cs.setdefault(
         id="FUEL_TYPE",
-        annotations=[common.Annotation(id="tdc-aka", text=repr(["Fuel type"]))],
+        annotations=[v21.Annotation(id="tdc-aka", text=repr(["Fuel type"]))],
     )
     cs.setdefault(
         id="GEO",
         annotations=[
-            common.Annotation(
+            v21.Annotation(
                 id="tdc-aka",
                 text=repr(
                     ["Area", "Country", "Country code", "ECONOMY", "REF_AREA", "Region"]
@@ -181,11 +181,11 @@ def get_cs_common() -> "common.ConceptScheme":
     )
     cs.setdefault(
         id="SERVICE",
-        annotations=[common.Annotation(id="tdc-aka", text=repr(["FREIGHT_PASSENGER"]))],
+        annotations=[v21.Annotation(id="tdc-aka", text=repr(["FREIGHT_PASSENGER"]))],
     )
     cs.setdefault(
         id="TIME_PERIOD",
-        annotations=[common.Annotation(id="tdc-aka", text=repr(["Time", "Year"]))],
+        annotations=[v21.Annotation(id="tdc-aka", text=repr(["Time", "Year"]))],
     )
 
     return cs
