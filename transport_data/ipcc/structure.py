@@ -85,7 +85,8 @@ def gen_cs_ch3(**kwargs) -> "sdmx.model.common.ConceptScheme":
     .. todo:: Include internationalized texts (names, descriptions) from the Arabic,
        Chinese, French, Russian, and/or Spanish versions of the documents.
     """
-    from sdmx.model.common import Annotation, Concept, ConceptScheme
+    from sdmx.model.common import Concept, ConceptScheme
+    from sdmx.model.v21 import Annotation
 
     cs = ConceptScheme(
         id="CS_IPCC_2006_V2_CH3", name="Concepts appearing in equations", **kwargs

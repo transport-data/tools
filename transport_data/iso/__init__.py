@@ -4,7 +4,7 @@ import logging
 from functools import partial
 from typing import TYPE_CHECKING, Mapping
 
-from sdmx.model import common
+from sdmx.model import common, v21
 
 from transport_data.util.pluggy import hookimpl
 from transport_data.util.pycountry import LOCALIZABLE, get_database, load_translations
@@ -73,7 +73,7 @@ def generate_codelists(standard_number: str) -> None:
         # - For localizable fields, collect localizations of the field's value.
         # - Convert to Annotation objects. Not all of these will be used for each Code.
         anno = {
-            f: common.Annotation(id=f, text=tr(v) if f in LOCALIZABLE else {"zxx": v})
+            f: v21.Annotation(id=f, text=tr(v) if f in LOCALIZABLE else {"zxx": v})
             for f, v in record._fields.items()
             if v is not None
         }

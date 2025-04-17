@@ -9,14 +9,14 @@ includes:
 - Convert to SDMX following TDCI conventions.
 """
 
-import json
 import logging
 import re
+from collections.abc import Iterator
 from functools import lru_cache, partial
 from itertools import count, product
 from operator import itemgetter
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -31,18 +31,15 @@ log = logging.getLogger(__name__)
 #: Base URL for data files.
 BASE_URL = "https://www.oica.net/wp-content/uploads/"
 
-#: Package data file containing :mod:`.pooch` registry information (file names and
-#: hashes).
-REGISTRY_FILE = Path(__file__).parent.joinpath("registry.json")
+REGISTRY_FILE = Path(__file__).with_name("registry.txt")
 
-# Read the registry file
-with open(REGISTRY_FILE) as f:
-    POOCH = Pooch(module=__name__, base_url=BASE_URL, registry=json.load(f))
+#: Pooch instance with registry populated from the file :data:`REGISTRY_FILE`.
+POOCH = Pooch(module=__name__, base_url=BASE_URL, registry=REGISTRY_FILE)
 
 
 def convert(
     measure: str,
-) -> Dict[str, "sdmx.model.v21.DataSet"]:
+) -> dict[str, "sdmx.model.v21.DataSet"]:
     """Convert OICA spreadsheets to SDMX.
 
     This method handles OICA's particular arrangement of data from a single data flow
@@ -70,7 +67,7 @@ def convert(
     results = [convert_single_file(path, dfd) for path in filenames_for_dfd(dfd)]
 
     # Merge observations from multiple files into a single data set per data flow
-    result: Dict[str, "sdmx.model.v21.DataSet"] = {}
+    result: dict[str, "sdmx.model.v21.DataSet"] = {}
     for r in results:
         for dfd_id, datasets in r.items():
             if dfd_id not in result:
@@ -108,7 +105,7 @@ def convert_tp(time_period: str, units: str, vehicle_type: str):
 
 def convert_single_file(
     path: Path, dfd: "sdmx.model.v21.DataflowDefinition"
-) -> Dict[str, List["sdmx.model.v21.DataSet"]]:
+) -> dict[str, list["sdmx.model.v21.DataSet"]]:
     """Convert single OICA data spreadsheet to SDMX.
 
     This function currently handles the 2020 and later file format used for sales and
@@ -186,7 +183,7 @@ def convert_single_file(
         axis=1,
     ).dropna(subset=["MEASURE", "VEHICLE_TYPE"], how="any")
 
-    result: Dict[str, List[DataSet]] = {}
+    result: dict[str, list[DataSet]] = {}
 
     # Group data by MEASURE ~ dataflow
     for m, group_df in df.groupby("MEASURE"):
@@ -265,7 +262,7 @@ def filenames_for_dfd(
 
 def _make_geo_codes(
     cl: "sdmx.model.common.Codelist", values: pd.Series, **kwargs
-) -> Dict:
+) -> dict:
     """Create a codelist for the ``GEO`` concept, given certain `values`.
 
     For each unique value in `values`:
@@ -293,7 +290,7 @@ def _make_geo_codes(
     from transport_data.util.pycountry import NAME_MAP
 
     counter = count()
-    id_for_name: Dict[str, str] = {}
+    id_for_name: dict[str, str] = {}
 
     @lru_cache
     def _make_code(value: str):
@@ -428,7 +425,7 @@ def get_conceptscheme() -> "sdmx.model.common.ConceptScheme":
 
 def get_structures(
     measure: str,
-) -> Tuple[
+) -> tuple[
     "sdmx.model.v21.DataflowDefinition", "sdmx.model.v21.DataStructureDefinition"
 ]:
     """Create a data flow and data structure definitions for a given OICA `measure`.
@@ -491,7 +488,7 @@ def get_structures(
     return dfd, dsd
 
 
-def update_registry():
+def update_registry() -> None:
     """Update the registry.
 
     This function crawls :data:`.BASE_URL` for file names matching certain patterns.
@@ -523,4 +520,5 @@ def update_registry():
                 POOCH.registry[filename] = file_hash(path)
 
     with open(REGISTRY_FILE, "w") as f:
-        json.dump(POOCH.registry, f, indent=2, sort_keys=True)
+        for k, v in sorted(POOCH.registry.items()):
+            f.write(f"{k}  {v}\n")

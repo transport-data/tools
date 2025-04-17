@@ -1,5 +1,6 @@
 [build-system]
-requires = ["build", "setuptools-scm"]
+build-backend = "hatchling.build"
+requires = ["hatchling", "uv-dynamic-versioning"]
 
 [project]
 dynamic = ["version"]
@@ -53,8 +54,10 @@ tests = [
 ]
 
 [project.urls]
-homepage = "https://transport-data.org"
-repository = "https://github.com/transport-data/tools"
+Documentation = "https://docs.transport-data.org"
+Changelog = "https://docs.transport-data.org/en/stable/whatsnew.html"
+Repository = "https://github.com/transport-data/tools"
+Issues = "https://github.com/transport-data/tools/issues"
 
 [project.scripts]
 tdc = "transport_data.cli:main"
@@ -68,6 +71,9 @@ exclude_also = [
   "raise NotImplementedError",
 ]
 
+[tool.hatch]
+version.source = "uv-dynamic-versioning"
+
 [tool.mypy]
 exclude = ["build/"]
 
@@ -77,7 +83,7 @@ module = [
   "google_auth_oauthlib.*",
   "google.*",
   "googleapiclient.*",
-  "pooch",
+  "pooch.*",
   "pycountry.*",
 ]
 ignore_missing_imports = true
@@ -93,8 +99,3 @@ usefixtures = "tmp_store"
 select = ["C9", "E", "F", "I", "W"]
 ignore = ["E501", "W191"]
 mccabe.max-complexity = 10
-
-[tool.setuptools.packages]
-find = {}
-
-[tool.setuptools_scm]
