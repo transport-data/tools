@@ -1,5 +1,6 @@
 [build-system]
-requires = ["build", "setuptools-scm"]
+build-backend = "hatchling.build"
+requires = ["hatchling", "uv-dynamic-versioning"]
 
 [project]
 dynamic = ["version"]
@@ -68,6 +69,9 @@ exclude_also = [
   "raise NotImplementedError",
 ]
 
+[tool.hatch]
+version.source = "uv-dynamic-versioning"
+
 [tool.mypy]
 exclude = ["build/"]
 
@@ -93,8 +97,3 @@ usefixtures = "tmp_store"
 select = ["C9", "E", "F", "I", "W"]
 ignore = ["E501", "W191"]
 mccabe.max-complexity = 10
-
-[tool.setuptools.packages]
-find = {}
-
-[tool.setuptools_scm]
