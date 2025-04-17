@@ -91,7 +91,7 @@ class Config:
 
     #: If :any:`True`, fetch from the Zenodo mirror at :data:`POOCH_ZENODO`. Otherwise,
     #: fetch from :data:`POOCH`.
-    from_zenodo: bool = False
+    from_zenodo: bool = True
 
     #: If :any:`True`, do not fetch anything; only confirm that the files to be fetched
     #: are available.
