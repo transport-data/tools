@@ -4,8 +4,14 @@ What's new
 Next release
 ============
 
-- Rename :py:`.adb` to :mod:`.ato` (:pull:`47`).
-- Update known hash for one file provided by :mod:`.ato` (:issue:`46`, :pull:`47`).
+- Improve :class:`~.util.pooch.Pooch` class (:pull:`50`).
+- :mod:`.ato` data provider:
+
+  - Rename :py:`.adb` to :mod:`.ato` (:pull:`47`).
+  - Update known hashes for files provided by :mod:`.ato` (:issue:`46`, :pull:`47`, :pull:`50`).
+  - Fetch source data from Zenodo mirror (:pull:`50`).
+- :mod:`transport_data` supports type checking of its use in downstream code,
+  by `including a py.typed marker <https://typing.python.org/en/latest/spec/distributing.html#packaging-type-information>`__.
 
 v24.12.29
 =========
