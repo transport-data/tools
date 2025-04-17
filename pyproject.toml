@@ -54,8 +54,10 @@ tests = [
 ]
 
 [project.urls]
-homepage = "https://transport-data.org"
-repository = "https://github.com/transport-data/tools"
+Documentation = "https://docs.transport-data.org"
+Changelog = "https://docs.transport-data.org/en/stable/whatsnew.html"
+Repository = "https://github.com/transport-data/tools"
+Issues = "https://github.com/transport-data/tools/issues"
 
 [project.scripts]
 tdc = "transport_data.cli:main"
