@@ -12,6 +12,7 @@ Next release
   - Fetch source data from Zenodo mirror (:pull:`50`).
 - :mod:`transport_data` supports type checking of its use in downstream code,
   by `including a py.typed marker <https://typing.python.org/en/latest/spec/distributing.html#packaging-type-information>`__.
+- New HOWTO :doc:`Create records using the TDC portal <howto/portal>` (:pull:`45`).
 
 v24.12.29
 =========
@@ -33,7 +34,7 @@ v24.11.25
 
 - Add interactive :program:`tdc edit` command-line interface for authoring SDMX data structures (:pull:`28`, :pull:`31`).
 
-  - New HOWTO :doc:`HOWTO <howto/cli-edit>` to explain usage of these features.
+  - New HOWTO :doc:`Edit data structures with the tdc CLI <howto/cli-edit>` to explain usage of these features.
 - Add ``METHOD`` to the TDC metadata structure (:pull:`28`) via :data:`.org.metadata.CONCEPTS`.
 - Improve processing of :doc:`adb` ATO metadata (:pull:`28`).
 

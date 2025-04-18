@@ -6,7 +6,7 @@
 
 .. runblock:: console
 
-   $ tdc add fetch --help
+   $ tdc ato fetch --help
 
 .. runblock:: console
 

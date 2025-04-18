@@ -93,6 +93,7 @@ autosummary_generate = True
 
 extlinks = {
     "issue": ("https://github.com/transport-data/tools/issues/%s", "#%s"),
+    "portal-issue": ("https://github.com/transport-data/portal/issues/%s", "#%s"),
     "pull": ("https://github.com/transport-data/tools/pull/%s", "PR #%s"),
     "gh-user": ("https://github.com/%s", "@%s"),
 }

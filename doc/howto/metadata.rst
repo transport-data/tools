@@ -139,6 +139,9 @@ Add additional sheets
   The ``DATA_DESC`` attribute is intended as a catch-all; use blank lines to separate different points of information about the data flow.
 - Use simple language.
 
+
+.. _howto-metadata-common-concept-ids:
+
 Use common IDs for concepts/dimensions
 --------------------------------------
 

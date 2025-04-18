@@ -62,6 +62,8 @@ Entities
 TDCI
    …is the collection of people affiliated with TDC, either as individuals or representatives or organizations.
 
+.. _std-category:
+
 Data categories
 ---------------
 
