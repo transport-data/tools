@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import TYPE_CHECKING, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, List, Tuple, cast
 
 from sdmx.model import common, v21
 
@@ -236,7 +236,7 @@ def read_worksheet(
     ws: "Worksheet",
     msd: "v21.MetadataStructureDefinition",
     cs_dims: "v21.ConceptScheme",
-) -> Optional["v21.MetadataReport"]:
+) -> "v21.MetadataReport | None":
     """Read a metadata report from the worksheet `ws`.
 
     Parameters

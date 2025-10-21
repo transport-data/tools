@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from itertools import chain, product
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from urllib.parse import quote, urlparse
 
 import pandas as pd
@@ -139,7 +139,7 @@ POOCH_ZENODO = Pooch(
 )
 
 
-def convert(part: str, config: Optional[Config] = None, **kwargs) -> None:
+def convert(part: str, config: Config | None = None, **kwargs) -> None:
     """Convert `part` of the ATO National Database to SDMX-ML and store."""
     from tqdm import tqdm
 
@@ -331,7 +331,7 @@ def dataset_to_metadata_reports(
     return result
 
 
-def fetch(*parts: str, config: Optional[Config] = None, **kwargs) -> list["Path"]:
+def fetch(*parts: str, config: Config | None = None, **kwargs) -> list["Path"]:
     """Fetch source data files for one or more parts of the ATO National Database.
 
     Parameters

@@ -14,7 +14,7 @@ class that provides conveniences used by other code in :mod:`transport_data`.
 from functools import partialmethod
 from importlib.metadata import version
 from itertools import count
-from typing import TYPE_CHECKING, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, TypeVar
 from warnings import filterwarnings
 
 if TYPE_CHECKING:
@@ -42,12 +42,12 @@ class ModelProxy:
     dependency on :class:`ckan` itself.
     """
 
-    name: Optional[str] = None
-    id: Optional[str] = None
+    name: str | None = None
+    id: str | None = None
 
     _collections: dict[str, str] = dict()
 
-    def __init__(self, data: Optional[dict] = None, **kwargs) -> None:
+    def __init__(self, data: dict | None = None, **kwargs) -> None:
         self.__dict__.update(data or {})
         self.__dict__.update(kwargs)
 
@@ -73,7 +73,7 @@ class ModelProxy:
         """Return the original dictionary of object data."""
         return self.__dict__.copy()
 
-    def get_item(self, name: str, index: Optional[int] = None):
+    def get_item(self, name: str, index: int | None = None):
         """Get a member of a collection."""
         data = self.__dict__[name][index]
         cls = get_class(name)
@@ -90,7 +90,7 @@ class ModelProxy:
         self.__dict__.update(data)
 
 
-def get_class(name: str) -> Optional[type[ModelProxy]]:
+def get_class(name: str) -> type[ModelProxy] | None:
     """Return a :class:`.ModelProxy` subclass given `name`."""
     glb = globals()
     for candidate in (
@@ -183,7 +183,7 @@ class Client:
         return getattr(self._api.action, name)
 
     def list_action(
-        self, kind: str, limit: Optional[int] = None, max: Optional[int] = None
+        self, kind: str, limit: int | None = None, max: int | None = None
     ) -> list:
         """Call the ``{kind}_list`` API endpoint.
 
@@ -220,7 +220,7 @@ class Client:
     package_list = partialmethod(list_action, kind="package")
     tag_list = partialmethod(list_action, kind="tag")
 
-    def show_action(self, obj_or_id: Union[str, dict, T], _cls: type[T]) -> T:
+    def show_action(self, obj_or_id: str | dict | T, _cls: type[T]) -> T:
         """Call the ``{kind}_show`` API endpoint.
 
         If `obj_or_id` is an instance of :class:`.ModelProxy`, its
@@ -234,7 +234,7 @@ class Client:
         if isinstance(obj_or_id, dict):
             kw: dict[str, str] = obj_or_id
             kw.update(id=kw.pop("name", kw.get("id", "")))
-            result: Optional[T] = _cls()
+            result: T | None = _cls()
         else:
             kw = dict()
 

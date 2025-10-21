@@ -3,7 +3,7 @@
 import io
 from datetime import datetime
 from importlib.metadata import version
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
         version: str
 
     class MAKeywords(VAKeywords):
-        maintainer: Optional[sdmx.model.common.Agency]
+        maintainer: sdmx.model.common.Agency | None
 
 
 class CSVAdapter(io.RawIOBase):
@@ -79,9 +79,9 @@ class CSVAdapter(io.RawIOBase):
     def __init__(
         self,
         path: "pathlib.Path",
-        structure: Optional[str] = None,
-        structure_id: Optional[str] = None,
-        action: Optional[str] = None,
+        structure: str | None = None,
+        structure_id: str | None = None,
+        action: str | None = None,
     ) -> None:
         self._path = path
 
@@ -160,10 +160,8 @@ def make_obs(
 
 def read_csv(
     path: "pathlib.Path",
-    structure: Union[
-        "sdmx.model.v30.Dataflow", "sdmx.model.v30.DataStructureDefinition"
-    ],
-    adapt: Optional[dict] = None,
+    structure: "sdmx.model.v30.Dataflow | sdmx.model.v30.DataStructureDefinition",
+    adapt: dict | None = None,
 ) -> "sdmx.message.DataMessage":
     """Read or adapt SDMX-CSV from `path`.
 
@@ -181,7 +179,7 @@ def read_csv(
     import sdmx
 
     if adapt:
-        source: Union["pathlib.Path", "CSVAdapter"] = CSVAdapter(path, **adapt)
+        source: "pathlib.Path" | "CSVAdapter" = CSVAdapter(path, **adapt)
     else:
         source = path
 

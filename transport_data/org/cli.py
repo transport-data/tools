@@ -10,7 +10,6 @@ defined in this module.
 """
 
 import pathlib
-from typing import Optional
 
 import click
 
@@ -54,7 +53,7 @@ def read(path: "pathlib.Path"):
 @click.argument(
     "path_out", type=click.Path(dir_okay=False, path_type=pathlib.Path), required=False
 )
-def summarize(path_in: "pathlib.Path", path_out: Optional["pathlib.Path"], ref_area):
+def summarize(path_in: "pathlib.Path", path_out: "pathlib.Path | None", ref_area):
     """Generate HTML metadata summary.
 
     If a single value is given for --ref-area (e.g. --ref-area=CA), a summary is

@@ -5,7 +5,6 @@
 """
 
 import logging
-from typing import Optional
 
 import pandas as pd
 import sdmx.model.v21 as m
@@ -60,7 +59,7 @@ def common_structures():
 def structures_for_data(
     data: pd.DataFrame,
     base_id: str = "GENERATED",
-    maintainer: Optional[m.Agency] = None,
+    maintainer: m.Agency | None = None,
 ) -> StructureMessage:
     """Return IAMC-like data structures describing `data`.
 
@@ -256,7 +255,7 @@ def cl_for_data(data: pd.Series, id: str, **ma_kwargs) -> m.Codelist:
 
 
 def variable_cl_for_dsd(
-    dsd: m.BaseDataStructureDefinition, codelist: Optional[m.Codelist] = None
+    dsd: m.BaseDataStructureDefinition, codelist: m.Codelist | None = None
 ) -> m.Codelist:
     """Generate an SDMX codelist with IAMC "VARIABLE" codes corresponding to `dsd`.
 

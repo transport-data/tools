@@ -1,7 +1,6 @@
 import json
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
-from typing import Optional
 
 import click
 from platformdirs import user_cache_path, user_config_path, user_data_path
@@ -17,7 +16,7 @@ class Config:
     )
 
     #: Path to the configuration file read, if any.
-    config_path: Optional[Path] = None
+    config_path: Path | None = None
 
     #: Path for local data. See :ref:`store-layout` for details.
     data_path: Path = field(

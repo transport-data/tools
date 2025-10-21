@@ -2,7 +2,7 @@
 
 from datetime import date
 from itertools import chain
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import sdmx.model.v21 as m
 
@@ -54,7 +54,7 @@ def provides():
     return ("AgencyScheme=TDCI:TDCI",)
 
 
-def get_agencyscheme(version: Union[None, str] = None) -> "sdmx.model.v21.AgencyScheme":
+def get_agencyscheme(version: None | str = None) -> "sdmx.model.v21.AgencyScheme":
     """Generate an AgencyScheme including some TDCI data providers."""
     as_ = m.AgencyScheme(
         id="TDCI",
