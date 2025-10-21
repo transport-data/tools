@@ -71,10 +71,9 @@ def convert(
     for r in results:
         for dfd_id, datasets in r.items():
             if dfd_id not in result:
-                result[dfd_id] = datasets[0]
-                [result[dfd_id].add_obs(ds.obs) for ds in datasets[1:]]
-            else:
-                [result[dfd_id].add_obs(ds.obs) for ds in datasets]
+                result[dfd_id] = datasets.pop(0)
+            for ds in datasets:
+                result[dfd_id].add_obs(ds.obs)
 
     return result
 

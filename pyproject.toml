@@ -75,7 +75,7 @@ exclude_also = [
 version.source = "uv-dynamic-versioning"
 
 [tool.mypy]
-exclude = ["build/"]
+files = ["doc", "transport_data"]
 
 [[tool.mypy.overrides]]
 module = [

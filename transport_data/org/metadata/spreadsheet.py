@@ -248,7 +248,7 @@ def read_worksheet(
     from transport_data.org.metadata import _get
 
     # Mapping from names (not IDs) to MetadataAttributes
-    mda_for_name = {
+    mda_for_name: dict[str, "common.MetadataAttribute"] = {
         str(mda.concept_identity.name): mda
         for mda in msd.report_structure["ALL"].components
     }
@@ -275,7 +275,8 @@ def read_worksheet(
     mdr = v21.MetadataReport()
     mdr.attaches_to = tok
 
-    mda = None  # Reference to the MetaDataAttribute describing the current row
+    # Reference to the MetaDataAttribute describing the current row
+    mda = common.MetadataAttribute()
     dimension_concepts = []
 
     # Iterate over rows in the worksheet, skipping the first

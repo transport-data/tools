@@ -1,11 +1,15 @@
 """Utilities for :mod:`docutils`."""
 
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 from zipfile import BadZipFile, ZipFile
 
 import docutils.writers
 import docutils.writers.odf_odt
 from docutils.writers.odf_odt import SubElement
+
+if TYPE_CHECKING:
+    from xml.etree.ElementTree import Element
 
 
 class ODFTranslator(docutils.writers.odf_odt.ODFTranslator):
@@ -49,11 +53,13 @@ class ODFTranslator(docutils.writers.odf_odt.ODFTranslator):
                 f"stylesheet path {stylespath} must be {extension} or .xml file"
             )
 
-        self.dom_stylesheet = etree.fromstring(self.str_stylesheet)
+        self.dom_stylesheet = cast("Element", etree.fromstring(self.str_stylesheet))
 
         if self.str_stylesheetcontent:  # pragma: no cover
             # TODO Identify what this is for, or remove
-            self.dom_stylesheetcontent = etree.fromstring(self.str_stylesheetcontent)
+            self.dom_stylesheetcontent = cast(
+                "Element", etree.fromstring(self.str_stylesheetcontent)
+            )
             self.table_styles = self.extract_table_styles(self.str_stylesheetcontent)
 
     def append_pending_ids(self, el) -> None:
@@ -67,10 +73,9 @@ class ODFTranslator(docutils.writers.odf_odt.ODFTranslator):
         if self.settings.create_links:
             if "refuri" in node:
                 href = node["refuri"]
-                if self.settings.cloak_email_addresses and href.startswith(
-                    "mailto:"
-                ):  # pragma: no cover
-                    href = self.cloak_mailto(href)
+                if self.settings.cloak_email_addresses and href.startswith("mailto:"):
+                    # href = self.cloak_mailto(href)
+                    href = href
                 el = self.append_child(
                     "text:a",
                     attrib={
@@ -84,7 +89,7 @@ class ODFTranslator(docutils.writers.odf_odt.ODFTranslator):
                     "text:a",
                     attrib={"xlink:type": "simple", "xlink:href": f"#{node['refid']}"},
                 )
-                el2.text = node.children.pop(0)
+                el2.text = str(node.children.pop(0))
             else:  # pragma: no cover
                 self.document.reporter.warning(
                     'References must have "refuri" or "refid" attribute.'
