@@ -36,12 +36,13 @@ jobs:
     name: ${{ matrix.os }}-py${{ matrix.python-version }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         lfs: true
 
-    - uses: astral-sh/setup-uv@v5
+    - uses: astral-sh/setup-uv@v7
       with:
+        activate-environment: true
         cache-dependency-glob: "**/pyproject.toml"
         python-version: ${{ matrix.python-version }}
 
@@ -69,8 +70,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/setup-uv@v5
+    - uses: actions/checkout@v5
+    - uses: astral-sh/setup-uv@v7
       with:
         cache-dependency-glob: |
           **/pyproject.toml
