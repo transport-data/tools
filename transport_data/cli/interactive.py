@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from math import ceil, log10
-from typing import Optional, Union, cast
+from typing import cast
 
 import click
 import prompt_toolkit
@@ -23,11 +23,11 @@ HELP_TEXT = "Control-C: exit"
 class EditorState:
     """References to artefacts being created or edited."""
 
-    ia: Optional[common.IdentifiableArtefact] = None
-    na: Optional[common.NameableArtefact] = None
-    ma: Optional[common.MaintainableArtefact] = None
+    ia: common.IdentifiableArtefact | None = None
+    na: common.NameableArtefact | None = None
+    ma: common.MaintainableArtefact | None = None
 
-    view: Optional["View"] = None
+    view: "View | None" = None
 
 
 class Editor(prompt_toolkit.Application):
@@ -85,7 +85,7 @@ class Editor(prompt_toolkit.Application):
         """Control-C handler."""
         event.app.exit()
 
-    def next(self, view: Optional[type["View"]] = None) -> None:
+    def next(self, view: type["View"] | None = None) -> None:
         """Identify the next :class:`.View` `cls`; display it and its prompt.
 
         If `view` is :any:`None` (the default), :data:`FLOW` is used to identify the
@@ -172,7 +172,7 @@ class View(ABC):
         app.set_prompt(self.prompt, self.default)
 
     @abstractmethod
-    def accept(self, text: str) -> Optional[type["View"]]:
+    def accept(self, text: str) -> type["View"] | None:
         """Handle user input.
 
         Subclasses **must** implement this method. An implementation **may** return a
@@ -397,7 +397,7 @@ class VA_Version(View):
 #:
 #: If the value is a :class:`dict`, it maps from classes for :attr:`.EditorState.ia` to
 #: Views.
-FLOW: dict[Optional[type[View]], Union[None, type[View], dict[type, type[View]]]] = {
+FLOW: dict[type[View] | None, None | type[View] | dict[type, type[View]]] = {
     None: MA_Class,
     MA_Class: MA_Maintainer,
     MA_Maintainer: IA_ID,

@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union
 
 
 class Report(ABC):
@@ -19,7 +18,7 @@ class Report(ABC):
     template_name: str
 
     @abstractmethod
-    def render(self) -> Union[str, bytes]:
+    def render(self) -> str | bytes:
         """Render the report (generate its contents) and return as str or bytes.
 
         The content may be in any format: plain text, HTML, binary file content, etc.

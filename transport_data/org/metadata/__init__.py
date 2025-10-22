@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from functools import lru_cache, partial
 from itertools import count
-from typing import Any, Callable, Hashable, Iterable, Optional, cast
+from typing import Any, Callable, Hashable, Iterable, cast
 
 from pycountry import countries
 from sdmx.model import common, v21
@@ -226,7 +226,7 @@ def groupby(
     return result
 
 
-def _get(mdr: "v21.MetadataReport", mda_id: str) -> Optional[str]:
+def _get(mdr: "v21.MetadataReport", mda_id: str) -> str | None:
     """Retrieve from `mdr` the reported value of the metadata attribute `mda_id`."""
     for mda in mdr.metadata:
         if mda.value_for is not None and mda.value_for.id == mda_id:

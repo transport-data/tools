@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Optional, Union
 
 import pooch
 from pooch.downloaders import DOIDownloader, choose_downloader
@@ -30,14 +29,14 @@ class Pooch(pooch.Pooch):
         self,
         # Args of pooch.Pooch.__init__()
         base_url,
-        registry: Union[dict, Path, None] = None,
-        urls: Optional[dict] = None,
+        registry: dict | Path | None = None,
+        urls: dict | None = None,
         retry_if_failed: int = 0,
         allow_updates: bool = True,
         # Additional args
         module: str = "",
-        expand: Optional[Callable] = None,
-        processor: Optional[str] = None,
+        expand: Callable | None = None,
+        processor: str | None = None,
     ) -> None:
         kwargs = dict(
             path=pooch.os_cache("transport-data").joinpath(module.split(".")[1]),

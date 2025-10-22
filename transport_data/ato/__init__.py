@@ -5,12 +5,12 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from itertools import chain, product
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from urllib.parse import quote, urlparse
 
 import pandas as pd
 import sdmx.model.v21 as m
-from sdmx.model import v21
+from sdmx.model import common, v21
 
 from transport_data.util.pluggy import hookimpl
 from transport_data.util.pooch import Pooch
@@ -139,7 +139,7 @@ POOCH_ZENODO = Pooch(
 )
 
 
-def convert(part: str, config: Optional[Config] = None, **kwargs) -> None:
+def convert(part: str, config: Config | None = None, **kwargs) -> None:
     """Convert `part` of the ATO National Database to SDMX-ML and store."""
     from tqdm import tqdm
 
@@ -331,7 +331,7 @@ def dataset_to_metadata_reports(
     return result
 
 
-def fetch(*parts: str, config: Optional[Config] = None, **kwargs) -> list["Path"]:
+def fetch(*parts: str, config: Config | None = None, **kwargs) -> list["Path"]:
     """Fetch source data files for one or more parts of the ATO National Database.
 
     Parameters
@@ -590,20 +590,18 @@ def validate_economy(df: pd.DataFrame) -> pd.DataFrame:
     - The "Economy Code" column of `df` is renamed "ECONOMY", and contains only values
       from :data:`CL_ECONOMY`. The "Economy Name" column is dropped.
     """
-    codes = (
-        df[["Economy Code", "Economy Name"]]
-        .sort_values("Economy Code")
-        .drop_duplicates()
-        .apply(
-            lambda row: m.Code(id=row["Economy Code"], name=row["Economy Name"]), axis=1
-        )
-    )
+    ec, en = "Economy Code", "Economy Name"
+
+    def _make_code(row: pd.Series):
+        return common.Code(id=row[ec], name=row[en], parent=CL_ECONOMY)
+
+    codes = df[[ec, en]].sort_values(ec).drop_duplicates().apply(_make_code, axis=1)
     for c in codes:
         try:
             CL_ECONOMY.append(c)
         except ValueError:
-            assert CL_ECONOMY[c.id].compare(c), (
-                f"Existing {CL_ECONOMY[c.id]} does not match {c}"
+            assert CL_ECONOMY[c.id].compare(c, verbose=True), (
+                f"Existing {CL_ECONOMY[c.id]!r} does not match {c!r}"
             )
 
-    return df.rename(columns={"Economy Code": "ECONOMY"}).drop(columns=["Economy Name"])
+    return df.rename(columns={ec: "ECONOMY"}).drop(columns=[en])

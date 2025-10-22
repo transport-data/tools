@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Generator, cast
 import click.testing
 import pytest
 import sdmx.message
+from requests.exceptions import HTTPError
 from sdmx.model import common, v21
 
 import transport_data
@@ -27,7 +28,11 @@ MARK = {
         condition=GITHUB_ACTIONS and platform.system() == "Windows",
         raises=zipfile.BadZipFile,
         reason="'Truncated file header' on GHA runner",
-    )
+    ),
+    "#52": pytest.mark.xfail(
+        raises=HTTPError,
+        reason="File removed; https://github.com/transport-data/tools/issues/52",
+    ),
 }
 
 

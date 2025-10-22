@@ -4,6 +4,10 @@ What's new
 Next release
 ============
 
+- :mod:`transport_data` supports and is tested on
+  `Python 3.14 <https://www.python.org/downloads/release/python-3140/>`_ (:pull:`51`),
+  released 2025-10-07.
+  Support for Python 3.9 is dropped, as it has reached end-of-life.
 - Improve :class:`~.util.pooch.Pooch` class (:pull:`50`).
 - :mod:`.ato` data provider:
 
