@@ -1,15 +1,23 @@
 import pytest
+from pytest import param
 
 from transport_data.oica import convert, get_cl_geo, update_registry
+from transport_data.testing import MARK
 
 
 @pytest.mark.parametrize(
     "measure, N_obs",
     (
-        pytest.param("PROD", None, marks=pytest.mark.xfail(raises=NotImplementedError)),
-        ("SALES", dict(SALES=2294, SALES_GR=1182)),
-        ("STOCK", dict(STOCK=462, STOCK_AAGR=230, STOCK_CAP=77)),
-        ("STOCK_AAGR", dict(STOCK=462, STOCK_AAGR=230, STOCK_CAP=77)),
+        param("PROD", None, marks=pytest.mark.xfail(raises=NotImplementedError)),
+        param("SALES", dict(SALES=2294, SALES_GR=1182), marks=MARK["#52"]),
+        param(
+            "STOCK", dict(STOCK=462, STOCK_AAGR=230, STOCK_CAP=77), marks=MARK["#52"]
+        ),
+        param(
+            "STOCK_AAGR",
+            dict(STOCK=462, STOCK_AAGR=230, STOCK_CAP=77),
+            marks=MARK["#52"],
+        ),
     ),
 )
 def test_convert(measure: str, N_obs: dict[str, int]) -> None:
