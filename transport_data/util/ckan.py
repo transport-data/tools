@@ -36,13 +36,17 @@ T = TypeVar("T", bound="ModelProxy")
 class ModelProxy:
     """Simple proxy for a CKAN object/model.
 
-    :mod:`ckan` itself is a Python package, but is fairly ‘heavy’—a large package with
-    many dependencies. ModelProxy allows to interact with the different classes of
+    :mod:`ckan` itself is a Python package, but is a ‘heavy’ dependency—a large package
+    with many dependencies. ModelProxy allows to interact with the different classes of
     CKAN objects based on the JSON data returned by the CKAN Action API, without a
-    dependency on :class:`ckan` itself.
+    dependency on :mod:`ckan` itself.
     """
 
+    #: Object 'name'. In the CKAN data model, this is often a snake-case string like
+    #: "name-of-data-set".
     name: str | None = None
+
+    #: Object 'id'. In the CKAN data model, this is often a :mod:`uuid` of some sort.
     id: str | None = None
 
     _collections: ClassVar[dict[str, tuple[type, str]]] = dict()
@@ -82,6 +86,7 @@ class ModelProxy:
         return self.__dict__.copy()
 
     def get(self, name: str):
+        """Return the value of a single field."""
         return self.__dict__.get(name)
 
     def get_item(self, name: str, index: int | None = None):

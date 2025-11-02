@@ -8,12 +8,29 @@ Next release
   `Python 3.14 <https://www.python.org/downloads/release/python-3140/>`_ (:pull:`51`),
   released 2025-10-07.
   Support for Python 3.9 is dropped, as it has reached end-of-life.
+- Improve :mod:`.org` (:pull:`38`):
+
+  - New CLI command :program:`tdc ckan` (see :func:`.ckan.main`).
+  - New class :class:`.TDCALLReportStructure`,
+    representing the contents of a TDC metadata report.
+  - New functions :func:`~.org.ckan.get_msd`,
+    :func:`~.org.ckan.ckan_package_to_mdr`, and
+    :func:`~.org.ckan.mdr_to_ckan_package`.
+- Improve :mod:`.util.ckan` (:pull:`38`):
+
+  - New :class:`.ModelProxy` class :class:`~.ckan.User`.
+  - New method :meth:`.ModelProxy.get`.
+  - :class:`.ModelProxy` processes collections of JSON objects to :mod:`transport_data` instances.
+  - New class :class:`.CKANMetadataReportStructure`,
+    representing the metadata fields of a CKAN package.
 - Improve :class:`~.util.pooch.Pooch` class (:pull:`50`).
 - :mod:`.ato` data provider:
 
   - Rename :py:`.adb` to :mod:`.ato` (:pull:`47`).
   - Update known hashes for files provided by :mod:`.ato` (:issue:`46`, :pull:`47`, :pull:`50`).
   - Fetch source data from Zenodo mirror (:pull:`50`).
+- New CLI command :program:`tdc test wipe` (:pull:`38`):
+- New function :func:`.util.sdmx.fields_to_mda` (:pull:`38`).
 - :mod:`transport_data` supports type checking of its use in downstream code,
   by `including a py.typed marker <https://typing.python.org/en/latest/spec/distributing.html#packaging-type-information>`__.
 - New HOWTO :doc:`Create records using the TDC portal <howto/portal>` (:pull:`45`).
@@ -21,7 +38,10 @@ Next release
 v24.12.29
 =========
 
-- Add :mod:`.util.ckan`, including a :class:`~.ckan.Client` for access to CKAN instances (including the TDC instances); proxy classes for CKAN objects including :class:`~.ckan.Package`, :class:`~.ckan.Resource`, and mode (:pull:`35`).
+- Add :mod:`.util.ckan` (:pull:`35`),
+  including a :class:`~.ckan.Client` for access to CKAN instances
+  (including the TDC instances);
+  proxy classes for CKAN objects including :class:`~.ckan.Package`, :class:`~.ckan.Resource`, and more.
 - Add :data:`.org.ckan.PROD` and :data:`.org.ckan.DEV` instances of :class:`.ckan.Client` (:pull:`35`).
 - Improve documentation (:pull:`40`).
 
