@@ -1,7 +1,21 @@
 import pytest
 from requests.exceptions import SSLError
 
-from transport_data.org.ckan import DEV, PROD, STAGING
+from transport_data.org.ckan import (
+    DEV,
+    PROD,
+    STAGING,
+    ckan_package_to_mdr,
+    mdr_to_ckan_package,
+)
+from transport_data.testing import CKAN_UUID, CliRunner
+from transport_data.util.ckan import Package
+
+
+@pytest.fixture
+def package(test_data_path) -> Package:
+    """A :class:`.Package` from a test specimen."""
+    return Package.from_file(test_data_path.joinpath("ckan", "package.json"))
 
 
 @pytest.mark.parametrize(
@@ -24,3 +38,61 @@ def test_main(instance, N_exp: int) -> None:
     assert p is result[0]  # Same object instance returned
 
     assert "dataset" == p.type
+
+
+def test_ckan_package_to_mdr(package: Package) -> None:
+    """:func:`.ckan_package_to_mdr` works as expected."""
+    from transport_data.org.metadata import _get
+
+    # Function runs
+    mdr = ckan_package_to_mdr(package)
+
+    # Resulting MetadataReport has the expected number of attributes
+    assert 48 == len(mdr.metadata)
+
+    # Structured attributes are stored as their string representations
+    assert repr(["cars", "private-cars", "truck", "bus"]) == _get(mdr, "modes")
+    # Python types are stored as their representations
+    assert "False" == _get(mdr, "is_archived")
+    assert "True" == _get(mdr, "isopen")
+    assert "None" == _get(mdr, "author")
+
+
+def test_cli(tdc_cli: CliRunner) -> None:
+    """:program:`tdc ckan foo` returns a non-zero exit code and displays error text."""
+    result = tdc_cli.invoke(["ckan", "foo"])
+
+    assert "Action name not known: foo" in result.output
+    assert 1 == result.exit_code
+
+
+@pytest.mark.ckan_dev
+@pytest.mark.network
+def test_create() -> None:  # pragma: no cover
+    """A test package can be created on the DEV instance."""
+    instance, owner_org = DEV, CKAN_UUID["DEV org test"]
+
+    p = Package(
+        # Minimal fields for creating a Package object
+        name="transport-data-tools-test",  # TODO Create a hashed random name
+        notes=".",
+        owner_org=owner_org,
+        tdc_category="public",
+    )
+
+    response = instance.package_create(**p.asdict())
+
+    assert response
+
+
+def test_mdr_to_ckan_package(package: Package) -> None:
+    """:func:`.mdr_to_ckan_package` works as expected."""
+
+    # Convert to a MetadataReport
+    mdr = ckan_package_to_mdr(package)
+
+    # Convert back to a Package instance
+    p = mdr_to_ckan_package(mdr)
+
+    if package != p:
+        assert package.__dict__ == p.__dict__  # `pytest -vv` shows the rich comparison

@@ -26,6 +26,17 @@ _NotImplemented = pytest.mark.xfail(
 _NotAuthorized = pytest.mark.skip(reason="Needs API key")
 
 
+class TestOrganization:
+    @pytest.fixture
+    def obj(self, test_data_path) -> Organization:
+        p = Package.from_file(test_data_path.joinpath("ckan", "package.json"))
+        return Organization(name="test-org", packages=[p, p])
+
+    def test_repr(self, obj: Organization) -> None:
+        assert "<CKAN Organization 'test-org'" in repr(obj)
+        assert "\n  <CKAN Package '2023-production" in repr(obj)
+
+
 class TestPackage:
     """These also function as tests of :class:`.ModelProxy`."""
 
@@ -46,7 +57,7 @@ class TestPackage:
 
     def test_init_name_only(self) -> None:
         p = Package(name="foo-bar")
-        assert "<CKAN Package 'foo-bar' with 0 fields>" == repr(p)
+        assert "<CKAN Package 'foo-bar' | 0 fields | id=(none)>" == repr(p)
 
     def test_len(self, obj) -> None:
         assert 47 == len(obj)

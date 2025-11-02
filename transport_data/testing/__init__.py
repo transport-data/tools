@@ -1,7 +1,6 @@
 import os
 import platform
 import zipfile
-from pathlib import Path
 from typing import TYPE_CHECKING, Generator, cast
 
 import click.testing
@@ -15,9 +14,17 @@ from transport_data.config import Config
 from transport_data.store import UnionStore
 
 if TYPE_CHECKING:
+    from importlib.resources.abc import Traversable
+
     import dsss.store
 
     from transport_data.util.sdmx import MAKeywords
+
+#: List of CKAN UUIDs for objects used for testing.
+CKAN_UUID = {
+    "DEV org test": "538d7317-fa7b-4890-a945-ae4d30021f38",
+    "PROD org test": "8bc58a55-fd85-4667-b23e-a5dba18cdb9a",
+}
 
 #: :any:`True` if tests are being run on GitHub Actions.
 GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
@@ -124,9 +131,12 @@ def tdc_cli():
 
 
 @pytest.fixture(scope="session")
-def test_data_path() -> Generator[Path, None, None]:
+def test_data_path() -> Generator["Traversable", None, None]:
     """Path containing test data."""
-    yield Path(__file__).parent.joinpath("data", "tests")
+    from importlib.resources import files
+
+    # TODO When Python 3.11 is the minimum supported, use separate "data", "tests" args
+    yield files("transport_data").joinpath("data/tests")
 
 
 @pytest.fixture(scope="session")

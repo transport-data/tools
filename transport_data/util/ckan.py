@@ -14,7 +14,7 @@ class that provides conveniences used by other code in :mod:`transport_data`.
 from functools import partialmethod
 from importlib.metadata import version
 from itertools import count
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 from warnings import filterwarnings
 
 if TYPE_CHECKING:
@@ -36,20 +36,30 @@ T = TypeVar("T", bound="ModelProxy")
 class ModelProxy:
     """Simple proxy for a CKAN object/model.
 
-    :mod:`ckan` itself is a Python package, but is fairly ‘heavy’—a large package with
-    many dependencies. ModelProxy allows to interact with the different classes of
+    :mod:`ckan` itself is a Python package, but is a ‘heavy’ dependency—a large package
+    with many dependencies. ModelProxy allows to interact with the different classes of
     CKAN objects based on the JSON data returned by the CKAN Action API, without a
-    dependency on :class:`ckan` itself.
+    dependency on :mod:`ckan` itself.
     """
 
+    #: Object 'name'. In the CKAN data model, this is often a snake-case string like
+    #: "name-of-data-set".
     name: str | None = None
+
+    #: Object 'id'. In the CKAN data model, this is often a :mod:`uuid` of some sort.
     id: str | None = None
 
-    _collections: dict[str, str] = dict()
+    _collections: ClassVar[dict[str, tuple[type, str]]] = dict()
 
     def __init__(self, data: dict | None = None, **kwargs) -> None:
         self.__dict__.update(data or {})
         self.__dict__.update(kwargs)
+        self._process_collections()
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.__dict__ == other.__dict__
 
     def __len__(self) -> int:
         return len(self.__dict__)
@@ -58,7 +68,9 @@ class ModelProxy:
         return (
             f"<CKAN {type(self).__name__} "
             + (repr(self.name) if self.name else "(no name)")
-            + f" with {len(self.__dict__) - 1} fields>"
+            + f" | {len(self.__dict__) - 1} fields | id="
+            + self.__dict__.get("id", "(none)")
+            + ">"
         )
 
     @classmethod
@@ -73,12 +85,28 @@ class ModelProxy:
         """Return the original dictionary of object data."""
         return self.__dict__.copy()
 
+    def get(self, name: str):
+        """Return the value of a single field."""
+        return self.__dict__.get(name)
+
     def get_item(self, name: str, index: int | None = None):
         """Get a member of a collection."""
         data = self.__dict__[name][index]
         cls = get_class(name)
         assert cls
         return cls(data)
+
+    def _process_collections(self) -> None:
+        """Convert the :attr:`_collections` to the designated types."""
+        for name, (t_collection, cls_name) in self._collections.items():
+            cls = get_class(cls_name)
+            assert cls is not None
+
+            data = self.__dict__.get(name)
+            if data is None:
+                continue
+
+            self.__dict__[name] = [(cls(x) if isinstance(x, dict) else x) for x in data]
 
     def update(self, data: dict) -> None:
         """Update part or all of the object data."""
@@ -88,6 +116,7 @@ class ModelProxy:
         elif self.id and data.get("id", self.id) != self.id:
             raise ValueError(f"Cannot update with {data['id']!r} != {self.id=!r}")
         self.__dict__.update(data)
+        self._process_collections()
 
 
 def get_class(name: str) -> type[ModelProxy] | None:
@@ -116,6 +145,15 @@ class Organization(Group):
 
     # NB this is a subclass instead of `Organization = Group` so that type(…).__name__
     #    gives 'organization'
+
+    _collections = {
+        "packages": (list, "Package"),
+    }
+
+    def __repr__(self) -> str:
+        lines = [super().__repr__()]
+        lines.extend(f"  {p!r}" for p in (self.get("packages") or []))
+        return "\n".join(lines)
 
 
 class MemberRole(ModelProxy):
@@ -151,6 +189,12 @@ class Tag(ModelProxy):
     """
 
 
+class User(ModelProxy):
+    """Proxy for `ckan.model.User
+    <https://github.com/ckan/ckan/blob/master/ckan/model/user.py>`_.
+    """
+
+
 class Client:
     """Wrapper around :class:`ckanapi.RemoteCKAN`.
 
@@ -159,31 +203,45 @@ class Client:
     - Iterating over calls with rate limits.
     - Caching results, including combined results from multiple calls.
     - Converting return values to instances of :class:`ModelProxy` subclasses.
-
-    .. todo::
-       - Handle API keys via :mod:`transport_data.config`.
     """
 
     _api: "RemoteCKAN"
     _cache: dict
+    id: str
 
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: str, id: str) -> None:
         from ckanapi import RemoteCKAN
 
+        self.id = id
+
         # Construct a user-agent string
-        user_agent = (
-            f"transport_data/{version('transport_data')} "
+        kw: dict[str, str | None] = dict(
+            user_agent=f"transport_data/{version('transport_data')} "
             "(+https://docs.transport-data.org)"
         )
 
-        self._api = RemoteCKAN(address, user_agent=user_agent)
+        # Fetch the user's API token, if any
+        try:
+            import keyring
+
+            kw.update(
+                apikey=keyring.get_password("transport-data", f"api-token-{self.id}")
+            )
+        except ImportError:
+            pass
+
+        self._api = RemoteCKAN(address, **kw)
         self._cache = dict(package=dict())
 
     def __getattr__(self, name: str):
         return getattr(self._api.action, name)
 
     def list_action(
-        self, kind: str, limit: int | None = None, max: int | None = None
+        self,
+        kind: str,
+        limit: int | None = None,
+        max: int | None = None,
+        **kwargs,
     ) -> list:
         """Call the ``{kind}_list`` API endpoint.
 
@@ -203,10 +261,12 @@ class Client:
 
         c = self._cache[f"{kind}_list"] = list()
 
+        data_dict = {"limit": limit}
+        data_dict.update(kwargs)
+
         for i in count():
-            result = self._api.call_action(
-                f"{kind}_list", data_dict={"limit": limit, "offset": i * limit}
-            )
+            data_dict.update(offset=i * limit)
+            result = self._api.call_action(f"{kind}_list", data_dict=data_dict)
             c.extend(result)
             if len(result) < limit or (max and max < (i + 1) * limit):
                 break
@@ -219,8 +279,9 @@ class Client:
     organization_list = partialmethod(list_action, "organization")
     package_list = partialmethod(list_action, kind="package")
     tag_list = partialmethod(list_action, kind="tag")
+    user_list = partialmethod(list_action, kind="user")
 
-    def show_action(self, obj_or_id: str | dict | T, _cls: type[T]) -> T:
+    def show_action(self, obj_or_id: str | dict | T, _cls: type[T], **kwargs) -> T:
         """Call the ``{kind}_show`` API endpoint.
 
         If `obj_or_id` is an instance of :class:`.ModelProxy`, its
@@ -232,13 +293,13 @@ class Client:
         The return value is cached.
         """
         if isinstance(obj_or_id, dict):
-            kw: dict[str, str] = obj_or_id
+            kw: dict[str, str | None] = obj_or_id
             kw.update(id=kw.pop("name", kw.get("id", "")))
             result: T | None = _cls()
         else:
             kw = dict()
 
-        if isinstance(obj_or_id, str):
+        if isinstance(obj_or_id, str) or obj_or_id is None:
             # Query using the "id" keyword
             kw.update(id=obj_or_id)
             # Create a new result object according to the type of
@@ -249,6 +310,8 @@ class Client:
             elif obj_or_id.name:
                 kw.update(id=obj_or_id.name)
             result = obj_or_id
+
+        kw.update(kwargs)
 
         kind = _cls.__name__.lower()
 

@@ -4,6 +4,7 @@ import itertools
 import logging
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from functools import lru_cache, partial
 from itertools import count
 from typing import Any, Callable, Hashable, Iterable, cast
@@ -11,91 +12,103 @@ from typing import Any, Callable, Hashable, Iterable, cast
 from pycountry import countries
 from sdmx.model import common, v21
 
+from transport_data.util.sdmx import fields_to_mda
+
 log = logging.getLogger(__name__)
 
-#: Concepts and metadata attributes in the TDC metadata structure.
-CONCEPTS = {
-    "DATAFLOW": (
-        "Data flow ID",
-        """A unique identifier for the data flow (=data source, data set, etc.).
 
-We suggest to use IDs like ‘VN001’, where ‘VN’ is the ISO 3166 alpha-2 country
-code, and ‘001’ is a unique number. The value MUST match the name of the sheet
-in which it appears.""",
-    ),
-    "DATA_PROVIDER": (
-        "Data provider",
-        """Organization or individual that provides the data and any related metadata.
+@dataclass
+class TDCALLReportStructure:
+    """Concepts and metadata attributes in the TDC metadata structure."""
 
-This can be as general (“IEA”) or specific (organization unit/department, specific
-person responsible, contact details, etc.) as appropriate.""",
-    ),
-    "URL": (
-        "URL or web address",
-        "Location on the Internet with further information about the data flow.",
-    ),
-    "MEASURE": (
-        "Measure (‘indicator’)",
-        """Statistical concept for which data are provided in the data flow.
+    #: Data flow ID
+    #:
+    #: A unique identifier for the data flow (=data source, data set, etc.).
+    #:
+    #: We suggest to use IDs like ‘VN001’, where ‘VN’ is the ISO 3166 alpha-2 country
+    #: code, and ‘001’ is a unique number. The value MUST match the name of the sheet
+    #: in which it appears.
+    DATAFLOW: str
 
-If the data flow contains data for multiple measures, give each one separated by
-semicolons. Example: “Number of cars; passengers per vehicle”.
+    #: Data provider
+    #:
+    #: Organization or individual that provides the data and any related metadata.
+    #:
+    #: This can be as general (“IEA”) or specific (organization unit/department,
+    #: specific person responsible, contact details, etc.) as appropriate.
+    DATA_PROVIDER: str
 
-This SHOULD NOT duplicate the value for ‘UNIT_MEASURE’. Example: “Annual driving
-distance per vehicle”, not “Kilometres per vehicle”.""",
-    ),
-    "UNIT_MEASURE": (
-        "Unit of measure",
-        """Unit in which the data values are expressed.
+    #: URL or web address
+    #:
+    #: Location on the Internet with further information about the data flow.
+    URL: str
 
-If ‘MEASURE’ contains 2+ items separated by semicolons, give the respective units in the
-same way and order. If there are no units, write ‘dimensionless’, ‘1’, or similar.""",
-    ),
-    "DIMENSION": (
-        "Dimensions",
-        """Formally, the “statistical concept used in combination with other statistical
-concepts to identify a statistical series or individual observations.”
+    #: Measure (‘indicator’)
+    #:
+    #: Statistical concept for which data are provided in the data flow.
+    #:
+    #: If the data flow contains data for multiple measures, give each one separated by
+    #: semicolons. Example: “Number of cars; passengers per vehicle”.
+    #:
+    #: This SHOULD NOT duplicate the value for ‘UNIT_MEASURE’. Example: “Annual driving
+    #: distance per vehicle”, not “Kilometres per vehicle”.
+    MEASURE: str
 
-Record all dimensions of the data, either in a bulleted or numbered list, or
-separated by semicolons. In parentheses, give some indication of the scope
-and/or resolution of the data along each dimension. Most data have at least time
-and space dimensions.
+    #: Unit of measure
+    #:
+    #: Unit in which the data values are expressed.
+    #:
+    #: If ‘MEASURE’ contains 2+ items separated by semicolons, give the respective units
+    #: in the same way and order. If there are no units, write ‘dimensionless’, ‘1’, or
+    #: similar.
+    UNIT_MEASURE: str
 
-Example:
+    #: Dimensions
+    #:
+    #: Formally, the “statistical concept used in combination with other statistical
+    #: concepts to identify a statistical series or individual observations.
+    #:
+    #: Record all dimensions of the data, either in a bulleted or numbered list, or
+    #: separated by semicolons. In parentheses, give some indication of the scope
+    #: and/or resolution of the data along each dimension. Most data have at least time
+    #: and space dimensions.
+    #:
+    #: Example:
+    #:
+    #: - TIME_PERIOD (annual, 5 years up to 2021)
+    #: - REF_AREA (whole country; VN only)
+    #: - Vehicle type (12 different types: […])
+    #: - Emissions species (CO2 and 4 others)"""
+    DIMENSION: str
 
-- TIME_PERIOD (annual, 5 years up to 2021)
-- REF_AREA (whole country; VN only)
-- Vehicle type (12 different types: […])
-- Emissions species (CO2 and 4 others)""",
-    ),
-    "DATA_DESCR": (
-        "Data description",
-        """Any information about the data flow that does not fit in other attributes.
+    #: Data description
+    #:
+    #: Any information about the data flow that does not fit in other attributes.
+    #:
+    #: Until or unless other metadata attributes are added to this metadata structure/
+    #: template, this MAY include:
+    #:
+    #: - Any conditions on data access, e.g. publicly available, proprietary, fee or
+    #:   subscription required, available on request, etc.
+    #: - Frequency of data updates.
+    #: - Any indication of quality, including third-party references that indicate data
+    #:   quality.
+    DATA_DESCR: str
 
-Until or unless other metadata attributes are added to this metadata structure/
-template, this MAY include:
+    #: Methodology
+    #:
+    #: Any information about methods used by the data provider to collect, process, or
+    #: prepare the data.
+    METHOD: str
 
-- Any conditions on data access, e.g. publicly available, proprietary, fee or
-  subscription required, available on request, etc.
-- Frequency of data updates.
-- Any indication of quality, including third-party references that indicate data
-  quality.
-""",
-    ),
-    "METHOD": (
-        "Methodology",
-        """Any information about methods used by the data provider to collect, process,
-or prepare the data.""",
-    ),
-    "COMMENT": (
-        "Comment",
-        """Any other information about the metadata values, for instance discrepancies or
-unclear or missing information.
-
-Precede comments with initials; append to existing comments to keep
-chronological order; and include a date (for example, “2024-07-24”) if helpful.""",
-    ),
-}
+    #: Comment
+    #:
+    #: Any other information about the metadata values, for instance discrepancies or
+    #: unclear or missing information.
+    #:
+    #: Precede comments with initials; append to existing comments to keep
+    #: chronological order; and include a date (for example, “2024-07-24”) if helpful.
+    COMMENT: str
 
 
 def contains_data_for(mdr: "v21.MetadataReport", ref_area: str) -> bool:
@@ -203,12 +216,11 @@ def get_msd() -> "v21.MetadataStructureDefinition":
     msd = v21.MetadataStructureDefinition(id="SIMPLE", version="1", maintainer=TDCI)
     rs = msd.report_structure["ALL"] = v21.ReportStructure(id="ALL")
 
-    for id_, (name, description) in CONCEPTS.items():
-        ci = cs.setdefault(id=id_, name=name, description=description)
-        rs.getdefault(id_, concept_identity=ci)
+    fields_to_mda(TDCALLReportStructure, rs, cs)
 
     # NB Currently not supported by sdmx1; results in an empty XML collection
     STORE.set(msd)
+    STORE.set(cs)
 
     return msd
 
