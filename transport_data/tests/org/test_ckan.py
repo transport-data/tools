@@ -8,7 +8,7 @@ from transport_data.org.ckan import (
     ckan_package_to_mdr,
     mdr_to_ckan_package,
 )
-from transport_data.testing import CKAN_UUID
+from transport_data.testing import CKAN_UUID, CliRunner
 from transport_data.util.ckan import Package
 
 
@@ -58,9 +58,17 @@ def test_ckan_package_to_mdr(package: Package) -> None:
     assert "None" == _get(mdr, "author")
 
 
+def test_cli(tdc_cli: CliRunner) -> None:
+    """:program:`tdc ckan foo` returns a non-zero exit code and displays error text."""
+    result = tdc_cli.invoke(["ckan", "foo"])
+
+    assert "Action name not known: foo" in result.output
+    assert 1 == result.exit_code
+
+
 @pytest.mark.ckan_dev
 @pytest.mark.network
-def test_create() -> None:
+def test_create() -> None:  # pragma: no cover
     """A test package can be created on the DEV instance."""
     instance, owner_org = DEV, CKAN_UUID["DEV org test"]
 

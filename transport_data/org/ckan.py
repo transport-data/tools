@@ -207,15 +207,14 @@ def main(instance: Client, verbose, action, args):
     try:
         result = getattr(client, action)(**data_dict)
     except Exception as e:
-        print(repr(e))
-        return False
+        raise click.ClickException(repr(e))
 
     if action.endswith("_list"):
         for i, obj in enumerate(result, start=1):
             print(f"{i:3d}. {obj}")
     elif isinstance(result, str):
         print(result)
-    else:
+    else:  # pragma: no cover
         print(repr(result))
         if verbose and isinstance(result, ModelProxy):
             print(result.asdict())
