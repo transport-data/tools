@@ -3,7 +3,7 @@
 import typing
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Union
 
 import click
 
@@ -35,8 +35,8 @@ class CKANMetadataReportStructure:
     #: This **must** be identical to the values appearing in the other fields.
     JSON: dict
 
-    author: Optional[str]
-    author_email: Optional[str]
+    author: str | None
+    author_email: str | None
     contributors: list
     creator_user_id: "uuid.UUID"
     data_access: str
@@ -53,8 +53,8 @@ class CKANMetadataReportStructure:
     license_id: str
     license_title: str
     license_url: str
-    maintainer: Optional[str]
-    maintainer_email: Optional[str]
+    maintainer: str | None
+    maintainer_email: str | None
     metadata_created: str
     metadata_modified: str
     modes: list
@@ -81,7 +81,7 @@ class CKANMetadataReportStructure:
     type: str
     units: list
     url: str
-    version: Optional[str]
+    version: str | None
 
 
 #: :class:`click.Option` for :program:`--instance/-i` that allows the user to select one
@@ -172,7 +172,7 @@ def mdr_to_ckan_package(mdr):
             raise NotImplementedError
         elif data_type in (bool, list):
             data[ra.value_for.id] = eval(ra.value)
-        elif data_type is Optional[str]:
+        elif data_type == Union[str, None]:
             data[ra.value_for.id] = None if ra.value == "None" else str(ra.value)
         else:
             data[ra.value_for.id] = data_type(ra.value)
