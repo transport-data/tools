@@ -555,6 +555,7 @@ def read_sheet(
     # - Finally, convert to float.
     dtypes = df.loc[:, data_col_mask].dtypes  # Dtypes of data columns only
     for col, _ in filter(lambda x: x[1] != "float", dtypes.items()):
+        assert isinstance(col, str)
         df[col] = (
             df[col]
             .str.strip()
