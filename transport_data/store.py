@@ -48,18 +48,6 @@ class UnionStore(dsss.store.UnionStore):
 
     # Overrides of methods of dsss.store.UnionStore or its parents
 
-    def assign_version(self, obj, **kwargs) -> None:
-        """Assign a version to `obj` subsequent to any existing versions.
-
-        Compared to the parent class, this implementation ensures that the assigned
-        version is :class:`str`. This is needed because :mod:`sdmx` currently fails to
-        write :class:`.Version` to SDMX-ML.
-
-        .. todo:: Remove this override once the issue is fixed in :mod:`sdmx`.
-        """
-        super().assign_version(obj, **kwargs)
-        obj.version = str(obj.version)
-
     def get(self, key: str):
         """Return an object given its `key`.
 
