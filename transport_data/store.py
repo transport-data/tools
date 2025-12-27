@@ -64,10 +64,11 @@ class UnionStore(dsss.store.UnionStore):
             return super().get(full_urn)
         except KeyError:
             match = sdmx.urn.match(full_urn)
-            if match and match["version"] is None:
-                if versions := self.list_versions(
-                    m.get_class(match["class"]), match["agency"], match["id"]
-                ):
+            if match and match["version"] in (None, "None"):
+                # No version specified → iterate over all versions
+                klass = m.get_class(match["class"])
+                assert klass is not None
+                if versions := self.list_versions(klass, match["agency"], match["id"]):
                     return super().get(full_urn.replace("(None)", f"({versions[-1]})"))
             raise
 
