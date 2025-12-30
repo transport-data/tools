@@ -40,6 +40,13 @@ MARK = {
         raises=HTTPError,
         reason="File removed; https://github.com/transport-data/tools/issues/52",
     ),
+    # See https://blog.zenodo.org/2025/11/25/2025-11-14-search-api-updates/
+    "zenodo-429": pytest.mark.flaky(
+        condition=GITHUB_ACTIONS,
+        reruns=5,
+        reruns_delay=10,
+        reason="Rate limits of Zenodo API",
+    ),
 }
 
 

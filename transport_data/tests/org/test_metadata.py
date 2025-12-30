@@ -64,6 +64,7 @@ def test_make_workbook_cli(tmp_path, tdc_cli) -> None:
 
 
 @MARK[0]
+@MARK["zenodo-429"]
 @pytest.mark.usefixtures("ato_converted_data")
 def test_merge_ato(example_metadata) -> None:
     mds, cs = example_metadata

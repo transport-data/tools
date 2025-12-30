@@ -13,22 +13,20 @@ import pathlib
 
 import click
 
-from transport_data.util.click import common_params
-
 
 @click.group("org")
 def main():
     """TDCI itself."""
 
 
-@main.command("refresh", params=common_params("version"))
-def refresh(version):
+@main.command()
+def refresh():
     """Update the TDCI metadata."""
     from transport_data import STORE
 
     from . import get_agencyscheme
 
-    STORE.set(get_agencyscheme(version=version))
+    STORE.set(get_agencyscheme())
 
 
 @main.command("read")

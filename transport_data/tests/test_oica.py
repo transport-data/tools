@@ -1,8 +1,13 @@
 import pytest
 from pytest import param
+from requests.exceptions import SSLError
 
 from transport_data.oica import convert, get_cl_geo, update_registry
 from transport_data.testing import MARK
+
+pytestmark = pytest.mark.xfail(
+    raises=SSLError, reason="Expired SSL certificate on www.oica.net"
+)
 
 
 @pytest.mark.parametrize(

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 import sdmx.model.v21 as m
 
-from transport_data import STORE as registry
 from transport_data.util.pluggy import hookimpl, pm
 
 if TYPE_CHECKING:
@@ -54,13 +53,14 @@ def provides():
     return ("AgencyScheme=TDCI:TDCI",)
 
 
-def get_agencyscheme(version: None | str = None) -> "sdmx.model.v21.AgencyScheme":
+def get_agencyscheme() -> "sdmx.model.v21.AgencyScheme":
     """Generate an AgencyScheme including some TDCI data providers."""
     as_ = m.AgencyScheme(
         id="TDCI",
         # NameableArtefact
         name="Transport Data Commons Initiative partners and participants",
         # VersionableArtefact
+        version="2025.12.27",
         valid_from=date.today().isoformat(),
         # MaintainableArtefact
         maintainer=None,
@@ -71,10 +71,6 @@ def get_agencyscheme(version: None | str = None) -> "sdmx.model.v21.AgencyScheme
 
     # TDCI itself is the maintainer
     as_.maintainer = as_["TDCI"]
-
-    as_.version = version
-    if as_.version is None:
-        registry.assign_version(as_, patch=1)
 
     return as_
 

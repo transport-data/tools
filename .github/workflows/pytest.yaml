@@ -49,8 +49,23 @@ jobs:
     - name: Install the Python package and dependencies
       run: uv pip install --upgrade .[tests]
 
-    - name: Clone the transport-data/registry repo
-      run: coverage run -m transport_data store clone
+    - name: Cache test data
+      uses: actions/cache@v5
+      with:
+        path: |
+          /Users/runner/Library/Caches/transport-data
+          /home/runner/.cache/transport-data
+          C:\Users\runneradmin\AppData\Local\transport-data
+        key: ${{ matrix.os }}
+
+    - name: Prepare test data
+      # Run the following commands, with coverage measurement:
+      #
+      # 1. Clone the transport-data/registry repo
+      # 2. Fetch ATO data from the Zenodo mirror, avoiding rate limits
+      run: |
+        coverage run -m transport_data store clone
+        coverage run -m transport_data ato fetch --all --from-zenodo --go
 
     - name: Run test suite using pytest
       run: |
