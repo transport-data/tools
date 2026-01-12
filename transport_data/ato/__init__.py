@@ -131,10 +131,10 @@ POOCH = Pooch(
 )
 
 #: Pooch to fetch data from the Zenodo mirror at
-#: https://doi.org/10.5281/zenodo.14913730.
+#: https://doi.org/10.5281/zenodo.14913729.
 POOCH_ZENODO = Pooch(
     module=f"{__name__}-zenodo",
-    base_url="doi:10.5281/zenodo.14913730/",
+    base_url="doi:10.5281/zenodo.15232577/",
     expand=expand_zenodo,
 )
 
