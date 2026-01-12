@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 #: Base URL for data files.
-BASE_URL = "https://www.oica.net/wp-content/uploads/"
+BASE_URL = "https://www.oica.net/wp-content/uploads/2025/"
 
 REGISTRY_FILE = Path(__file__).with_name("registry.txt")
 
@@ -240,7 +240,7 @@ def filenames_for_dfd(
         )
     elif "SALES" in dfd.id:
         pattern = "{}_sales_{}.xlsx"
-        values = {"cv", "pc", "total"}, range(2017, 2024)
+        values = {"cv", "pc", "total"}, range(2017, 2025)
     elif "STOCK" in dfd.id:
         pattern = "{}-World-vehicles-in-use-{}.xlsx"
         values = {"CV", "PC", "Total"}, range(2017, 2024)
@@ -251,12 +251,15 @@ def filenames_for_dfd(
     for name_parts in product(*values):
         # Format a file name
         name = pattern.format(*name_parts)
-
         try:
-            # Try to fetch if `fetch` is True; else return every name
-            yield Path(POOCH.fetch(name) if fetch else name)
-        except ValueError:
-            pass
+            # Identify the first name/path in the registry that matches
+            name = next(k for k in POOCH.registry.keys() if k.endswith(name))
+        except StopIteration:
+            # Invalid name, not in the registry
+            continue
+
+        # Try to fetch if `fetch` is True; else return every name
+        yield Path(POOCH.fetch(name) if fetch else name)
 
 
 def _make_geo_codes(

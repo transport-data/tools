@@ -10,7 +10,6 @@ import click.testing
 import pytest
 import responses
 import sdmx.message
-from requests.exceptions import HTTPError
 from sdmx.model import common, v21
 
 import transport_data
@@ -41,8 +40,8 @@ MARK = {
         reason="'Truncated file header' on GHA runner",
     ),
     "#52": pytest.mark.xfail(
-        raises=HTTPError,
-        reason="File removed; https://github.com/transport-data/tools/issues/52",
+        raises=AssertionError,
+        reason="Upstream files removed; https://github.com/transport-data/tools/issues/52",
     ),
 }
 
