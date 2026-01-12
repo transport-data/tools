@@ -53,6 +53,7 @@ tests = [
   "pytest-rerunfailures",
   "pytest-timeout",
   "pytest-xdist",
+  "responses",
   "transport-data[keyring,google]",
 ]
 

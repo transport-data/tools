@@ -13,6 +13,7 @@ repos:
     - platformdirs
     - prompt-toolkit
     - pytest
+    - responses
     - sdmx1
     - Sphinx
     - types-docutils
