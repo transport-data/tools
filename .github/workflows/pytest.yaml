@@ -49,8 +49,13 @@ jobs:
     - name: Install the Python package and dependencies
       run: uv pip install --upgrade .[tests]
 
-    - name: Clone the transport-data/registry repo
-      run: coverage run -m transport_data store clone
+    - name: Prepare test data
+      # 1. Set the Zenodo API token.
+      # 2. Clone the transport-data/registry repo.
+      run: |
+        echo "${{ secrets.ZENODO_TOKEN }}" | keyring set transport-data api-token-zenodo
+        coverage run -m transport_data store clone
+      shell: bash
 
     - name: Run test suite using pytest
       run: |

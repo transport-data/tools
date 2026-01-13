@@ -9,7 +9,7 @@ from transport_data.testing import MARK
     "measure, N_obs",
     (
         param("PROD", None, marks=pytest.mark.xfail(raises=NotImplementedError)),
-        param("SALES", dict(SALES=2294, SALES_GR=1182), marks=MARK["#52"]),
+        param("SALES", dict(SALES=1332, SALES_GR=444)),
         param(
             "STOCK", dict(STOCK=462, STOCK_AAGR=230, STOCK_CAP=77), marks=MARK["#52"]
         ),

@@ -1,12 +1,15 @@
+import json
 import os
 import platform
+import re
 import zipfile
-from typing import TYPE_CHECKING, Generator, cast
+from collections.abc import Generator, Iterator
+from typing import TYPE_CHECKING, cast
 
 import click.testing
 import pytest
+import responses
 import sdmx.message
-from requests.exceptions import HTTPError
 from sdmx.model import common, v21
 
 import transport_data
@@ -37,8 +40,8 @@ MARK = {
         reason="'Truncated file header' on GHA runner",
     ),
     "#52": pytest.mark.xfail(
-        raises=HTTPError,
-        reason="File removed; https://github.com/transport-data/tools/issues/52",
+        raises=AssertionError,
+        reason="Upstream files removed; https://github.com/transport-data/tools/issues/52",
     ),
 }
 
@@ -73,6 +76,33 @@ def ember_dfd(store: "dsss.store.Store") -> "v21.Dataflow":
     store.set(dsd)
 
     return dfd
+
+
+@pytest.fixture(scope="session")
+def mock_zenodo_api(
+    test_data_path: "Traversable",
+) -> Iterator["responses.RequestsMock"]:
+    """Mock Zenodo API responses to avoid hitting rate limits."""
+    from transport_data.util.responses import RepeatRegistry, RequestsMock
+
+    # Use a registry that repeats the same response for a given URL
+    mock = RequestsMock(assert_all_requests_are_fired=False, registry=RepeatRegistry)
+
+    # Pass through requests to certain other domains
+    mock.add_passthru("https://asiantransportobservatory.org")
+    mock.add_passthru("https://doi.org")
+    # Pass through requests for actual files
+    mock.add_passthru(
+        re.compile(r"^https://zenodo\.org/api/records/\d+/files/.*/content$")
+    )
+
+    # Mock API responses with record information
+    base = "https://zenodo.org/api"
+    for doi in "14913730", "15232577":
+        with open(str(test_data_path.joinpath(f"zenodo-{doi}.json"))) as f:
+            mock.add(method="GET", url=f"{base}/records/{doi}", json=json.load(f))
+
+    yield mock
 
 
 @pytest.fixture(scope="session")
@@ -131,7 +161,7 @@ def tdc_cli():
 
 
 @pytest.fixture(scope="session")
-def test_data_path() -> Generator["Traversable", None, None]:
+def test_data_path() -> Iterator["Traversable"]:
     """Path containing test data."""
     from importlib.resources import files
 

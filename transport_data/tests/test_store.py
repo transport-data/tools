@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,6 +11,8 @@ from transport_data.store import main
 
 if TYPE_CHECKING:
     import dsss.store
+
+log = logging.getLogger(__name__)
 
 
 class TestBaseStore:
@@ -64,25 +67,23 @@ class TestUnionStore:
                 common.AgencyScheme,
             ),
             (
-                "urn:sdmx:org.sdmx.infomodel.base.AgencyScheme=TDCI:TDCI(0.0.1)",
+                "urn:sdmx:org.sdmx.infomodel.base.AgencyScheme=TDCI:TDCI(2025.12.27)",
                 common.AgencyScheme,
             ),
-            ("AgencyScheme=TDCI:TDCI(0.0.1)", common.AgencyScheme),
+            ("AgencyScheme=TDCI:TDCI(2025.12.27)", common.AgencyScheme),
             ("AgencyScheme=TDCI:TDCI", common.AgencyScheme),
             # DSD can be retrieved with normalized or non-normalized ID
-            pytest.param(
-                "DataStructure=TEST:MASS(1.0.0)",
-                v21.DataStructureDefinition,
-                marks=pytest.mark.xfail(  # TODO Remove when fixed upstream
-                    raises=UnboundLocalError, reason="Limitation in sdmx1 v2.19.1"
-                ),
-            ),
+            ("DataStructure=TEST:MASS(1.0.0)", v21.DataStructureDefinition),
             ("DataStructureDefinition=TEST:MASS(1.0.0)", v21.DataStructureDefinition),
         ),
     )
     def test_get(self, tmp_store, urn, cls) -> None:
         """Objects can be retrieved by partial URN."""
-        result = tmp_store.get(urn)
+        try:
+            result = tmp_store.get(urn)
+        except Exception:  # pragma: no cover
+            log.error("\n".join(["Not found among:"] + tmp_store.list(cls)))
+            raise
         assert isinstance(result, cls)
 
     def test_list(self, tmp_store) -> None:

@@ -1,0 +1,216 @@
+{
+  "created": "2025-02-23T15:22:12.446778+00:00",
+  "modified": "2025-02-23T15:22:13.036130+00:00",
+  "id": 14913730,
+  "conceptrecid": "14913729",
+  "doi": "10.5281/zenodo.14913730",
+  "conceptdoi": "10.5281/zenodo.14913729",
+  "doi_url": "https://doi.org/10.5281/zenodo.14913730",
+  "metadata": {
+    "title": "Asian Transport Outlook (ATO) National Database",
+    "doi": "10.5281/zenodo.14913730",
+    "publication_date": "2022-09-29",
+    "description": "<p>This record mirrors current and previous versions of data published by the Asian Transport Observatory (ATO). At the original location (https://asiantransportobservatory.org/snd/), this is described (as of 2025-02-23) as:</p>\n<p>The Asian Transport Outlook (ATO) National Database is a collection of national-level indicators on the transport sector in 51 economies in the Asia Pacific region using about 400 indicators. The database also includes relevant information on policy frameworks for transport in these economies.</p>\n<p>As of 2025-02-23, the ATO website and the data files themselves do not specify a license for these data. The &ldquo;ATO Terms of Service&rdquo; attached to this record contain text copied from https://asiantransportobservatory.org/termsofservice/ under the heading &ldquo;Copyright Notice.&rdquo;</p>\n<p>This record is created as an archive to support reproducible research wherein the precise results depend on the exact contents of the ATO National Database as of a certain point in time. This falls under the permitted/encouraged \"non-profit purposes\" mentioned in the Terms of Service.</p>\n<p>The files in the record have the same names as those provided by the original source, with the addition of a date like &ldquo;2025-02-17&rdquo;. This reflects the creation and/or modification time (whichever is latest) of the file, as expressed in the embedded document metadata. Different versions of the same file are distinguished by this name suffix.</p>\n<p>This record will be updated with additional, serial versions to add newer or older version(s) of these or related files, at least until these are available from another source that meets the same archival criteria as Zenodo.</p>",
+    "access_right": "open",
+    "creators": [
+      {
+        "name": "Asian Transport Observatory",
+        "affiliation": null
+      }
+    ],
+    "contributors": [
+      {
+        "name": "Kishimoto, Paul Natsuo",
+        "affiliation": null,
+        "type": "DataCurator",
+        "orcid": "0000-0002-8578-753X"
+      }
+    ],
+    "related_identifiers": [
+      {
+        "identifier": "https://asiantransportobservatory.org/snd/",
+        "relation": "isDerivedFrom",
+        "resource_type": "dataset",
+        "scheme": "url"
+      }
+    ],
+    "dates": [
+      {
+        "type": "created"
+      },
+      {
+        "type": "updated"
+      }
+    ],
+    "language": "eng",
+    "resource_type": {
+      "title": "Dataset",
+      "type": "dataset"
+    },
+    "communities": [
+      {
+        "id": "transport-data"
+      }
+    ],
+    "relations": {
+      "version": [
+        {
+          "index": 0,
+          "is_last": false,
+          "parent": {
+            "pid_type": "recid",
+            "pid_value": "14913729"
+          }
+        }
+      ]
+    }
+  },
+  "title": "Asian Transport Outlook (ATO) National Database",
+  "links": {
+    "self": "https://zenodo.org/api/records/14913730",
+    "self_html": "https://zenodo.org/records/14913730",
+    "preview_html": "https://zenodo.org/records/14913730?preview=1",
+    "doi": "https://doi.org/10.5281/zenodo.14913730",
+    "self_doi": "https://doi.org/10.5281/zenodo.14913730",
+    "self_doi_html": "https://zenodo.org/doi/10.5281/zenodo.14913730",
+    "reserve_doi": "https://zenodo.org/api/records/14913730/draft/pids/doi",
+    "parent": "https://zenodo.org/api/records/14913729",
+    "parent_html": "https://zenodo.org/records/14913729",
+    "parent_doi": "https://doi.org/10.5281/zenodo.14913729",
+    "parent_doi_html": "https://zenodo.org/doi/10.5281/zenodo.14913729",
+    "self_iiif_manifest": "https://zenodo.org/api/iiif/record:14913730/manifest",
+    "self_iiif_sequence": "https://zenodo.org/api/iiif/record:14913730/sequence/default",
+    "files": "https://zenodo.org/api/records/14913730/files",
+    "media_files": "https://zenodo.org/api/records/14913730/media-files",
+    "archive": "https://zenodo.org/api/records/14913730/files-archive",
+    "archive_media": "https://zenodo.org/api/records/14913730/media-files-archive",
+    "latest": "https://zenodo.org/api/records/14913730/versions/latest",
+    "latest_html": "https://zenodo.org/records/14913730/latest",
+    "versions": "https://zenodo.org/api/records/14913730/versions",
+    "draft": "https://zenodo.org/api/records/14913730/draft",
+    "access_links": "https://zenodo.org/api/records/14913730/access/links",
+    "access_grants": "https://zenodo.org/api/records/14913730/access/grants",
+    "access_users": "https://zenodo.org/api/records/14913730/access/users",
+    "access_request": "https://zenodo.org/api/records/14913730/access/request",
+    "access": "https://zenodo.org/api/records/14913730/access",
+    "communities": "https://zenodo.org/api/records/14913730/communities",
+    "communities-suggestions": "https://zenodo.org/api/records/14913730/communities-suggestions",
+    "request_deletion": "https://zenodo.org/api/records/14913730/request-deletion",
+    "file_modification": "https://zenodo.org/api/records/14913730/file-modification",
+    "requests": "https://zenodo.org/api/records/14913730/requests"
+  },
+  "updated": "2025-02-23T15:22:13.036130+00:00",
+  "recid": "14913730",
+  "revision": 4,
+  "files": [
+    {
+      "id": "0672a68d-c06f-490e-9ec9-3091a00ee7f9",
+      "key": "ATO Workbook (TRANSPORT POLICY (POL)) 2022-09-29.xlsx",
+      "size": 554502,
+      "checksum": "md5:8e3d9dade1a55144ac819e771c5cc81b",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (TRANSPORT POLICY (POL)) 2022-09-29.xlsx/content"
+      }
+    },
+    {
+      "id": "e3a7c0f8-4d49-4fb0-a51a-cfd67de6fcc0",
+      "key": "ATO Workbook (SOCIO-ECONOMIC (SEC)) 2024-11-14.xlsx",
+      "size": 1235020,
+      "checksum": "md5:71696963b1445c688acbecee7801436f",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (SOCIO-ECONOMIC (SEC)) 2024-11-14.xlsx/content"
+      }
+    },
+    {
+      "id": "7a16a4c2-defd-4f86-adcf-1d5b932ae08b",
+      "key": "ATO Workbook (ROAD SAFETY (RSA)) 2024-11-14.xlsx",
+      "size": 317406,
+      "checksum": "md5:f23881eec277bb238adac623e879360f",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (ROAD SAFETY (RSA)) 2024-11-14.xlsx/content"
+      }
+    },
+    {
+      "id": "0d2fc63b-41d4-4475-97f9-35a74864a381",
+      "key": "ATO Workbook (CLIMATE CHANGE (CLC)) 2024-11-14.xlsx",
+      "size": 738533,
+      "checksum": "md5:7cf1b0bb142bdf9d7042e67c8468c8d3",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (CLIMATE CHANGE (CLC)) 2024-11-14.xlsx/content"
+      }
+    },
+    {
+      "id": "fd37b8c2-57cb-48b4-badf-ff7649e39842",
+      "key": "ATO Workbook (INFRASTRUCTURE (INF)) 2024-11-14.xlsx",
+      "size": 703364,
+      "checksum": "md5:9a776fc75523d813032e02a6c2c3bff4",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (INFRASTRUCTURE (INF)) 2024-11-14.xlsx/content"
+      }
+    },
+    {
+      "id": "66ca5cf9-8d4f-4d53-9b21-7451fceea2e8",
+      "key": "ATO Workbook (ROAD SAFETY (RSA)) 2025-02-17.xlsx",
+      "size": 323600,
+      "checksum": "md5:8871cec131c735f5453359809f2bdab0",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (ROAD SAFETY (RSA)) 2025-02-17.xlsx/content"
+      }
+    },
+    {
+      "id": "0118e2b7-53b5-41da-8e42-9aae05ef6017",
+      "key": "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)) 2024-11-14.xlsx",
+      "size": 1178689,
+      "checksum": "md5:4d3ee147e0a655cde038669dd640a8a2",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)) 2024-11-14.xlsx/content"
+      }
+    },
+    {
+      "id": "17090fe5-84f2-42b5-b025-50e5e56d1ab2",
+      "key": "ATO Workbook (MISCELLANEOUS (MIS)) 2024-11-14.xlsx",
+      "size": 265995,
+      "checksum": "md5:13a96f8b62fa3f4e5376f3b879a04ed9",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (MISCELLANEOUS (MIS)) 2024-11-14.xlsx/content"
+      }
+    },
+    {
+      "id": "0c4675b7-35eb-4667-aa03-3f5de60a1707",
+      "key": "ATO Workbook (AIR POLLUTION & HEALTH (APH)) 2024-11-14.xlsx",
+      "size": 763788,
+      "checksum": "md5:974a442f59181d84c7051a931f98c334",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (AIR POLLUTION & HEALTH (APH)) 2024-11-14.xlsx/content"
+      }
+    },
+    {
+      "id": "b877c2c8-392f-4de1-b57a-6ca55635e5d0",
+      "key": "ATO Workbook (ACCESS & CONNECTIVITY (ACC)) 2024-11-14.xlsx",
+      "size": 134859,
+      "checksum": "md5:089eb2bd106822dc0f46ab82e4e05385",
+      "links": {
+        "self": "https://zenodo.org/api/records/14913730/files/ATO Workbook (ACCESS & CONNECTIVITY (ACC)) 2024-11-14.xlsx/content"
+      }
+    }
+  ],
+  "swh": {},
+  "owners": [
+    {
+      "id": "28561"
+    }
+  ],
+  "status": "published",
+  "stats": {
+    "downloads": 456,
+    "unique_downloads": 419,
+    "views": 179,
+    "unique_views": 168,
+    "version_downloads": 239,
+    "version_unique_downloads": 229,
+    "version_unique_views": 90,
+    "version_views": 95
+  },
+  "state": "done",
+  "submitted": true
+}

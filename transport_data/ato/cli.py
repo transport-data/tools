@@ -27,7 +27,10 @@ def main():
 @click.argument("part", nargs=-1)
 @click.option("--go", is_flag=True, help="Actually fetch.")
 @click.option("--all", "all_", is_flag=True, help="Fetch all files.")
-def fetch_cmd(part, all_, go):
+@click.option(
+    "--from-zenodo", "from_zenodo", is_flag=True, help="Fetch from Zenodo mirror."
+)
+def fetch_cmd(part, all_, go: bool, from_zenodo: bool) -> None:
     """Fetch original data files."""
     if not len(part):
         if not all_:
@@ -36,7 +39,7 @@ def fetch_cmd(part, all_, go):
 
         part = list(FILES.keys())
 
-    fetch(*part)
+    fetch(*part, from_zenodo=from_zenodo, dry_run=not go)
 
 
 @main.command("convert")

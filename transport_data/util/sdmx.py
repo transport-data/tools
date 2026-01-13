@@ -222,7 +222,7 @@ def fields_to_mda(
        name="Foo", and description="Description of Foo."
     2. With id="bar" and an annotation with id="data-type" and text="<class 'int'>".
     """
-    from sdmx.model import common
+    from sdmx.model import common, v21
 
     # Assemble info about the dataclass fields of `cls`
     field_info = {f.name: (f, "") for f in fields(cls)}
@@ -250,6 +250,6 @@ def fields_to_mda(
         # Construct the ConceptIdentity and add to `cs`
         ci = cs.setdefault(id=id_, name=name or None, description=desc or None)
         # Construct the data type annotation
-        type_anno = common.Annotation(id="data-type", text={"zxx": repr(f.type)})
+        type_anno = v21.Annotation(id="data-type", text={"zxx": repr(f.type)})
         # Add the metadata attribute to the report structure
         rs.getdefault(id=id_, concept_identity=ci, annotations=[type_anno])

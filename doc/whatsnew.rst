@@ -16,19 +16,34 @@ Next release
   - New functions :func:`~.org.ckan.get_msd`,
     :func:`~.org.ckan.ckan_package_to_mdr`, and
     :func:`~.org.ckan.mdr_to_ckan_package`.
-- Improve :mod:`.util.ckan` (:pull:`38`):
+
+  - Improve :mod:`.util.ckan` (:pull:`38`):
 
   - New :class:`.ModelProxy` class :class:`~.ckan.User`.
   - New method :meth:`.ModelProxy.get`.
   - :class:`.ModelProxy` processes collections of JSON objects to :mod:`transport_data` instances.
   - New class :class:`.CKANMetadataReportStructure`,
     representing the metadata fields of a CKAN package.
-- Improve :class:`~.util.pooch.Pooch` class (:pull:`50`).
+
+- Improve :class:`~.util.pooch.Pooch` class (:pull:`50`, :pull:`56`).
+
+  - Use a secret stored with :program:`keyring set transport-data api-token-zenodo`,
+    if available,
+    to avoid Zenodo rate limiting.
+  - Reduce repeated API calls.
+  - Handle 429 Too Many Requests HTTP responses.
+
 - :mod:`.ato` data provider:
 
   - Rename :py:`.adb` to :mod:`.ato` (:pull:`47`).
-  - Update known hashes for files provided by :mod:`.ato` (:issue:`46`, :pull:`47`, :pull:`50`).
-  - Fetch source data from Zenodo mirror (:pull:`50`).
+  - Update known hashes for files provided by :mod:`.ato` (:issue:`46`, :pull:`47`, :pull:`50`, :pull:`56`).
+  - Fetch source data from Zenodo mirror (:pull:`50`, :pull:`56`).
+
+- :mod:`oica` data provider:
+ 
+  - Update base URL and registry per 2025-10 OICA website refresh (:pull:`56`).
+  - Add 2024 data files (:pull:`56`).
+
 - New CLI command :program:`tdc test wipe` (:pull:`38`):
 - New function :func:`.util.sdmx.fields_to_mda` (:pull:`38`).
 - :mod:`transport_data` supports type checking of its use in downstream code,

@@ -50,19 +50,19 @@ FILES = {
     ),
     "APH": (
         "ATO Workbook (AIR POLLUTION & HEALTH (APH)).xlsx",
-        "sha256:b06c102a1184ed83d77673146599e11c2b6c81d784ebcee6b46f4d43713e899a",
+        "sha256:dcec4676c74566712e2771aad0afe196d1db9a3f7630eac1c3dba29d0b7c09f4",
     ),
     "CLC": (
         "ATO Workbook (CLIMATE CHANGE (CLC)).xlsx",
-        "sha256:7fe2d4bb656508bf3194406d25ed04c1ac403daaaf1ada74847a2c330efcfb2a",
+        "sha256:2d582ade3dfe452fb2eedb3cbe9d06ac7167f0bb867e41016c8a1e7aa2efca15",
     ),
     "INF": (
         "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
-        "sha256:30b9d05330838809ff0d53b2e61ade935eccdb4b73c0509fd1fc49b405699ac3",
+        "sha256:8ee1274cd2268c44b1f33d3917b72fc6626897aca28ecbee56c0ba8aa646e89a",
     ),
     "MIS": (
         "ATO Workbook (MISCELLANEOUS (MIS)).xlsx",
-        "sha256:2ef3cdc5e6363cdca1f671bbf12bf0463fe8a4210cb49b3d32ebd2440c6fe6df",
+        "sha256:c601e9e217e137a6071758f73cac050ea7dae4ff746e4a99d8c3297269175c03",
     ),
     "POL": (
         "ATO Workbook (TRANSPORT POLICY (POL)).xlsx",
@@ -70,15 +70,15 @@ FILES = {
     ),
     "RSA": (
         "ATO Workbook (ROAD SAFETY (RSA)).xlsx",
-        "sha256:36b964fa4e5f4ff36cd4903c5551a5a974369068fc2fc62bc4ef3cec34d45537",
+        "sha256:51a6658fa12fcb3ac77298f5908ab343492385ecb1b24602ba21b91dbbcedca5",
     ),
     "SEC": (
         "ATO Workbook (SOCIO-ECONOMIC (SEC)).xlsx",
-        "sha256:b5d2ee5d07b5554ef262436ef898afd976fbb4956bd7cb850829cb7391d207c0",
+        "sha256:bc5e4a0006173a53f5b5f283c3b0174566b81842e368a432f25ba563ffcda93b",
     ),
     "TAS": (
         "ATO Workbook (TRANSPORT ACTIVITY & SERVICES (TAS)).xlsx",
-        "sha256:628d4e9774f84d30d80706e982e4ddf7187d77f8676e69765c307701da1caf77",
+        "sha256:3e468c325ab508476d5d06e81d7d0e2c21655b4f3801abf20776812928126bb6",
     ),
 }
 
@@ -131,10 +131,10 @@ POOCH = Pooch(
 )
 
 #: Pooch to fetch data from the Zenodo mirror at
-#: https://doi.org/10.5281/zenodo.14913730.
+#: https://doi.org/10.5281/zenodo.14913729.
 POOCH_ZENODO = Pooch(
     module=f"{__name__}-zenodo",
-    base_url="doi:10.5281/zenodo.14913730/",
+    base_url="doi:10.5281/zenodo.15232577/",
     expand=expand_zenodo,
 )
 
@@ -411,11 +411,15 @@ def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, Callable]:
     measure_name = aa.pop_annotation(id="INDICATOR").text
     measure_desc = aa.pop_annotation(id="DESCRIPTION").text
 
-    # Add to the "Measure" concept scheme
-    # TODO avoid duplicating items for e.g. TDC-PAT-001(1), TDC-PAT-001(2)
+    # Measure concept
     c = m.Concept(id=measure_id, name=measure_name, description=measure_desc)
-    # TODO Extend an existing code list if converting only 1 or a few data sets
-    CS_MEASURE.append(c)
+    if c in CS_MEASURE:
+        # Avoid duplicating items
+        log.info(f"Skip updating {CS_MEASURE[measure_id]!r} with {c!r}")
+        c = CS_MEASURE[measure_id]
+    else:
+        # Extend the "Measure" concept scheme
+        CS_MEASURE.append(c)
 
     # Data structure definition with an ID matching the measure
     # NB here we set ATO as the maintainer. Precisely, ATO establishes the data

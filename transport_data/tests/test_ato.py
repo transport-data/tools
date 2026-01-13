@@ -1,12 +1,17 @@
+from typing import TYPE_CHECKING
+
 import pytest
 from sdmx.model import v21
 
 from transport_data.ato import convert, dataset_to_metadata_reports, fetch
 from transport_data.testing import MARK
 
+if TYPE_CHECKING:
+    import responses
+
 
 @pytest.fixture(scope="session")
-def ato_converted_data(tmp_store):
+def ato_converted_data(mock_zenodo_api: "responses.RequestsMock", tmp_store) -> None:
     """Converted ATO data and structures in the test data directory."""
     # 'Proper' method: repeat the conversion in the test data directory
     for part in (
@@ -20,7 +25,8 @@ def ato_converted_data(tmp_store):
         "SEC",
         "TAS",
     ):
-        convert(part, from_zenodo=True)
+        with mock_zenodo_api:
+            convert(part, from_zenodo=False)
 
     # # 'Fast' method: mirror the files from the user's directory
     # from shutil import copyfile
@@ -57,14 +63,16 @@ def test_convert0(ato_converted_data):
     "part",
     (pytest.param("POL", marks=pytest.mark.xfail(reason="File format differs")),),
 )
-def test_convert1(part):
+def test_convert1(mock_zenodo_api, part) -> None:
     """Test other `part`s that need particular marks."""
-    convert(part, from_zenodo=True)
+    with mock_zenodo_api:
+        convert(part, from_zenodo=True)
 
 
 @pytest.mark.parametrize("from_zenodo", (False, True))
-def test_fetch(from_zenodo):
-    result = fetch(from_zenodo=from_zenodo, dry_run=True)
+def test_fetch(mock_zenodo_api, from_zenodo) -> None:
+    with mock_zenodo_api:
+        result = fetch(from_zenodo=from_zenodo, dry_run=True)
 
     # Expected number of file names available
     assert 9 == len(result)
