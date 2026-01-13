@@ -411,11 +411,15 @@ def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, Callable]:
     measure_name = aa.pop_annotation(id="INDICATOR").text
     measure_desc = aa.pop_annotation(id="DESCRIPTION").text
 
-    # Add to the "Measure" concept scheme
-    # TODO avoid duplicating items for e.g. TDC-PAT-001(1), TDC-PAT-001(2)
+    # Measure concept
     c = m.Concept(id=measure_id, name=measure_name, description=measure_desc)
-    # TODO Extend an existing code list if converting only 1 or a few data sets
-    CS_MEASURE.append(c)
+    if c in CS_MEASURE:
+        # Avoid duplicating items
+        log.info(f"Skip updating {CS_MEASURE[measure_id]!r} with {c!r}")
+        c = CS_MEASURE[measure_id]
+    else:
+        # Extend the "Measure" concept scheme
+        CS_MEASURE.append(c)
 
     # Data structure definition with an ID matching the measure
     # NB here we set ATO as the maintainer. Precisely, ATO establishes the data
