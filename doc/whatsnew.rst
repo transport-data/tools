@@ -1,8 +1,11 @@
 What's new
 **********
 
-Next release
-============
+.. Next release
+.. ============
+
+v26.1.13
+========
 
 - :mod:`transport_data` supports and is tested on
   `Python 3.14 <https://www.python.org/downloads/release/python-3140/>`_ (:pull:`51`),
