@@ -14,6 +14,7 @@ class that provides conveniences used by other code in :mod:`transport_data`.
 from functools import partialmethod
 from importlib.metadata import version
 from itertools import count
+from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, TypeVar
 from warnings import filterwarnings
 
@@ -202,6 +203,56 @@ class Resource(ModelProxy):
     """Proxy for `ckan.model.Resource
     <https://github.com/ckan/ckan/blob/master/ckan/model/resource.py>`_.
     """
+
+    # Type hints
+    hash: str
+    name: str
+    size: int
+    url: str
+
+    def fetch(self, max_size: int = 10_000_000) -> Path:
+        """Fetch the resource file and cache it locally.
+
+        Parameters
+        ----------
+        max_size
+            Maximum size of file to download.
+
+        Raises
+        ------
+        AssertionError
+            if the size of the file is equal to or greater than `max_size`.
+        """
+        from hashlib import file_digest
+
+        import requests
+
+        from transport_data import CONFIG
+
+        assert self.size <= max_size, f"File size {self.size} >= maxiumum {max_size} B"
+
+        # Identify the target local path. Use directory hierarchy to avoid directories
+        # with many files.
+        assert self.id is not None
+        target = CONFIG.cache_path.joinpath(
+            "resource", self.id[0], self.id[:2], self.id, self.name
+        )
+
+        # Ensure the target directory exists
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            # Check existence and hash of local file
+            with open(target, "rb") as fd:
+                assert file_digest(fd, "md5").hexdigest() == self.hash
+        except (AssertionError, FileNotFoundError):
+            # Hash does not match or file does not exist
+            response = requests.get(self.url, stream=True)
+            with open(target, "wb") as fd:
+                for chunk in response.iter_content():
+                    fd.write(chunk)
+
+        return target
 
 
 class Tag(ModelProxy):
