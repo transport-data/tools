@@ -174,6 +174,29 @@ class Package(ModelProxy):
     <https://github.com/ckan/ckan/blob/master/ckan/model/package.py>`_.
     """
 
+    _collections = {
+        "resources": (list, "Resource"),
+    }
+
+    # Type hints
+    name: str
+    organization: dict[str, str]
+    resources: list["Resource"]
+    tdc_category: str
+
+    def portal_url(self) -> str:
+        """Infer the TDC Portal URL for the package.
+
+        The URL is not provided by the API, so we construct it with similar logic to
+        the portal.
+        """
+        return (
+            "https://portal.transport-data.org/@"
+            + self.organization["title"].lower()
+            + "/"
+            + self.name
+        )
+
 
 class Resource(ModelProxy):
     """Proxy for `ckan.model.Resource
