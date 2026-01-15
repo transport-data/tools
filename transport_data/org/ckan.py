@@ -121,7 +121,7 @@ def get_msd() -> "v21.MetadataStructureDefinition":
     return msd
 
 
-def ckan_package_to_mdr(p) -> "v21.MetadataReport":
+def ckan_package_to_mdr(package: Package) -> "v21.MetadataReport":
     """Convert a :class:`.Package` instance to a MetadataReport."""
     from sdmx.model import v21
 
@@ -134,10 +134,19 @@ def ckan_package_to_mdr(p) -> "v21.MetadataReport":
     for mda in msd.report_structure["ALL"]:
         av = ONEAV(value_for=mda)
         if mda.id == "JSON":
-            av.value = repr(p.asdict())
+            # All JSON data
+            av.value = repr(package.asdict())
         else:
-            value = getattr(p, mda.id)
-            av.value = value if isinstance(value, str) else repr(value)
+            value = getattr(package, mda.id)
+            match value:
+                case str():
+                    av.value = value
+                case list() if len(value) and isinstance(value[0], ModelProxy):
+                    # Restore ModelProxy contents to JSON-like instead of short __repr__
+                    av.value = repr([obj.asdict() for obj in value])
+                case _:
+                    av.value = repr(value)
+
         mdr.metadata.append(av)
 
     return mdr

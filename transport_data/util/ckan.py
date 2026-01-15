@@ -94,7 +94,7 @@ class ModelProxy:
         data = self.__dict__[name][index]
         cls = get_class(name)
         assert cls
-        return cls(data)
+        return data if isinstance(data, cls) else cls(data)
 
     def _process_collections(self) -> None:
         """Convert the :attr:`_collections` to the designated types."""
@@ -173,6 +173,29 @@ class Package(ModelProxy):
     """Proxy for `ckan.model.Package
     <https://github.com/ckan/ckan/blob/master/ckan/model/package.py>`_.
     """
+
+    _collections = {
+        "resources": (list, "Resource"),
+    }
+
+    # Type hints
+    name: str
+    organization: dict[str, str]
+    resources: list["Resource"]
+    tdc_category: str
+
+    def portal_url(self) -> str:
+        """Infer the TDC Portal URL for the package.
+
+        The URL is not provided by the API, so we construct it with similar logic to
+        the portal.
+        """
+        return (
+            "https://portal.transport-data.org/@"
+            + self.organization["title"].lower()
+            + "/"
+            + self.name
+        )
 
 
 class Resource(ModelProxy):
