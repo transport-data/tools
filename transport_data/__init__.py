@@ -28,6 +28,7 @@ STORE = UnionStore(CONFIG)
 # Register plugin hooks
 register_internal(
     "ato",
+    "estat",
     "iamc",
     "ipcc",
     "iso",
