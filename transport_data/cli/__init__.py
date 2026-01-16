@@ -4,12 +4,14 @@ from collections import defaultdict
 from collections.abc import MutableMapping
 from dataclasses import dataclass
 from importlib import import_module
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import click
 
 from transport_data import CONFIG  # noqa: F401
+from transport_data.util.pluggy import pm
 
 if TYPE_CHECKING:
     from transport_data.util.ckan import Package
@@ -23,27 +25,17 @@ def main():
 #: List of (sub)modules that define CLI (sub)commands. Each should contain a
 #: @click.command() named "main".
 MODULES_WITH_CLI = [
-    "ato.cli",
-    "config",
-    "cli.interactive",
-    "estat",
-    "iamc.cli",
-    "iso.cli",
-    "itdp.cli",
-    "jrc.cli",
-    "oica.cli",
-    "org.cli",
-    "org.ckan",
-    "proto.cli",
-    "store",
-    "testing.cli",
+    "transport_data.config",
+    "transport_data.cli.interactive",
+    "transport_data.org.ckan",
+    "transport_data.proto.cli",
+    "transport_data.store",
+    "transport_data.testing.cli",
 ]
 
-
 # Add commands from each module that defines them
-for name in MODULES_WITH_CLI:
+for full_name in chain(MODULES_WITH_CLI, pm.hook.cli_modules()):
     try:
-        full_name = f"transport_data.{name}"
         module = import_module(full_name)
     except ImportError as e:
         print(f"{full_name} commands not available: {e.args[0]}")
