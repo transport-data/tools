@@ -12,7 +12,7 @@ import pandas as pd
 import sdmx.model.v21 as m
 from sdmx.model import common, v21
 
-from transport_data.util.pluggy import hookimpl
+from transport_data import hook
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
 
@@ -373,7 +373,12 @@ def format_data_provider(value: str) -> str:
         return value + "—republished by ATO"
 
 
-@hookimpl
+@hook
+def cli_modules():
+    return f"{__name__}.cli"
+
+
+@hook
 def get_agencies():
     a = m.Agency(
         id="ATO",
@@ -392,7 +397,7 @@ def get_agencies():
     return (a,)
 
 
-@hookimpl
+@hook
 def provides():
     return (
         "Codelist=TDCI:CL_ATO_ECONOMY",
