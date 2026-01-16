@@ -4,7 +4,14 @@ from warnings import filterwarnings
 
 from .config import Config
 from .store import UnionStore
+from .util.pluggy import hookimpl as hook
 from .util.pluggy import register_internal
+
+__all__ = [
+    "CONFIG",
+    "STORE",
+    "hook",
+]
 
 filterwarnings("ignore", "pkg_resources is deprecated", UserWarning, "ckanapi.version")
 
