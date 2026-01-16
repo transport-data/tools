@@ -6,13 +6,19 @@ from typing import TYPE_CHECKING
 
 import sdmx.model.v21 as m
 
-from transport_data.util.pluggy import hookimpl, pm
+from transport_data import hook
+from transport_data.util.pluggy import pm
 
 if TYPE_CHECKING:
     import sdmx.model.v21
 
 
-@hookimpl
+@hook
+def cli_modules():
+    return f"{__name__}.cli"
+
+
+@hook
 def get_agencies() -> "sdmx.model.v21.Agency":
     """Return agencies and organizations including and subsidiary to TDCI itself."""
     # Agency
@@ -48,7 +54,7 @@ def get_agencies() -> "sdmx.model.v21.Agency":
     return a1, a2
 
 
-@hookimpl
+@hook
 def provides():
     return ("AgencyScheme=TDCI:TDCI",)
 

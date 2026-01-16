@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from transport_data.util.pluggy import hookimpl
+from transport_data import hook
 from transport_data.util.pooch import Pooch
 
 if TYPE_CHECKING:
@@ -329,7 +329,12 @@ def _make_geo_codes(
     return id_for_name
 
 
-@hookimpl
+@hook
+def cli_modules():
+    return f"{__name__}.cli"
+
+
+@hook
 def get_agencies():
     """Return the OICA Agency."""
     from sdmx.model import v21
@@ -342,7 +347,7 @@ def get_agencies():
     return (a,)
 
 
-@hookimpl
+@hook
 def provides():
     return (
         "Codelist=TDCI:CL_OICA_GEO",
