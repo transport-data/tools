@@ -1,8 +1,12 @@
 What's new
 **********
 
-.. Next release
-.. ============
+Next release
+============
+
+- :mod:`transport_data` supports and is tested with
+  `Pandas 3.0.0 <https://pandas.pydata.org/pandas-docs/stable/whatsnew/v3.0.0.html>`_,
+   released 2026-01-21 (:pull:`59`).
 
 v26.1.13
 ========
