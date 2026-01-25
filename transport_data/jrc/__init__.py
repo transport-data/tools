@@ -207,7 +207,16 @@ def _match_extract(df: pd.DataFrame, expr) -> pd.DataFrame:
 def _fill_unit_measure(df: pd.DataFrame, measure: str) -> pd.DataFrame:
     """Fill in the UNIT_MEASURE column of `df`."""
     # Identify the MODE, if any
-    mode = df.get("MODE", default=pd.Series([None])).unique().item()  # type: ignore
+    # commented: Regression in pandas 3.0.0
+    # mode = df.get("MODE", default=pd.Series([None])).unique().item()
+    # Work around pandas-dev/pandas#63876
+    if "MODE" in df.columns:
+        modes = df["MODE"].unique()
+        assert 1 == len(modes)
+        mode = modes[0]
+    else:
+        mode = None
+
     return df.assign(
         UNIT_MEASURE=lambda df: df[["U0", "U1"]]
         .fillna(UNIT_MEASURE.get((mode, measure), ""))
