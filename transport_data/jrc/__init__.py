@@ -22,13 +22,17 @@ import numpy as np
 import pandas as pd
 import sdmx.model.v21 as m
 
-from transport_data import STORE
-from transport_data.util.pluggy import hookimpl
+from transport_data import STORE, hook
 from transport_data.util.pooch import Pooch
 from transport_data.util.sdmx import anno_generated
 
 
-@hookimpl
+@hook
+def cli_modules():
+    return f"{__name__}.cli"
+
+
+@hook
 def get_agencies():
     """Return information about the agency providing the data set.
 
@@ -50,7 +54,7 @@ Maintainers of the IDEES data set: https://data.jrc.ec.europa.eu/dataset/jrc-101
     return (a,)
 
 
-@hookimpl
+@hook
 def provides():
     return ("ConceptScheme=TDCI:CS_JRC_MEASURE",)
 
