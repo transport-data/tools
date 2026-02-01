@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
+from requests.exceptions import ConnectionError
 
 from transport_data import hook
 from transport_data.util.pooch import Pooch
@@ -513,11 +514,13 @@ def update_registry() -> None:
 
     for dfd, _ in map(get_structures, ["PROD", "SALES", "STOCK"]):
         for file in filenames_for_dfd(dfd, fetch=False):
-            filename = file.name
+            filename = str(file)
             existing_hash = POOCH.registry.setdefault(filename, None)
 
-            if not POOCH.is_available(filename):
-                # File doesn't exist on the remote
+            try:
+                assert POOCH.is_available(filename)
+            except (AssertionError, ConnectionError):
+                # File doesn't exist on the remote, or request times out
                 POOCH.registry.pop(filename)
                 continue
 
