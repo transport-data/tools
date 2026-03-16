@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  python-version: "3.13"
+  python-version: "3.14"
   # Uncomment for testing
   # UV_PUBLISH_URL: https://test.pypi.org/legacy/
 
@@ -27,11 +27,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/setup-uv@v5
-      with:
-        cache-dependency-glob: "**/pyproject.toml"
-        python-version: ${{ env.python-version }}
+    - uses: actions/checkout@v6
+    - uses: astral-sh/setup-uv@v7
+      with: { python-version: "${{ env.python-version }}" }
     - run: uv build
     - run: uv publish --trusted-publishing=always
       if: >-
