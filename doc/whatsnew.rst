@@ -7,6 +7,7 @@ Next release
 - :mod:`transport_data` supports and is tested with
   `Pandas 3.0.0 <https://pandas.pydata.org/pandas-docs/stable/whatsnew/v3.0.0.html>`_,
    released 2026-01-21 (:pull:`59`).
+- Update for pycountry 26.2.16, released 2026-02-17 (:pull:`61`).
 
 v26.1.13
 ========
