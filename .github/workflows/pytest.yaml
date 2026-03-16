@@ -36,14 +36,13 @@ jobs:
     name: ${{ matrix.os }}-py${{ matrix.python-version }}
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         lfs: true
 
     - uses: astral-sh/setup-uv@v7
       with:
         activate-environment: true
-        cache-dependency-glob: "**/pyproject.toml"
         python-version: ${{ matrix.python-version }}
 
     - name: Install the Python package and dependencies
@@ -76,14 +75,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: astral-sh/setup-uv@v7
-      with:
-        cache-dependency-glob: |
-          **/pyproject.toml
-          **/.pre-commit-config.yaml
-        python-version: "3.14"
-    - uses: actions/cache@v4
+      with: { python-version: "3.14" }
+    - uses: actions/cache@v5
       with:
         path: ~/.cache/pre-commit
         key: ${{ github.job }}|${{ hashFiles('.pre-commit-config.yaml') }}
