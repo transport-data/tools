@@ -1,6 +1,7 @@
 """Utilities for :mod:`sdmx`."""
 
 import io
+import logging
 from dataclasses import fields
 from datetime import datetime
 from importlib.metadata import version
@@ -31,6 +32,9 @@ if TYPE_CHECKING:
 
     class MAKeywords(VAKeywords):
         maintainer: sdmx.model.common.Agency | None
+
+
+log = logging.getLogger(__name__)
 
 
 class CSVAdapter(io.RawIOBase):
@@ -193,6 +197,67 @@ def read_csv(
         "sdmx.message.DataMessage",
         sdmx.read_sdmx(source, format="csv", structure=structure),
     )
+
+
+def structure_from_csv(
+    path: "pathlib.Path",
+) -> tuple["sdmx.model.v30.Dataflow", dict]:
+    """Infer a data flow and arguments for :func:`.read_csv` from `path`."""
+
+    import csv
+
+    from sdmx.model import v30
+
+    from transport_data.org import get_agencyscheme
+
+    # Parse the first line of the file as CSV
+    with open(path, "r") as f:
+        reader = csv.reader(f)
+        row = next(reader)
+
+    dsd = v30.DataStructureDefinition(
+        id="DS_INFERRED",
+        description=f"Inferred from the contents of {path}",
+        maintainer=get_agencyscheme()["TDCI"],
+    )
+    adapt = dict()
+
+    for column, default in (
+        ("STRUCTURE", "datastructure"),
+        ("STRUCTURE_ID", dsd.id),
+        ("ACTION", "I"),
+    ):
+        try:
+            row.remove(column)
+        except ValueError:
+            adapt[column.lower()] = default
+
+    # Assume the measure ID "OBS_VALUE"
+    index_obs_value = row.index("OBS_VALUE")
+    dsd.measures.getdefault(id="OBS_VALUE")
+
+    # Preceding columns are dimensions
+    for dim_id in row[:index_obs_value]:
+        dsd.dimensions.getdefault(id=dim_id)
+
+    # Following columns are attributes
+    for attr_id in row[index_obs_value + 1 :]:
+        dsd.attributes.getdefault(id=attr_id)
+
+    log.info(
+        f"Inferred structure {dsd} with {len(dsd.dimensions)} dimension(s): "
+        + " ".join(d.id for d in dsd.dimensions)
+    )
+
+    # Construct a dataflow definition matching `dsd`
+    dfd = v30.Dataflow(
+        id="DF_INFERRED",
+        description=dsd.description,
+        maintainer=dsd.maintainer,
+        structure=dsd,
+    )
+
+    return dfd, adapt
 
 
 def fields_to_mda(
