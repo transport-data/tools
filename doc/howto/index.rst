@@ -11,6 +11,7 @@ In contrast, the :doc:`/standards` are *prescriptive*.
 .. toctree::
    :maxdepth: 2
 
+   Get involved <get-involved>
    Edit data structures <cli-edit>
    Format data <data-csv>
    Record and update metadata <metadata>
