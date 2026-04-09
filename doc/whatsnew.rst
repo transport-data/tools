@@ -8,6 +8,7 @@ Next release
   `Pandas 3.0.0 <https://pandas.pydata.org/pandas-docs/stable/whatsnew/v3.0.0.html>`_,
    released 2026-01-21 (:pull:`59`).
 - Update for pycountry 26.2.16, released 2026-02-17 (:pull:`61`).
+- New HOWTO :doc:`Get involved <howto/get-involved>` (:pull:`62`).
 
 v26.1.13
 ========
