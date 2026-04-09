@@ -58,7 +58,7 @@ FILES = {
     ),
     "INF": (
         "ATO Workbook (INFRASTRUCTURE (INF)).xlsx",
-        "sha256:8ee1274cd2268c44b1f33d3917b72fc6626897aca28ecbee56c0ba8aa646e89a",
+        "sha256:84a3a06a730dec591aae3a2bfdc918885a27a8acdeeae0f3ec1650ef4383ad0d",
     ),
     "MIS": (
         "ATO Workbook (MISCELLANEOUS (MIS)).xlsx",
