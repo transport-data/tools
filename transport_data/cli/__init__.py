@@ -35,8 +35,13 @@ MODULES_WITH_CLI = [
 
 # Add commands from each module that defines them
 for name in MODULES_WITH_CLI:
-    module = import_module(f"transport_data.{name}")
-    main.add_command(getattr(module, "main"))
+    try:
+        full_name = f"transport_data.{name}"
+        module = import_module(full_name)
+    except ImportError as e:
+        print(f"{full_name} commands not available: {e.args[0]}")
+    else:
+        main.add_command(getattr(module, "main"))
 
 
 @main.command()
