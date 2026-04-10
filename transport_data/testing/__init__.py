@@ -155,7 +155,7 @@ def sdmx_structures(tmp_store) -> sdmx.message.StructureMessage:
 
 
 @pytest.fixture
-def tdc_cli():
+def tdc_cli() -> Iterator[CliRunner]:
     """A :class:`.CliRunner` object that invokes the :program:`tdc` CLI."""
     yield CliRunner()
 
