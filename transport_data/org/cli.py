@@ -10,8 +10,12 @@ defined in this module.
 """
 
 import pathlib
+from typing import TYPE_CHECKING
 
 import click
+
+if TYPE_CHECKING:
+    from qrcode.image.base import BaseImageWithDrawer
 
 
 @click.group("org")
@@ -151,3 +155,73 @@ def template():
     from .metadata.spreadsheet import make_workbook
 
     make_workbook()
+
+
+@main.command("qr")
+@click.option("--format", type=click.Choice(["png", "svg"]), default="png")
+@click.argument("data")
+def qr(format: str, data: str) -> None:
+    """Generate QR codes.
+
+    DATA should be a complete URL. A unique filename is generated from the URL, like
+    qr-example-com-foo.png. With --format=png, the TDC logo is embedded.
+    """
+    import re
+    from hashlib import blake2s
+    from importlib.resources import files
+    from urllib.parse import urlparse
+
+    import qrcode
+
+    # Parse the data as a URL
+    url = urlparse(data)
+    # Portion of the URL after the domain
+    path_plus = data.partition(url.netloc)[2].lstrip("/")
+    if re.search(r"[/\?=]", path_plus):
+        # Hash of the path and subsequent URL parts, first 4 characters
+        path_plus = blake2s(path_plus.encode()).hexdigest()[:5]
+    # Construct the output filename
+    filename = f"qr-{url.netloc.replace('.', '-')}{'-' if len(path_plus) else ''}{path_plus}.{format}"
+
+    # Path to the TDC logo for embedding
+    logo_path = files("transport_data").joinpath("data", "image", "logo.png")
+
+    # Construct the QR code
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=2)
+    # Add the URL as data
+    qr.add_data(data)
+
+    # Convert to an image
+    if format == "png":
+        # PNG image
+        from qrcode.image.styledpil import StyledPilImage
+        from qrcode.image.styles.colormasks import SolidFillColorMask
+        from qrcode.image.styles.moduledrawers.pil import SquareModuleDrawer
+
+        img: "BaseImageWithDrawer" = qr.make_image(
+            image_factory=StyledPilImage,
+            color_mask=SolidFillColorMask(
+                back_color=(0, 96, 100),  # Same as HTML #006064
+                front_color=(255, 255, 255),  # White
+            ),
+            module_drawer=SquareModuleDrawer(),
+            embedded_image_path=logo_path,
+        )
+    elif format == "svg":
+        # SVG image
+        # NB The documentation is not clear, but it appears not possible to set the
+        #    colours or an embedded image if using SVG.
+        from qrcode.image.styles.moduledrawers.svg import SvgPathSquareDrawer
+        from qrcode.image.svg import SvgPathImage
+
+        img = qr.make_image(
+            image_factory=SvgPathImage,
+            background="#006064",  # Appears to have no effect
+            module_drawer=SvgPathSquareDrawer(),
+            # embedded_image_path=logo_path,  # Not supported
+        )
+
+    # Write to file
+    with open(filename, "wb") as f:
+        img.save(f)
+    print(f"Wrote {filename}")

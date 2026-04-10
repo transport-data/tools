@@ -43,7 +43,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-docs = ["furo", "Sphinx", "sphinx-autorun"]
+docs = [
+  "furo",
+  "Sphinx",
+  "sphinx-autorun",
+  'keyrings.alt; sys_platform=="linux"',
+]
 google = ["google-api-python-client", "google-auth-httplib2", "google-auth-oauthlib"]
 keyring = ["keyring"]
 tests = [
@@ -54,8 +59,9 @@ tests = [
   "pytest-timeout",
   "pytest-xdist",
   "responses",
-  "transport-data[keyring,google]",
+  "transport-data[keyring,google,qr]",
 ]
+qr = ["qrcode[pil]"]
 
 [project.urls]
 Documentation = "https://docs.transport-data.org"
