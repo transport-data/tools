@@ -54,8 +54,9 @@ tests = [
   "pytest-timeout",
   "pytest-xdist",
   "responses",
-  "transport-data[keyring,google]",
+  "transport-data[keyring,google,qr]",
 ]
+qr = ["qrcode[pil]"]
 
 [project.urls]
 Documentation = "https://docs.transport-data.org"
