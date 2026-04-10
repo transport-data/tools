@@ -18,6 +18,7 @@ repos:
     - Sphinx
     - types-docutils
     - types-openpyxl
+    - types-qrcode
     - types-requests
     - types-tqdm
     args: []
