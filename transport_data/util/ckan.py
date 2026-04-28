@@ -223,7 +223,6 @@ class Resource(ModelProxy):
         AssertionError
             if the size of the file is equal to or greater than `max_size`.
         """
-        from hashlib import file_digest
 
         import requests
 
@@ -245,19 +244,24 @@ class Resource(ModelProxy):
 
         file_hash = ""
         try:
+            from hashlib import file_digest
+
             # Check existence and hash of local file
             with open(target, "rb") as fd:
                 file_hash = file_digest(fd, "md5").hexdigest()
 
             # Allow that self.hash is empty; don't force download in this case
             assert self.hash in ("", file_hash)
-        except (AssertionError, FileNotFoundError) as e:
+        except (AssertionError, FileNotFoundError, ImportError) as e:
             # Hash does not match or file does not exist
-            if isinstance(e, AssertionError):
-                print(
-                    f"Hash {file_hash} of {target} does not match expected {self.hash};"
-                    " will re-download"
-                )
+            match e:
+                case AssertionError():
+                    print(
+                        f"Hash {file_hash} of {target} does not match expected "
+                        f"{self.hash}; will re-download"
+                    )
+                case ImportError():
+                    print("hashlib.file_digest() not available in Python 3.10")
             response = requests.get(self.url, stream=True)
             with open(target, "wb") as fd:
                 for chunk in response.iter_content():
