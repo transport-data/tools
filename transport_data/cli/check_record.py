@@ -6,6 +6,10 @@ from typing import TYPE_CHECKING, Any
 import click
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
+    from sdmx.model.v30 import Dataflow
+
     from transport_data.util.ckan import Package
 
 
@@ -38,14 +42,28 @@ SUFFIXES = {
 
 def check_package0(package: "Package") -> None:
     """Print some checks about a `package`."""
-    # Convert resource file names to Path instances; count suffixes
-    files = []
+    from transport_data.util.sdmx import structure_from_csv
+
+    # Mapping from Path instances to args for read_csv() or None
+    file_args: dict["Path", tuple["Dataflow", dict] | None] = {}
+
+    # Counts of suffixes
     suffix_count: MutableMapping[str, int] = defaultdict(lambda: 0)
     for resource in package.resources:
         # Fetch a local copy of the resource; return its path
         path = resource.fetch()
-        files.append(path)
-        suffix_count[path.suffix.lower()] += 1
+
+        # Count the file suffix
+        suffix_lower = path.suffix.lower()
+        suffix_count[suffix_lower] += 1
+
+        try:
+            # Infer a data structure definition from the file
+            file_args[path] = structure_from_csv(path)
+        except Exception:
+            # Not a CSV file or cannot infer a DSD
+            file_args[path] = None
+            continue
 
     @dataclass
     class Check:
@@ -74,15 +92,19 @@ def check_package0(package: "Package") -> None:
         "Correct category assigned",
         package.tdc_category in {"tdc_formatted", "tdc_harmonized"},
     )
-    c5 = Check("CSV file(s) are in SDMX-CSV format (not implemented yet)", True)
+    c5 = Check("≥1 CSV file is in SDMX-CSV format", any(map(bool, file_args.values())))
     c6 = Check("Overall", "YES" if (c3.value and c4.value and c5.value) else "NO")
 
     lines.extend(f"- {check}" for check in (c3, c4, c5, c6))
 
     lines.extend(["", "Criteria for a TDC Harmonized record—all of the above, plus:"])
-    c7 = Check("Correct category assigned", package.tdc_category == "tdc_harmonized")
-    c8 = Check("Overall", "YES" if c7.value else "NO")
+    c7 = Check(
+        "Data structure dimension IDs are all in TDCI:CS_CONCEPTS (not implemented yet)",
+        True,
+    )
+    c8 = Check("Correct category assigned", package.tdc_category == "tdc_harmonized")
+    c9 = Check("Overall", "YES" if (c7.value and c8.value) else "NO")
 
-    lines.extend(f"- {check}" for check in (c7, c8))
+    lines.extend(f"- {check}" for check in (c7, c8, c9))
 
     print(*lines, sep="\n")
