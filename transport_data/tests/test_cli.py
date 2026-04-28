@@ -5,9 +5,17 @@ import pytest
 from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
 from prompt_toolkit.keys import Keys
 
+from transport_data.cli.check_record import check_package0
 from transport_data.cli.interactive import Editor
 from transport_data.store import UnionStore
 from transport_data.testing import CliRunner, ember_dfd
+from transport_data.util.ckan import Package
+
+
+@pytest.fixture
+def package(test_data_path: Path) -> Package:
+    """A :class:`.Package` from a test specimen."""
+    return Package.from_file(test_data_path.joinpath("ckan", "package.json"))
 
 
 @pytest.mark.parametrize(
@@ -110,6 +118,12 @@ def test_check_file2(tdc_cli: CliRunner, tmp_path: Path) -> None:
 
     assert 2 == result.exit_code, result.output
     assert "Unsupported file extension" in result.output
+
+
+def test_check_package0(package: Package) -> None:
+    # Function runs
+    check_package0(package)
+    # TODO extend with further assertions about stdout
 
 
 def run_script(lines: list[str]) -> None:
