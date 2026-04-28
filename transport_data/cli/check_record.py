@@ -1,7 +1,6 @@
 from collections import defaultdict
 from collections.abc import MutableMapping
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import click
@@ -43,7 +42,8 @@ def check_package0(package: "Package") -> None:
     files = []
     suffix_count: MutableMapping[str, int] = defaultdict(lambda: 0)
     for resource in package.resources:
-        path = Path(resource.name)
+        # Fetch a local copy of the resource; return its path
+        path = resource.fetch()
         files.append(path)
         suffix_count[path.suffix.lower()] += 1
 
