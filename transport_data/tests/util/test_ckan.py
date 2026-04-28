@@ -48,7 +48,7 @@ class TestPackage:
     def test_asdict(self, obj) -> None:
         obj.asdict()
 
-    def test_get_item(self, obj) -> None:
+    def test_get_item(self, obj: Package) -> None:
         g = obj.get_item("groups", 0)
         assert isinstance(g, Group)
 

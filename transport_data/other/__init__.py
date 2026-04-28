@@ -1,9 +1,9 @@
 """Other data providers."""
 
-from transport_data.util.pluggy import hookimpl
+from transport_data import hook
 
 
-@hookimpl
+@hook
 def get_agencies():
     from sdmx.model.common import Agency, Contact
 

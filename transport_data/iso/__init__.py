@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Mapping
 
 from sdmx.model import common, v21
 
-from transport_data.util.pluggy import hookimpl
+from transport_data import hook
 from transport_data.util.pycountry import LOCALIZABLE, get_database, load_translations
 
 if TYPE_CHECKING:
@@ -16,7 +16,12 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-@hookimpl
+@hook
+def cli_modules():
+    return f"{__name__}.cli"
+
+
+@hook
 def get_agencies():
     """Return the ``ISO`` :class:`~.sdmx.model.common.Agency`."""
     a = common.Agency(

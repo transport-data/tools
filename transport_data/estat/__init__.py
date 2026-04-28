@@ -12,7 +12,13 @@ provider-specific conversion code is needed.
 import click
 import sdmx
 
-from transport_data import STORE
+from transport_data import STORE, hook
+
+
+@hook
+def cli_modules():
+    return __name__
+
 
 # General functions
 

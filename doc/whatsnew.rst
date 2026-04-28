@@ -6,12 +6,28 @@ Next release
 
 - :mod:`transport_data` supports and is tested with
   `Pandas 3.0.0 <https://pandas.pydata.org/pandas-docs/stable/whatsnew/v3.0.0.html>`_,
-   released 2026-01-21 (:pull:`59`).
+  released 2026-01-21 (:pull:`59`).
 - Update for pycountry 26.2.16, released 2026-02-17 (:pull:`61`).
-- :program:`tdc` command-line interface warns but does not error
-  if some modules/commands are not available (:pull:`63`).
-- New CLI command :program:`tdc org qr` (:pull:`63`).
 - New HOWTO :doc:`Get involved <howto/get-involved>` (:pull:`62`).
+- Improvements to the :program:`tdc` command-line interface (CLI):
+
+  - :program:`tdc` warns but does not error
+    if some modules/commands are not available (:pull:`63`).
+  - New command :program:`tdc org qr` (:pull:`63`).
+  - New command :program:`tdc check-record` (:pull:`58`).
+  - Rename command :program:`tdc check` to :program:`tdc check-file` (:pull:`58`).
+
+- Improve :mod:`.util.ckan` (:pull:`58`):
+
+  - New method :meth:`.Package.portal_url`.
+  - New method :meth:`.Resource.fetch` to fetch and cache files.
+  - Add type hints for commonly-used attributes of :class:`.Package`, :class:`.Resource`.
+
+- Improve utility code (:pull:`58`):
+
+  - :any:`transport_data.hook` is available as a top-level import for marking hook implementations.
+  - New hook :func:`~.util.hooks.cli_modules`.
+  - New function :func:`.sdmx.structure_from_csv`.
 
 v26.1.13
 ========

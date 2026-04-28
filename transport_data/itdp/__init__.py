@@ -1,9 +1,14 @@
 """Institute for Transport & Development Policy (ITDP) provider."""
 
-from transport_data.util.pluggy import hookimpl
+from transport_data import hook
 
 
-@hookimpl
+@hook
+def cli_modules():
+    return f"{__name__}.cli"
+
+
+@hook
 def get_agencies():
     from sdmx.model import common
 

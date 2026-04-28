@@ -1,11 +1,21 @@
 import re
+from pathlib import Path
 
 import pytest
 from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
 from prompt_toolkit.keys import Keys
 
+from transport_data.cli.check_record import check_package0
 from transport_data.cli.interactive import Editor
-from transport_data.testing import ember_dfd
+from transport_data.store import UnionStore
+from transport_data.testing import CliRunner, ember_dfd
+from transport_data.util.ckan import Package
+
+
+@pytest.fixture
+def package(test_data_path: Path) -> Package:
+    """A :class:`.Package` from a test specimen."""
+    return Package.from_file(test_data_path.joinpath("ckan", "package.json"))
 
 
 @pytest.mark.parametrize(
@@ -14,7 +24,8 @@ from transport_data.testing import ember_dfd
         ("--help",),
         ("ato", "--help"),
         ("ato", "fetch", "--all"),
-        ("check", "--help"),
+        ("check-file", "--help"),
+        ("check-record", "--help"),
         ("config", "--help"),
         ("estat", "--help"),
         ("estat", "fetch", "--help"),
@@ -28,7 +39,7 @@ from transport_data.testing import ember_dfd
         ("store", "--help"),
     ),
 )
-def test_cli(tdc_cli, command):
+def test_cli(tdc_cli: CliRunner, command: tuple[str, ...]) -> None:
     tdc_cli.invoke(command)
 
 
@@ -41,12 +52,14 @@ CHECK_ARGS = [
 ]
 
 
-def test_check0(tdc_cli, test_data_path, tmp_store):
+def test_check_file0(
+    tdc_cli: CliRunner, test_data_path: Path, tmp_store: UnionStore
+) -> None:
     """Check a successful read of a .xlsx file."""
     ember_dfd(tmp_store)
 
     path = test_data_path.joinpath("read-csv-2.xlsx")
-    result = tdc_cli.invoke(["check"] + CHECK_ARGS + [str(path)])
+    result = tdc_cli.invoke(["check-file"] + CHECK_ARGS + [str(path)])
 
     # Command runs without error
     assert 0 == result.exit_code, result.output
@@ -76,12 +89,19 @@ Data set 0: action=ActionType.information
         (CHECK_ARGS + ["-vv"], 0, ""),  # Show pd.DataFrame full string repr
     ),
 )
-def test_check1(tdc_cli, test_data_path, tmp_store, args, exit_code, text):
+def test_check_file1(
+    tdc_cli: CliRunner,
+    test_data_path: Path,
+    tmp_store: UnionStore,
+    args: list[str],
+    exit_code: int,
+    text: str,
+) -> None:
     """Check various other argument combinations."""
     ember_dfd(tmp_store)
 
     path = test_data_path.joinpath("read-csv-1.csv")
-    result = tdc_cli.invoke(["check"] + args + [str(path)])
+    result = tdc_cli.invoke(["check-file"] + args + [str(path)])
 
     # Command gives the expected exit code
     assert exit_code == result.exit_code, result.output
@@ -91,13 +111,19 @@ def test_check1(tdc_cli, test_data_path, tmp_store, args, exit_code, text):
         assert text in result.output
 
 
-def test_check2(tdc_cli, tmp_path):
+def test_check_file2(tdc_cli: CliRunner, tmp_path: Path) -> None:
     path = tmp_path.joinpath("foo.txt")
     path.touch()
-    result = tdc_cli.invoke(["check", "X", str(path)])
+    result = tdc_cli.invoke(["check-file", "X", str(path)])
 
     assert 2 == result.exit_code, result.output
     assert "Unsupported file extension" in result.output
+
+
+def test_check_package0(package: Package) -> None:
+    # Function runs
+    check_package0(package)
+    # TODO extend with further assertions about stdout
 
 
 def run_script(lines: list[str]) -> None:
@@ -149,7 +175,7 @@ SCRIPT_2 = [
 
 
 @pytest.mark.timeout(1)
-def test_edit2(tmp_store) -> None:
+def test_edit2(tmp_store: UnionStore) -> None:
     # CLI runs and accepts the input without error
     run_script(SCRIPT_2)
 
@@ -176,7 +202,7 @@ SCRIPT_4 = [
 
 @pytest.mark.timeout(1)
 @pytest.mark.usefixtures("sdmx_structures")
-def test_edit4(tmp_store) -> None:
+def test_edit4(tmp_store: UnionStore) -> None:
     # CLI runs and accepts the input without error
     run_script(SCRIPT_4)
 
@@ -205,7 +231,7 @@ SCRIPT_5 = [
 
 
 @pytest.mark.timeout(1)
-def test_edit5(tmp_store) -> None:
+def test_edit5(tmp_store: UnionStore) -> None:
     # CLI runs and accepts the input without error
     run_script([REVERSE_ANSI_SEQUENCES[Keys.ControlC]])
     # Nothing was saved because ControlC was given

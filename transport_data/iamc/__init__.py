@@ -10,12 +10,17 @@ import pandas as pd
 import sdmx.model.v21 as m
 from sdmx.message import StructureMessage
 
-from transport_data.util.pluggy import hookimpl
+from transport_data import hook
 
 log = logging.getLogger(__name__)
 
 
-@hookimpl
+@hook
+def cli_modules():
+    return f"{__name__}.cli"
+
+
+@hook
 def get_agencies():
     a = m.Agency(
         id="IAMC",
@@ -25,7 +30,7 @@ def get_agencies():
     return (a,)
 
 
-@hookimpl
+@hook
 def provides():
     return ("ConceptScheme=TDCI:CS_IAMC",)
 

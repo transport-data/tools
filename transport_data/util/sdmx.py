@@ -1,6 +1,7 @@
 """Utilities for :mod:`sdmx`."""
 
 import io
+import logging
 from dataclasses import fields
 from datetime import datetime
 from importlib.metadata import version
@@ -31,6 +32,9 @@ if TYPE_CHECKING:
 
     class MAKeywords(VAKeywords):
         maintainer: sdmx.model.common.Agency | None
+
+
+log = logging.getLogger(__name__)
 
 
 class CSVAdapter(io.RawIOBase):
@@ -140,61 +144,6 @@ def anno_generated(obj: "sdmx.model.common.AnnotableArtefact") -> None:
     )
 
 
-def make_obs(
-    row: "pd.Series", dsd: "sdmx.model.v21.DataStructureDefinition"
-) -> "sdmx.model.v21.Observation":
-    """Helper function for making :class:`sdmx.model.Observation` objects."""
-    from sdmx.model import v21 as m
-
-    key = dsd.make_key(m.Key, row[[d.id for d in dsd.dimensions]].to_dict())
-
-    # Attributes
-    attrs = {}
-    for a in filter(
-        lambda a: isinstance(a.related_to, m.PrimaryMeasureRelationship), dsd.attributes
-    ):
-        # Only store an AttributeValue if there is some text
-        value = row[a.id]
-        if not pd.isna(value):
-            attrs[a.id] = m.AttributeValue(value_for=a, value=value)
-
-    pm = dsd.measures[0]
-    return m.Observation(
-        dimension=key, attached_attribute=attrs, value_for=pm, value=row[pm.id]
-    )
-
-
-def read_csv(
-    path: "pathlib.Path",
-    structure: "sdmx.model.v30.Dataflow | sdmx.model.v30.DataStructureDefinition",
-    adapt: dict | None = None,
-) -> "sdmx.message.DataMessage":
-    """Read or adapt SDMX-CSV from `path`.
-
-    Parameters
-    ----------
-    path :
-        A file in SDMX-CSV or CSV format.
-    structure :
-        Data flow or data structure describing the contents of `path`.
-    adapt :
-        Keyword arguments to :class:`CSVAdapter`. If given, the contents of `path` are
-        adapted from a ‘simplified’ or ‘reduced’ CSV format to SDMX-CSV on-the-fly. See
-        the class documentation for details.
-    """
-    import sdmx
-
-    if adapt:
-        source: "pathlib.Path" | "CSVAdapter" = CSVAdapter(path, **adapt)
-    else:
-        source = path
-
-    return cast(
-        "sdmx.message.DataMessage",
-        sdmx.read_sdmx(source, format="csv", structure=structure),
-    )
-
-
 def fields_to_mda(
     cls: type,
     rs: "sdmx.model.v21.ReportStructure",
@@ -253,3 +202,128 @@ def fields_to_mda(
         type_anno = v21.Annotation(id="data-type", text={"zxx": repr(f.type)})
         # Add the metadata attribute to the report structure
         rs.getdefault(id=id_, concept_identity=ci, annotations=[type_anno])
+
+
+def make_obs(
+    row: "pd.Series", dsd: "sdmx.model.v21.DataStructureDefinition"
+) -> "sdmx.model.v21.Observation":
+    """Helper function for making :class:`sdmx.model.Observation` objects."""
+    from sdmx.model import v21 as m
+
+    key = dsd.make_key(m.Key, row[[d.id for d in dsd.dimensions]].to_dict())
+
+    # Attributes
+    attrs = {}
+    for a in filter(
+        lambda a: isinstance(a.related_to, m.PrimaryMeasureRelationship), dsd.attributes
+    ):
+        # Only store an AttributeValue if there is some text
+        value = row[a.id]
+        if not pd.isna(value):
+            attrs[a.id] = m.AttributeValue(value_for=a, value=value)
+
+    pm = dsd.measures[0]
+    return m.Observation(
+        dimension=key, attached_attribute=attrs, value_for=pm, value=row[pm.id]
+    )
+
+
+def read_csv(
+    path: "pathlib.Path",
+    structure: "sdmx.model.v30.Dataflow | sdmx.model.v30.DataStructureDefinition",
+    adapt: dict | None = None,
+) -> "sdmx.message.DataMessage":
+    """Read or adapt SDMX-CSV from `path`.
+
+    Parameters
+    ----------
+    path :
+        A file in SDMX-CSV or CSV format.
+    structure :
+        Data flow or data structure describing the contents of `path`.
+    adapt :
+        Keyword arguments to :class:`CSVAdapter`. If given, the contents of `path` are
+        adapted from a ‘simplified’ or ‘reduced’ CSV format to SDMX-CSV on-the-fly. See
+        the class documentation for details.
+    """
+    import sdmx
+
+    if adapt:
+        source: "pathlib.Path" | "CSVAdapter" = CSVAdapter(path, **adapt)
+    else:
+        source = path
+
+    return cast(
+        "sdmx.message.DataMessage",
+        sdmx.read_sdmx(source, format="csv", structure=structure),
+    )
+
+
+def structure_from_csv(
+    path: "pathlib.Path",
+) -> tuple["sdmx.model.v30.Dataflow", dict]:
+    """Infer a data flow and arguments for :func:`.read_csv` from `path`.
+
+    Returns
+    -------
+    tuple
+        with 2 elements:
+
+        1. a :class:`sdmx.model.v30.Dataflow`.
+        2. :class:`dict`, a value for the :py:`adapt` argument of :func:`read_csv`.
+    """
+
+    import csv
+
+    from sdmx.model import v30
+
+    from transport_data.org import get_agencyscheme
+
+    # Parse the first line of the file as CSV
+    with open(path, "r") as f:
+        reader = csv.reader(f)
+        row = next(reader)
+
+    dsd = v30.DataStructureDefinition(
+        id="DS_INFERRED",
+        description=f"Inferred from the contents of {path}",
+        maintainer=get_agencyscheme()["TDCI"],
+    )
+    adapt = dict()
+
+    for column, default in (
+        ("STRUCTURE", "datastructure"),
+        ("STRUCTURE_ID", dsd.id),
+        ("ACTION", "I"),
+    ):
+        try:
+            row.remove(column)
+        except ValueError:
+            adapt[column.lower()] = default
+
+    # Assume the measure ID "OBS_VALUE"
+    index_obs_value = row.index("OBS_VALUE")
+    dsd.measures.getdefault(id="OBS_VALUE")
+
+    # Preceding columns are dimensions
+    for dim_id in row[:index_obs_value]:
+        dsd.dimensions.getdefault(id=dim_id)
+
+    # Following columns are attributes
+    for attr_id in row[index_obs_value + 1 :]:
+        dsd.attributes.getdefault(id=attr_id)
+
+    log.info(
+        f"Inferred structure {dsd} with {len(dsd.dimensions)} dimension(s): "
+        + " ".join(d.id for d in dsd.dimensions)
+    )
+
+    # Construct a dataflow definition matching `dsd`
+    dfd = v30.Dataflow(
+        id="DF_INFERRED",
+        description=dsd.description,
+        maintainer=dsd.maintainer,
+        structure=dsd,
+    )
+
+    return dfd, adapt

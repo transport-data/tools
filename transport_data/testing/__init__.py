@@ -3,7 +3,7 @@ import os
 import platform
 import re
 import zipfile
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from typing import TYPE_CHECKING, cast
 
 import click.testing
@@ -170,7 +170,7 @@ def test_data_path() -> Iterator["Traversable"]:
 
 
 @pytest.fixture(scope="session")
-def tmp_config(tmp_path_factory) -> Generator[Config, None, None]:
+def tmp_config(tmp_path_factory) -> Iterator[Config]:
     """A :class:`.Config` instance pointing to a temporary directory."""
     from platformdirs import user_data_path
 
@@ -189,7 +189,7 @@ def tmp_config(tmp_path_factory) -> Generator[Config, None, None]:
 
 
 @pytest.fixture(scope="session")
-def tmp_store(tmp_config) -> Generator[UnionStore, None, None]:
+def tmp_store(tmp_config) -> Iterator[UnionStore]:
     """A :class`.UnionStore` in a temporary directory per :func:`.tmp_config`."""
     result = UnionStore(tmp_config)
 
