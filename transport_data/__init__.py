@@ -37,4 +37,5 @@ register_internal(
     "oica",
     "org",
     "other",
+    "tumi",
 )
