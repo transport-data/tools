@@ -53,6 +53,7 @@ def ato_any_dataset(ato_converted_data) -> "v21.DataSet":  # pragma: no cover
 
 
 @MARK[0]
+@MARK[1]
 def test_convert0(ato_converted_data):
     """Test that :func:`.ato.convert` works for certain parts."""
     # Nothing in particular: simply request the fixture that generates the parts
@@ -79,6 +80,7 @@ def test_fetch(mock_zenodo_api, from_zenodo) -> None:
 
 
 @MARK[0]
+@MARK[1]
 @pytest.mark.usefixtures("ato_converted_data")
 def test_dataset_to_metadata_reports():
     from transport_data import STORE
