@@ -110,6 +110,8 @@ markers = [
   "ckan_dev: tests that access the TDC dev CKAN instance",
 ]
 usefixtures = ["tmp_store"]
+# pytest-timeout
+timeout = "300"
 
 [tool.ruff.lint]
 select = ["C9", "E", "F", "I", "W"]
