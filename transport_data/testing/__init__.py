@@ -39,6 +39,11 @@ MARK = {
         raises=zipfile.BadZipFile,
         reason="'Truncated file header' on GHA runner",
     ),
+    1: pytest.mark.timeout(timeout=450 if GITHUB_ACTIONS else None),
+    "ci_linux_only": pytest.mark.skipif(
+        condition=GITHUB_ACTIONS and platform.system() != "Linux",
+        reason="Skip on non-Linux GitHub Actions runners, for performance",
+    ),
     "#52": pytest.mark.xfail(
         raises=AssertionError,
         reason="Upstream files removed; https://github.com/transport-data/tools/issues/52",

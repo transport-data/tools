@@ -24,6 +24,7 @@ _NotImplemented = pytest.mark.xfail(
 )
 # _NotAuthorized = pytest.mark.xfail(raises=NotAuthorized, reason="Needs API key")
 _NotAuthorized = pytest.mark.skip(reason="Needs API key")
+_Timeout = pytest.mark.skip(reason="Times out, >300 s")
 
 
 class TestOrganization:
@@ -61,6 +62,12 @@ class TestPackage:
 
     def test_len(self, obj) -> None:
         assert 47 == len(obj)
+
+    def test_portal_url(self, obj: Package) -> None:
+        assert (
+            "https://portal.transport-data.org/@oica/2023-production-statistics"
+            == obj.portal_url()
+        )
 
     def test_update(self, obj) -> None:
         with pytest.raises(ValueError):
@@ -148,7 +155,7 @@ class TestClient:
             param("resource_view_show", {}, marks=_Incomplete),
             ("status_show", {}),
             ("tag_autocomplete", {}),
-            ("tag_list", {}),
+            param("tag_list", {}, marks=_Timeout),
             ("tag_search", {}),
             ("tag_show", {"name": "transport"}),
             param("task_status_show", {}, marks=_Incomplete),

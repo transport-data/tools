@@ -7,6 +7,7 @@ Next release
 - :mod:`transport_data` supports and is tested with
   `Pandas 3.0.0 <https://pandas.pydata.org/pandas-docs/stable/whatsnew/v3.0.0.html>`_,
   released 2026-01-21 (:pull:`59`).
+- Update known hashes for files provided by :mod:`.ato` (:pull:`66`).
 - Update for pycountry 26.2.16, released 2026-02-17 (:pull:`61`).
 - New HOWTO :doc:`Get involved <howto/get-involved>` (:pull:`62`).
 - Improvements to the :program:`tdc` command-line interface (CLI):
