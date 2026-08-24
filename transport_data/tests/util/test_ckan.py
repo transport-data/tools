@@ -63,6 +63,12 @@ class TestPackage:
     def test_len(self, obj) -> None:
         assert 47 == len(obj)
 
+    def test_portal_url(self, obj: Package) -> None:
+        assert (
+            "https://portal.transport-data.org/@oica/2023-production-statistics"
+            == obj.portal_url()
+        )
+
     def test_update(self, obj) -> None:
         with pytest.raises(ValueError):
             obj.update({"id": "foo"})
