@@ -24,6 +24,7 @@ _NotImplemented = pytest.mark.xfail(
 )
 # _NotAuthorized = pytest.mark.xfail(raises=NotAuthorized, reason="Needs API key")
 _NotAuthorized = pytest.mark.skip(reason="Needs API key")
+_Timeout = pytest.mark.skip(reason="Times out, >300 s")
 
 
 class TestOrganization:
@@ -148,7 +149,7 @@ class TestClient:
             param("resource_view_show", {}, marks=_Incomplete),
             ("status_show", {}),
             ("tag_autocomplete", {}),
-            ("tag_list", {}),
+            param("tag_list", {}, marks=_Timeout),
             ("tag_search", {}),
             ("tag_show", {"name": "transport"}),
             param("task_status_show", {}, marks=_Incomplete),
