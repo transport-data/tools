@@ -582,6 +582,7 @@ def read_sheet(
     # - Some sheets contain columns with text labels in miscellaneous/undocumented
     #   formats, not supported by this function:
     #   - SEC-SEG-009: "land", "port"
+    #   - MIS-GRC-020: "Yes", "No"
     #   - MIS-SUM-002: "A", "B", "C", "D"
     #
     #   TODO Ask ATO to provide these data as SDMX, or extend code to convert
@@ -595,7 +596,7 @@ def read_sheet(
             .str.replace(r"(\d)[, ]([\d\.])", r"\1\2", regex=True)
             .str.replace(r"^([\d\.]+)g", r"\1", regex=True)
             .str.replace(r"^(-|long ton|N/Appl\.|n/a|_)$", "NaN", regex=True)
-            .str.replace(r"^(land|port|A|B|C|D)$", "NaN", regex=True)
+            .str.replace(r"^(land|port|Yes|No|A|B|C|D)$", "NaN", regex=True)
             .astype(float)
         )
 
