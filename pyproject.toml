@@ -53,7 +53,7 @@ google = ["google-api-python-client", "google-auth-httplib2", "google-auth-oauth
 keyring = ["keyring"]
 tests = [
   'keyrings.alt; sys_platform=="linux"',
-  "pytest",
+  "pytest >= 9",
   "pytest-cov",
   "pytest-rerunfailures",
   "pytest-timeout",
@@ -98,15 +98,18 @@ module = [
 ]
 ignore_missing_imports = true
 
-[tool.pytest.ini_options]
-addopts = """
-  -m "not network"
-  --cov=transport_data --cov-report="""
+[tool.pytest]
+minversion = "9.0"
+addopts = [
+  '-m "not network"',
+  "--cov=transport_data",
+  "--cov-report=",
+]
 markers = [
   "network: tests that perform network requests",
   "ckan_dev: tests that access the TDC dev CKAN instance",
 ]
-usefixtures = "tmp_store"
+usefixtures = ["tmp_store"]
 
 [tool.ruff.lint]
 select = ["C9", "E", "F", "I", "W"]
