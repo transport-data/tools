@@ -1,6 +1,7 @@
 """Asian Transport Observatory (ATO) provider."""
 
 import logging
+import re
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -82,6 +83,16 @@ FILES = {
     ),
 }
 
+
+#: Compiled regular expression for footer texts appearing in ATO workbook sheets.
+FOOTER_PATTERN = re.compile(
+    """
+    .*developed.with.the.support.of |
+    ^See.terms.of.use.at |
+    ^Activities.in.the.Pacific.Island.Countries
+    """,
+    re.VERBOSE,
+)
 VERSION = "0.1.0"
 
 
@@ -405,6 +416,15 @@ def provides():
     )
 
 
+def is_footer_row(row: pd.Series) -> bool:
+    """Return :any:`True` if `row` is a footer row in an ATO workbook.
+
+    The expressions in :data:`FOOTER_PATTERN` are checked against the value in the
+    second column.
+    """
+    return bool(FOOTER_PATTERN.match(row.iloc[1]))
+
+
 def prepare(aa: m.AnnotableArtefact) -> tuple[m.DataSet, Callable]:
     """Prepare an empty data set and associated structures."""
     # Measure identifier and description
@@ -536,8 +556,12 @@ def read_sheet(
             )
         )
 
-    # Read data section
-    df = ef.parse(sheet_name, skiprows=14, skipfooter=2).dropna(how="all")
+    # - Read data section.
+    # - Drop rows that are completely empty.
+    df = ef.parse(sheet_name, skiprows=14).dropna(how="all")
+
+    # Drop rows that contain footers
+    df = df[~df.apply(is_footer_row, axis=1)]
 
     # Identify data columns: those with numeric labels
     data_col_mask = list(map(str.isnumeric, df.columns))
