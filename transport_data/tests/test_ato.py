@@ -54,6 +54,7 @@ def ato_any_dataset(ato_converted_data) -> "v21.DataSet":  # pragma: no cover
 
 @MARK[0]
 @MARK[1]
+@MARK["ci_linux_only"]
 def test_convert0(ato_converted_data):
     """Test that :func:`.ato.convert` works for certain parts."""
     # Nothing in particular: simply request the fixture that generates the parts
