@@ -205,10 +205,18 @@ class Resource(ModelProxy):
     """
 
     # Type hints
+    format: str
     hash: str
+    mimetype: str | None
     name: str
-    size: int
+    size: int | None
     url: str
+    url_type: str | None
+
+    @property
+    def has_local_file(self) -> bool:
+        """:any:`True` if the Resource **should** have a local file."""
+        return self.url_type == "upload"
 
     def fetch(self, max_size: int = 10_000_000) -> Path:
         """Fetch the resource file and cache it locally.
@@ -268,6 +276,15 @@ class Resource(ModelProxy):
                     fd.write(chunk)
 
         return target
+
+    def local_path(self, base_path: Path | None) -> Path:
+        """Return a path in the CKAN file system layout."""
+        from transport_data import CONFIG
+
+        base_path = base_path or CONFIG.cache_path.joinpath("resource")
+
+        assert self.id
+        return base_path.joinpath(self.id[:3], self.id[3:6], self.id[6:])
 
 
 class Tag(ModelProxy):
