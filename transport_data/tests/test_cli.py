@@ -8,7 +8,7 @@ from prompt_toolkit.keys import Keys
 from transport_data.cli.check_record import check_package0
 from transport_data.cli.interactive import Editor
 from transport_data.store import UnionStore
-from transport_data.testing import CliRunner, ember_dfd
+from transport_data.testing import MARK, CliRunner, ember_dfd
 from transport_data.util.ckan import Package
 
 
@@ -120,6 +120,7 @@ def test_check_file2(tdc_cli: CliRunner, tmp_path: Path) -> None:
     assert "Unsupported file extension" in result.output
 
 
+@MARK["ci_macos_timeout"]
 def test_check_package0(package: Package) -> None:
     # Function runs
     check_package0(package)
