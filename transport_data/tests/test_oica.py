@@ -4,6 +4,8 @@ from pytest import param
 from transport_data.oica import convert, get_cl_geo, update_registry
 from transport_data.testing import MARK
 
+pytestmark = MARK["ci_macos_timeout"]
+
 
 @pytest.mark.parametrize(
     "measure, N_obs",
@@ -40,5 +42,6 @@ def test_convert(measure: str, N_obs: dict[str, int]) -> None:
     #     print(sdmx.to_pandas(ds).to_string())
 
 
+@MARK["ci_linux_only"]
 def test_update_registry() -> None:
     update_registry()

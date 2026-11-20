@@ -10,6 +10,7 @@ import click.testing
 import pytest
 import responses
 import sdmx.message
+from requests.exceptions import ConnectTimeout
 from sdmx.model import common, v21
 
 import transport_data
@@ -43,6 +44,11 @@ MARK = {
     "ci_linux_only": pytest.mark.skipif(
         condition=GITHUB_ACTIONS and platform.system() != "Linux",
         reason="Skip on non-Linux GitHub Actions runners, for performance",
+    ),
+    "ci_macos_timeout": pytest.mark.xfail(
+        condition=GITHUB_ACTIONS and platform.system() == "Darwin",
+        raises=(TimeoutError, ConnectTimeout),
+        reason="Times out on GitHub Actions macOS runners",
     ),
     "#52": pytest.mark.xfail(
         raises=AssertionError,
