@@ -1,7 +1,7 @@
 import pytest
 from pytest import param
 
-from transport_data.oica import convert, get_cl_geo, update_registry
+from transport_data.oica import convert, fetch, get_cl_geo, update_registry
 from transport_data.testing import MARK
 
 pytestmark = MARK["ci_macos_timeout"]
@@ -40,6 +40,15 @@ def test_convert(measure: str, N_obs: dict[str, int]) -> None:
     #
     # for _, ds in result.items():
     #     print(sdmx.to_pandas(ds).to_string())
+
+
+def test_fetch(capsys: pytest.CaptureFixture) -> None:
+    fetch(dry_run=True)
+
+    captured = capsys.readouterr()
+    assert (
+        "Valid url for GEO=10/total_sales_2024.xlsx: True" in captured.out.splitlines()
+    )
 
 
 @MARK["ci_linux_only"]
