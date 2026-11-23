@@ -101,7 +101,7 @@ ignore_missing_imports = true
 [tool.pytest]
 minversion = "9.0"
 addopts = [
-  '-m "not network"',
+  '-m not network',
   "--cov=transport_data",
   "--cov-report=",
 ]
